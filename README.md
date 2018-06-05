@@ -1,11 +1,11 @@
-<img width="100%" src="./hero.png"/>
+<img width="100%" src="https://github.com/SolidStateGroup/bullet-train-nodejs-client/raw/master/hero.png"/>
 
 # Bullet Train Client
 [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/SolidStateGroup/bullettrain?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![npm version](https://badge.fury.io/js/bullet-train-client.svg)](https://badge.fury.io/js/bullet-train-client)
-[![](https://data.jsdelivr.com/v1/package/npm/bullet-train-client/badge)](https://www.jsdelivr.com/package/npm/bullet-train-client)
+[![npm version](https://badge.fury.io/js/bullet-train-nodejs.svg)](https://badge.fury.io/js/bullet-train-nodejs)
+[![](https://data.jsdelivr.com/v1/package/npm/bullet-train-nodejs/badge)](https://www.jsdelivr.com/package/npm/bullet-train-nodejs)
 
-The SDK clients for web and React Native for [https://bullet-train.io/](https://www.bullet-train.io/). Bullet Train allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+The SDK clients for NodeJS [https://bullet-train.io/](https://www.bullet-train.io/). Bullet Train allows you to manage feature flags and remote config across multiple projects, environments and organisations.
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ These instructions will get you a copy of the project up and running on your loc
 ## Installing
 
 ### VIA npm
-```npm i bullet-train-client --save```
+```npm i bullet-train-nodejs --save```
 	
 ## Usage
 **Retrieving feature flags for your project**
