@@ -1,15 +1,33 @@
 {
   "name": "bullet-train-nodejs",
-  "version": "0.0.4",
-  "description": "",
+  "version": "0.1.1",
+  "description": "Bullet Train lets you manage features flags and remote config across web, mobile and server side applications. Deliver true Continuous Integration. Get builds out faster. Control who has access to new features.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SolidStateGroup/bullet-train-nodejs-client"
   },
-  "author": "SSG",
+  "keywords": [
+    "nodejs",
+    "bullet train",
+    "feature flagger",
+    "continuous deployment"
+  ],
+  "bugs": {
+    "url": "https://github.com/SolidStateGroup/bullet-train-nodejs-client/issues"
+  },
+  "homepage": "http://bullet-train.io",
+  "author" : "SSG",
+  "contributors": [
+    { "name" : "Tom Stuart",
+       "email" : "tom@solidstategroup.com"
+    },
+    { "name" : "Kyle Johnson",
+       "email" : "kyle@solidstategroup.com",
+       "url": "https://www.npmjs.com/~kyle-ssg"
+    }],
   "license": "MIT",
   "dependencies": {
-    "express": "^4.16.3",
     "node-fetch": "^2.1.2"
   }
 }

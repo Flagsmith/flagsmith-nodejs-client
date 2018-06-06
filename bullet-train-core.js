@@ -56,7 +56,7 @@ const BulletTrain = class {
         if (self === undefined) {
             self = this;
         }
-        const { onChange, onError, api, disableCache } = this;
+        const { onChange, onError, api, disableCache } = self;
 
         const handleResponse = (res) => {
             // Handle server response
@@ -67,8 +67,8 @@ const BulletTrain = class {
                     value: feature.feature_state_value
                 };
             });
-            this.oldFlags = flags;
-            this.flags = flags;
+            self.oldFlags = flags;
+            self.flags = flags;
             return flags;
         };
 
@@ -109,18 +109,6 @@ const BulletTrain = class {
 
     getAllFlags() {
         return this.flags;
-    }
-
-    identify(userId) {
-        this.identity = userId;
-        if (this.initialised && !this.interval)
-            this.getFlags();
-    }
-
-    logout() {
-        this.identity = null;
-        if (this.initialised && !this.interval)
-            this.getFlags();
     }
 
     getValue(key, userId) {

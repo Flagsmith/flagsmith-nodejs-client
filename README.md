@@ -1,4 +1,3 @@
-<img width="100%" src="https://github.com/SolidStateGroup/bullet-train-nodejs-client/raw/master/hero.png"/>
 
 # Bullet Train Client
 [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/SolidStateGroup/bullettrain?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -6,6 +5,7 @@
 [![](https://data.jsdelivr.com/v1/package/npm/bullet-train-nodejs/badge)](https://www.jsdelivr.com/package/npm/bullet-train-nodejs)
 
 The SDK clients for NodeJS [https://bullet-train.io/](https://www.bullet-train.io/). Bullet Train allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+<img width="100%" src="https://github.com/SolidStateGroup/bullet-train-nodejs-client/raw/master/hero.png"/>
 
 ## Getting Started
 
@@ -19,7 +19,7 @@ These instructions will get you a copy of the project up and running on your loc
 ## Usage
 **Retrieving feature flags for your project**
 
-**For full documentation visit [https://bullet-train.io/documentation](https://www.bullet-train.io/documentation)**
+**For full documentation visit [https://docs.bullet-train.io](https://docs.bullet-train.io)**
 ```javascript
 var bulletTrain = require("bullet-train-nodejs");
 
@@ -57,9 +57,22 @@ bulletTrain.getValue("header")
 | Property        | Description           | Required  | Default Value  |
 | ------------- |:-------------:| -----:| -----:|
 | ```environmentID```     | Defines which project environment you wish to get flags for. *example ACME Project - Staging.* | **YES** | null
-| ```onError```     | Callback function on failure to retrieve flags. ``` (error)=>{...} ``` | | null
-| ```defaultFlags```     | Callback function on failure to retrieve flags. ``` (error)=>{...} ``` | | null
-| ```api```     | Use this property to define where you're getting feature flags from, e.g. if you're self hosting. |  https://featureflagger.3qqe.flynnhub.com/api/
+| ```onError```     | Callback function on failure to retrieve flags. ``` (error)=>{...} ``` |  **NO** | null
+| ```defaultFlags```     | Defines the default flags if there are any | **NO** | null
+| ```api```     | Use this property to define where you're getting feature flags from, e.g. if you're self hosting. |  **NO** | https://bullet-train-api.dokku1.solidstategroup.com/api/v1/
+
+**Available Functions**
+
+| Property        | Description |         
+| ------------- |:-------------:|
+| ```init```     | Initialise the sdk against a particular environment
+| ```hasFeature(key)```     | Get the value of a particular feature e.g. ```bulletTrain.hasFeature("powerUserFeature") // true```
+| ```hasFeature(key, userId)```     | Get the value of a particular feature for a user e.g. ```bulletTrain.hasFeature("powerUserFeature", 1234) // true```
+| ```getValue(key)```     | Get the value of a particular feature e.g. ```bulletTrain.getValue("font_size") // 10```
+| ```getValue(keym userId)```     | Get the value of a particular feature for a specificed user e.g. ```bulletTrain.getValue("font_size", 1234) // 15```
+| ```getFlags()```     | Trigger a manual fetch of the environment features, if a user is identified it will fetch their features
+| ```getFlagsForUser(1234)```     | Trigger a manual fetch of the environment features with a given user id
+
 
 **Identifying users**
 
