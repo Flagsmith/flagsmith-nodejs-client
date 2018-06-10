@@ -5,7 +5,7 @@
 [![](https://data.jsdelivr.com/v1/package/npm/bullet-train-nodejs/badge)](https://www.jsdelivr.com/package/npm/bullet-train-nodejs)
 
 The SDK clients for NodeJS [https://bullet-train.io/](https://www.bullet-train.io/). Bullet Train allows you to manage feature flags and remote config across multiple projects, environments and organisations.
-<img width="100%" src="https://github.com/SolidStateGroup/bullet-train-nodejs-client/raw/master/hero.png"/>
+<img width="100%" src="https://raw.githubusercontent.com/SolidStateGroup/bullet-train-frontend/master/hero.png"/>
 
 ## Getting Started
 
