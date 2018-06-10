@@ -25,7 +25,6 @@ var bulletTrain = require("bullet-train-nodejs");
 
 bulletTrain.init({
 	environmentID:"<YOUR_ENVIRONMENT_KEY>"
-	}
 });
 
 
@@ -42,7 +41,7 @@ bulletTrain.hasFeature("header")
 	}
 });
 
-bulletTrain.getValue("header", '<My User Id')
+bulletTrain.getValue("header", '<My User Id>')
 .then((value) => {
 	//Show some unique value to this user
 });

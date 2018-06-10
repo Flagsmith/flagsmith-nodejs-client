@@ -22,7 +22,10 @@ const BulletTrain = class {
 
     getFlagsForUser(identity, self) {
         const { onChange, onError, api, disableCache } = this;
-
+        //Because timer functions get the timeout context we need to pass through the explicit self on timers
+        if (self === undefined) {
+            self = this;
+        }
         const handleResponse = (res) => {
             // Handle server response
             let flags = {};
@@ -38,6 +41,9 @@ const BulletTrain = class {
                     };
                 }
             });
+            self.oldFlags = userFlags[identity];
+            self.flags = userFlags[identity];
+
             return userFlags;
         };
 

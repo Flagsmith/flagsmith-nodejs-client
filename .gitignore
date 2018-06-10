@@ -4,5 +4,6 @@
 .vscode/launch.json
 .vscode/extensions.json
 
+.idea/*
 
 node_modules/
