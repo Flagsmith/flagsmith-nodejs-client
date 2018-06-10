@@ -1,3 +1,3 @@
 module.exports = {
-    api : "https://bullet-train-api.dokku1.solidstategroup.com/api/v1/"
+    api : "https://api.bullet-train.io/api/v1/"
 };
