@@ -1,0 +1,23 @@
+{
+  "name": "node-minimal",
+  "version": "0.1.1",
+  "description": "Node Express Boilerplate",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --inspect ./server",
+    "dev": "nodemon --exec npm start",
+    "test": "nodemon ./server/tests/"
+  },
+  "author": "kyle-ssg",
+  "license": "MIT",
+  "engines": {
+    "node": "7.1.x",
+    "npm": "3.10.x"
+  },
+  "dependencies": {
+    "bullet-train-nodejs": "^0.1.1",
+    "ssg-node-express": "4.14.2",
+    "ssg-util": "0.0.1"
+  },
+  "keywords": []
+}
