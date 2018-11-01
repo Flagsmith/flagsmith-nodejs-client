@@ -8,7 +8,6 @@ const BulletTrain = class {
 
         this.getJSON = function (url, method) {
             const { environmentID } = this;
-            console.log(url);
             return fetch(url + '?format=json', {
                 method: method || 'GET',
                 headers: {
