@@ -6,6 +6,14 @@ const BulletTrain = class {
     constructor(props) {
         fetch = props.fetch;
 
+        this.checkFeatureEnabled = this.checkFeatureEnabled.bind(this);
+        this.getFlags = this.getFlags.bind(this);
+        this.getFlagsForUser = this.getFlagsForUser.bind(this);
+        this.getValue = this.getValue.bind(this);
+        this.getValueFromFeatures = this.getValueFromFeatures.bind(this);
+        this.hasFeature = this.hasFeature.bind(this);
+        this.init = this.init.bind(this);
+
         this.getJSON = function (url, method) {
             const { environmentID } = this;
             return fetch(url + '?format=json', {
@@ -18,13 +26,10 @@ const BulletTrain = class {
         };
     }
 
-
-    getFlagsForUser(identity, self) {
-        const { onChange, onError, api, disableCache } = this;
+    getFlagsForUser (identity) {
+        const { onError, api } = this;
         //Because timer functions get the timeout context we need to pass through the explicit self on timers
-        if (self === undefined) {
-            self = this;
-        }
+
         const handleResponse = (res) => {
             // Handle server response
             let flags = {};
@@ -40,9 +45,6 @@ const BulletTrain = class {
                     };
                 }
             });
-            self.oldFlags = userFlags[identity];
-            self.flags = userFlags[identity];
-
             return userFlags;
         };
 
@@ -56,12 +58,8 @@ const BulletTrain = class {
             });
     }
 
-    getFlags(self) {
-        //Because timer functions get the timeout context we need to pass through the explicit self on timers
-        if (self === undefined) {
-            self = this;
-        }
-        const { onChange, onError, api, disableCache } = self;
+    getFlags() {
+        const { onError, api } = this;
 
         const handleResponse = (res) => {
             // Handle server response
@@ -72,14 +70,11 @@ const BulletTrain = class {
                     value: feature.feature_state_value
                 };
             });
-            self.oldFlags = flags;
-            self.flags = flags;
             return flags;
         };
 
         return this.getJSON(api + "flags/")
             .then(res => {
-                console.log(res);
                 return handleResponse(res);
             }).catch(({ message }) => {
                 onError && onError({ message })
@@ -87,21 +82,17 @@ const BulletTrain = class {
     };
 
     init({
-        environmentID,
-        api,
-        disableCache,
-        onError,
-        defaultFlags
-    }) {
+             environmentID,
+             api,
+             disableCache,
+             onError,
+         }) {
 
         this.environmentID = environmentID;
 
         this.api = api;
-        this.interval = null;
         this.disableCache = disableCache;
         this.onError = onError;
-        this.flags = Object.assign({}, defaultFlags) || {};
-        this.initialised = true;
 
         if (!environmentID) {
             throw ('Please specify a environment id');
@@ -109,26 +100,21 @@ const BulletTrain = class {
         if (api === undefined) {
             this.api = config.api;
         }
-        return;
     }
 
-    getAllFlags() {
-        return this.flags;
-    }
-
-    getValue(key, userId) {
+    getValue (key, userId) {
         if (userId) {
             return this.getFlagsForUser(userId).then((flags) => {
-                return this.getValueFromFlags(key, flags);
+                return this.getValueFromFeatures(key, flags);
             })
         } else {
             return this.getFlags().then((flags) => {
-                return this.getValueFromFlags(key, flags);
+                return this.getValueFromFeatures(key, flags);
             });
         }
     }
 
-    hasFeature(key, userId) {
+    hasFeature (key, userId) {
         if (userId) {
             return this.getFlagsForUser(userId).then((flags) => {
                 return this.checkFeatureEnabled(key, flags);
@@ -139,13 +125,14 @@ const BulletTrain = class {
             });
         }
     }
-    getValueFromFlags(key, flags) {
-        if (flags === undefined || flags[key] === undefined) {
-            return undefined;
+
+    getValueFromFeatures (key, flags) {
+        if (!flags) {
+            return null;
         }
-        const flag = this.flags[key];
+        const flag = flags[key];
         let res = null;
-        if (flag && flag.enabled) {
+        if (flag) {
             res = flag.value;
         }
         //todo record check for value
@@ -153,8 +140,8 @@ const BulletTrain = class {
         return res;
     }
 
-    checkFeatureEnabled(key, flags) {
-        if (flags === undefined || flags[key] === undefined) {
+    checkFeatureEnabled (key, flags) {
+        if (!flags) {
             return false;
         }
         const flag = flags[key];
