@@ -15,15 +15,20 @@ const BulletTrain = class {
         this.hasFeature = this.hasFeature.bind(this);
         this.init = this.init.bind(this);
 
-        this.getJSON = function (url, method) {
+        this.getJSON = function (url, method, body) {
             const { environmentID } = this;
-            return fetch(url + '?format=json', {
+            const options = {
                 method: method || 'GET',
+                body,
                 headers: {
                     'x-environment-key': environmentID
                 }
-            })
-            .then(res => res.json());
+            };
+            if (method !== "GET") {
+                options.headers['Content-Type'] = 'application/json; charset=utf-8';
+            }
+            return fetch(url + '?format=json', options)
+                .then(res => res.json());
         };
     }
 
@@ -183,6 +188,38 @@ const BulletTrain = class {
         }
 
         return res;
+    }
+
+    getTrait (identity, key) {
+        const { onError } = this;
+
+        if (!identity || !key) {
+            onError && onError({message: `getTrait() called without a ${!identity ? 'user identity' : 'trait key'}`});
+            return Promise.reject(`getTrait() called without a ${!identity ? 'user identity' : 'trait key'}`);
+        }
+
+        return this.getUserIdentity(identity)
+            .then(({traits}) => traits[key])
+            .catch(({ message }) => {
+                onError && onError({ message });
+                return Promise.reject(message);
+            });
+    }
+
+    setTrait (identity, key, value) {
+        const { onError, api } = this;
+
+        if (!identity || !key) {
+            onError && onError({message: `setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`});
+            return Promise.reject(`setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`);
+        }
+
+        return this.getJSON(`${api}identities/${identity}/traits/${encodeURIComponent(key)}`, 'POST', JSON.stringify({ trait_value: value }))
+            .then(() => this.getUserIdentity(identity))
+            .catch(({ message }) => {
+                onError && onError({ message });
+                return Promise.reject(message);
+            });
     }
 };
 
