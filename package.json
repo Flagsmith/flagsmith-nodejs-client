@@ -17,15 +17,22 @@
     "url": "https://github.com/SolidStateGroup/bullet-train-nodejs-client/issues"
   },
   "homepage": "http://bullet-train.io",
-  "author" : "SSG",
+  "author": "SSG",
   "contributors": [
-    { "name" : "Tom Stuart",
-       "email" : "tom@solidstategroup.com"
+    {
+      "name": "Tom Stuart",
+      "email": "tom@solidstategroup.com"
     },
-    { "name" : "Kyle Johnson",
-       "email" : "kyle@solidstategroup.com",
-       "url": "https://www.npmjs.com/~kyle-ssg"
-    }],
+    {
+      "name": "Kyle Johnson",
+      "email": "kyle@solidstategroup.com",
+      "url": "https://www.npmjs.com/~kyle-ssg"
+    },
+    {
+      "name": "Luke Fanning",
+      "email": "luke@solidstategroup.com"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
     "node-fetch": "^2.1.2"

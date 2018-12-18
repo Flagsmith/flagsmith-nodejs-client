@@ -9,6 +9,7 @@ const BulletTrain = class {
         this.checkFeatureEnabled = this.checkFeatureEnabled.bind(this);
         this.getFlags = this.getFlags.bind(this);
         this.getFlagsForUser = this.getFlagsForUser.bind(this);
+        this.getUserIdentity = this.getUserIdentity.bind(this);
         this.getValue = this.getValue.bind(this);
         this.getValueFromFeatures = this.getValueFromFeatures.bind(this);
         this.hasFeature = this.hasFeature.bind(this);
@@ -22,39 +23,69 @@ const BulletTrain = class {
                     'x-environment-key': environmentID
                 }
             })
-                .then(res => res.json());
+            .then(res => res.json());
         };
     }
 
     getFlagsForUser (identity) {
         const { onError, api } = this;
-        //Because timer functions get the timeout context we need to pass through the explicit self on timers
+
+        if (!identity) {
+            onError && onError({message: 'getFlagsForUser() called without a user identity'});
+            return Promise.reject('getFlagsForUser() called without a user identity');
+        }
 
         const handleResponse = (res) => {
             // Handle server response
             let flags = {};
-            let userFlags = {};
             res.forEach(feature => {
-                if (identity) {
-                    if (userFlags[identity] === undefined) {
-                        userFlags[identity] = {};
-                    }
-                    userFlags[identity][feature.feature.name.toLowerCase().replace(/ /g, '_')] = {
-                        enabled: feature.enabled,
-                        value: feature.feature_state_value
-                    };
-                }
+                flags[feature.feature.name.toLowerCase().replace(/ /g, '_')] = {
+                    enabled: feature.enabled,
+                    value: feature.feature_state_value
+                };
             });
-            return userFlags;
+            return flags;
         };
 
         return this.getJSON(api + 'flags/' + identity)
             .then(res => {
-                return handleResponse(res, identity);
-            }).then((flags) => {
-                return flags[identity];
+                return handleResponse(res);
             }).catch(({ message }) => {
-                onError && onError({ message })
+                onError && onError({ message });
+                return Promise.reject(message);
+            });
+    }
+
+    getUserIdentity (identity) {
+        const { onError, api } = this;
+
+        if (!identity) {
+            onError && onError({message: 'getUserIdentity() called without a user identity'});
+            return Promise.reject('getUserIdentity() called without a user identity');
+        }
+
+        const handleResponse = (res) => {
+            // Handle server response
+            let flags = {};
+            let traits = {};
+            res.flags.forEach(feature => {
+                flags[feature.feature.name.toLowerCase().replace(/ /g, '_')] = {
+                    enabled: feature.enabled,
+                    value: feature.feature_state_value
+                };
+            });
+            res.traits.forEach(({trait_key, trait_value}) => {
+                traits[trait_key.toLowerCase().replace(/ /g, '_')] = trait_value;
+            });
+            return { flags, traits };
+        };
+
+        return this.getJSON(api + 'identities/' + identity + '/')
+            .then(res => {
+                return handleResponse(res);
+            }).catch(({ message }) => {
+                onError && onError({ message });
+                return Promise.reject(message);
             });
     }
 
@@ -77,7 +108,8 @@ const BulletTrain = class {
             .then(res => {
                 return handleResponse(res);
             }).catch(({ message }) => {
-                onError && onError({ message })
+                onError && onError({ message });
+                return Promise.reject(message);
             });
     };
 
