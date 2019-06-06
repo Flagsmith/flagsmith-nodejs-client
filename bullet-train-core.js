@@ -27,7 +27,7 @@ const BulletTrain = class {
             if (method !== "GET") {
                 options.headers['Content-Type'] = 'application/json; charset=utf-8';
             }
-            return fetch(url + '?format=json', options)
+            return fetch(url, options)
                 .then(res => res.json());
         };
     }
@@ -52,7 +52,7 @@ const BulletTrain = class {
             return flags;
         };
 
-        return this.getJSON(api + 'flags/' + identity)
+        return this.getJSON(api + 'identities/?identifier=' + identity)
             .then(res => {
                 return handleResponse(res);
             }).catch(({ message }) => {
@@ -85,7 +85,7 @@ const BulletTrain = class {
             return { flags, traits };
         };
 
-        return this.getJSON(api + 'identities/' + identity + '/')
+        return this.getJSON(api + 'identities/?identifier=' + identity)
             .then(res => {
                 return handleResponse(res);
             }).catch(({ message }) => {
@@ -214,7 +214,15 @@ const BulletTrain = class {
             return Promise.reject(`setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`);
         }
 
-        return this.getJSON(`${api}identities/${identity}/traits/${encodeURIComponent(key)}`, 'POST', JSON.stringify({ trait_value: value }))
+        const body = {
+            "identity": {
+                "identifier": identity
+            },
+            "trait_key": key,
+            "trait_value": trait_value
+        }
+
+        return this.getJSON(`${api}traits/`, 'POST', JSON.stringify(body))
             .then(() => this.getUserIdentity(identity))
             .catch(({ message }) => {
                 onError && onError({ message });
