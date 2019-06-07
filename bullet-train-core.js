@@ -43,7 +43,7 @@ const BulletTrain = class {
         const handleResponse = (res) => {
             // Handle server response
             let flags = {};
-            res.forEach(feature => {
+            res.flags.forEach(feature => {
                 flags[feature.feature.name.toLowerCase().replace(/ /g, '_')] = {
                     enabled: feature.enabled,
                     value: feature.feature_state_value
