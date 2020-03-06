@@ -219,7 +219,7 @@ const BulletTrain = class {
                 "identifier": identity
             },
             "trait_key": key,
-            "trait_value": trait_value
+            "trait_value": value
         }
 
         return this.getJSON(`${api}traits/`, 'POST', JSON.stringify(body))
