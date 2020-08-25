@@ -10,22 +10,22 @@ declare module 'bullet-train-nodejs' {
     }): void
 
     /**
-     * Get the value of a particular feature e.g. bulletTrain.hasFeature("powerUserFeature")
+     * Get the whether a flag is enabled e.g. bulletTrain.hasFeature("powerUserFeature")
      */
     export function hasFeature(key: string): Promise<boolean>
 
     /**
-     * Get the value of a particular feature for a user e.g. bulletTrain.hasFeature("powerUserFeature", 1234)
+     * Get the value of a whether a flag is enabled for a user e.g. bulletTrain.hasFeature("powerUserFeature", 1234)
      */
     export function hasFeature(key: string, userId: string): Promise<boolean>
 
     /**
-     * Get the value of a particular feature e.g. bulletTrain.getValue("font_size")
+     * Get the value of a particular remote config e.g. bulletTrain.getValue("font_size")
      */
     export function getValue(key: string): Promise<string>
 
     /**
-     * Get the value of a particular feature for a specificed user e.g. bulletTrain.getValue("font_size", 1234)
+     * Get the value of a particular remote config for a specified user e.g. bulletTrain.getValue("font_size", 1234)
      */
     export function getValue(key: string, userId: string): Promise<string>
 
