@@ -22,12 +22,12 @@ declare module 'bullet-train-nodejs' {
     /**
      * Get the value of a particular remote config e.g. bulletTrain.getValue("font_size")
      */
-    export function getValue(key: string): Promise<string>
+    export function getValue(key: string): Promise<string|number|boolean>
 
     /**
      * Get the value of a particular remote config for a specified user e.g. bulletTrain.getValue("font_size", 1234)
      */
-    export function getValue(key: string, userId: string): Promise<string>
+    export function getValue(key: string, userId: string): Promise<string|number|boolean>
 
     /**
      * Trigger a manual fetch of the environment features
@@ -55,12 +55,12 @@ declare module 'bullet-train-nodejs' {
     export function setTrait(
         userId: string,
         key: string,
-        value: string
+        value: string|number|boolean
     ): IUserIdentity
 
     interface IBulletTrainFeature {
         enabled: boolean
-        value?: string
+        value?: string|number|boolean
     }
 
     interface IFlags {
