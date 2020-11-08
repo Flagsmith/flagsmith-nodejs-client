@@ -1,8 +1,8 @@
 const Router = require('express').Router;
-const environmentID = "QjgYur4LQTwe5HpvbvhpzK";
-const bulletTrain = require("bullet-train-nodejs");
+const environmentID = "uCDQzKWgejrutqSYYsKWen";
+const flagsmith = require("flagsmith-nodejs");
 
-bulletTrain.init({
+flagsmith.init({
     environmentID
 });
 
@@ -10,14 +10,14 @@ module.exports = () => {
     const api = Router();
 
     api.get('/', (req, res) => {
-        bulletTrain.getValue("font_size")
+        flagsmith.getValue("font_size")
             .then((font_size) => {
                 res.json({font_size})
             });
     });
 
     api.get('/:user', (req, res) => {
-        bulletTrain.getValue("font_size", "bullet_train_sample_user")
+        flagsmith.getValue("font_size", "flagsmith_sample_user")
             .then((font_size) => {
                 res.json({font_size})
             });

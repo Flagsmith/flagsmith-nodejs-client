@@ -23,7 +23,7 @@ console.log();
 console.log('Go to http://localhost:'+PORT+'/');
 console.log('To get an example feature state');
 console.log();
-console.log('Go to http://localhost:'+PORT+'/bullet_train_sample_user');
+console.log('Go to http://localhost:'+PORT+'/flagsmith_sample_user');
 console.log('To get an example feature state for a user');
 
 module.exports = app;

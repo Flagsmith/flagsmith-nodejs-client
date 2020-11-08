@@ -1,6 +1,6 @@
 const config = require("./config");
 const fetch = require('node-fetch').default;
-const bt = require('./bullet-train-core');
-const bulletTrain = bt({fetch: fetch});
+const core = require('./flagsmith-core');
+const flagsmith = core({fetch: fetch});
 
-module.exports = bulletTrain;
+module.exports = flagsmith;
