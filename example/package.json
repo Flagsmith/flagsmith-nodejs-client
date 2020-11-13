@@ -15,7 +15,7 @@
     "npm": "3.10.x"
   },
   "dependencies": {
-    "bullet-train-nodejs": "^0.1.1",
+    "flagsmith-nodejs": "^1.0.8",
     "ssg-node-express": "4.16.4",
     "ssg-util": "0.0.3"
   },

@@ -1,4 +1,4 @@
-declare module 'bullet-train-nodejs' {
+declare module 'flagsmith-nodejs' {
     /**
      * Initialise the sdk against a particular environment
      */
@@ -10,22 +10,22 @@ declare module 'bullet-train-nodejs' {
     }): void
 
     /**
-     * Get the whether a flag is enabled e.g. bulletTrain.hasFeature("powerUserFeature")
+     * Get the whether a flag is enabled e.g. flagsmith.hasFeature("powerUserFeature")
      */
     export function hasFeature(key: string): Promise<boolean>
 
     /**
-     * Get the value of a whether a flag is enabled for a user e.g. bulletTrain.hasFeature("powerUserFeature", 1234)
+     * Get the value of a whether a flag is enabled for a user e.g. flagsmith.hasFeature("powerUserFeature", 1234)
      */
     export function hasFeature(key: string, userId: string): Promise<boolean>
 
     /**
-     * Get the value of a particular remote config e.g. bulletTrain.getValue("font_size")
+     * Get the value of a particular remote config e.g. flagsmith.getValue("font_size")
      */
     export function getValue(key: string): Promise<string|number|boolean>
 
     /**
-     * Get the value of a particular remote config for a specified user e.g. bulletTrain.getValue("font_size", 1234)
+     * Get the value of a particular remote config for a specified user e.g. flagsmith.getValue("font_size", 1234)
      */
     export function getValue(key: string, userId: string): Promise<string|number|boolean>
 
@@ -58,13 +58,13 @@ declare module 'bullet-train-nodejs' {
         value: string|number|boolean
     ): IUserIdentity
 
-    interface IBulletTrainFeature {
+    interface IFeature {
         enabled: boolean
         value?: string|number|boolean
     }
 
     interface IFlags {
-        [key: string]: IBulletTrainFeature
+        [key: string]: IFeature
     }
 
     interface ITraits {
@@ -72,7 +72,7 @@ declare module 'bullet-train-nodejs' {
     }
 
     interface IUserIdentity {
-        flags: IBulletTrainFeature
+        flags: IFeature
         traits: ITraits
     }
 }

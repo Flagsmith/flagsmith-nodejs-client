@@ -1,12 +1,11 @@
 <img width="100%" src="https://raw.githubusercontent.com/SolidStateGroup/bullet-train-frontend/master/hero.png"/>
 
-# Bullet Train Client
+# Flagsmith Client
 
-[![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/SolidStateGroup/bullettrain?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![npm version](https://badge.fury.io/js/bullet-train-nodejs.svg)](https://badge.fury.io/js/bullet-train-nodejs)
-[![](https://data.jsdelivr.com/v1/package/npm/bullet-train-nodejs/badge)](https://www.jsdelivr.com/package/npm/bullet-train-nodejs)
+[![npm version](https://badge.fury.io/js/flagsmith-nodejs.svg)](https://badge.fury.io/js/flagsmith-nodejs)
+[![](https://data.jsdelivr.com/v1/package/npm/flagsmith-nodejs/badge)](https://www.jsdelivr.com/package/npm/flagsmith-nodejs)
 
-The SDK clients for NodeJS [https://bullet-train.io/](https://www.bullet-train.io/). Bullet Train allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+The SDK clients for NodeJS [https://bullet-train.io/](https://www.bullet-train.io/). Flagsmith allows you to manage feature flags and remote config across multiple projects, environments and organisations.
 
 ## Getting Started
 
@@ -16,7 +15,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### VIA npm
 
-```npm i bullet-train-nodejs --save```
+```npm i flagsmith-nodejs --save```
 
 ## Usage
 
@@ -25,31 +24,31 @@ These instructions will get you a copy of the project up and running on your loc
 *For full documentation visit [https://docs.bullet-train.io](https://docs.bullet-train.io)*
 
 ```javascript
-var bulletTrain = require("bullet-train-nodejs");
+var flagsmith = require("flagsmith-nodejs");
 
-bulletTrain.init({
+flagsmith.init({
     environmentID:"<YOUR_ENVIRONMENT_KEY>"
 });
 
-bulletTrain.hasFeature("header", '<My User Id>')
+flagsmith.hasFeature("header", '<My User Id>')
 .then((featureEnabled) => {
     if (featureEnabled) {
         //Show my awesome cool new feature to this one user
     }
 });
-bulletTrain.hasFeature("header")
+flagsmith.hasFeature("header")
 .then((featureEnabled) => {
     if (featureEnabled) {
         //Show my awesome cool new feature to the world
     }
 });
 
-bulletTrain.getValue("header", '<My User Id>')
+flagsmith.getValue("header", '<My User Id>')
 .then((value) => {
     //Show some unique value to this user
 });
 
-bulletTrain.getValue("header")
+flagsmith.getValue("header")
 .then((value) => {
     //Show a value to the world
 });
@@ -69,10 +68,10 @@ bulletTrain.getValue("header")
 | Property        | Description |
 | ------------- |:-------------:|
 | ```init```     | Initialise the sdk against a particular environment
-| ```hasFeature(key)```     | Get the value of a particular feature e.g. ```bulletTrain.hasFeature("powerUserFeature") // true```
-| ```hasFeature(key, userId)```     | Get the value of a particular feature for a user e.g. ```bulletTrain.hasFeature("powerUserFeature", 1234) // true```
-| ```getValue(key)```     | Get the value of a particular feature e.g. ```bulletTrain.getValue("font_size") // 10```
-| ```getValue(key, userId)```     | Get the value of a particular feature for a specificed userId e.g. ```bulletTrain.getValue("font_size", 1234) // 15```
+| ```hasFeature(key)```     | Get the value of a particular feature e.g. ```flagsmith.hasFeature("powerUserFeature") // true```
+| ```hasFeature(key, userId)```     | Get the value of a particular feature for a user e.g. ```flagsmith.hasFeature("powerUserFeature", 1234) // true```
+| ```getValue(key)```     | Get the value of a particular feature e.g. ```flagsmith.getValue("font_size") // 10```
+| ```getValue(key, userId)```     | Get the value of a particular feature for a specificed userId e.g. ```flagsmith.getValue("font_size", 1234) // 15```
 | ```getFlags()```     | Trigger a manual fetch of the environment features, if a user is identified it will fetch their features
 | ```getFlagsForUser(userId)```     | Trigger a manual fetch of the environment features with a given userId
 | ```setTrait(userId, key, value)```     | Set the name/value pair for the specified userId
@@ -80,7 +79,7 @@ bulletTrain.getValue("header")
 
 ### Identifying users
 
-Identifying users allows you to target specific users from the [Bullet Train dashboard](https://www.bullet-train.io/).
+Identifying users allows you to target specific users from the [Flagsmith dashboard](https://www.bullet-train.io/).
 You can include an optional user identifier as part of the `hasFeature` and `getValue` methods to retrieve unique user flags and variables.
 
 ## Contributing
@@ -101,6 +100,6 @@ If you have any questions about our projects you can email <a href="mailto:suppo
 
 [Documentation](https://docs.bullet-train.io/)
 
-[Code Examples](https://github.com/BulletTrainHQ/bullet-train-docs)
+[Code Examples](https://github.com/flagsmithHQ/bullet-train-docs)
 
 [Youtube Tutorials](https://www.youtube.com/channel/UCki7GZrOdZZcsV9rAIRchCw)

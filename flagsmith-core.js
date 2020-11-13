@@ -1,7 +1,7 @@
 let fetch;
 const BULLET_TRAIN_KEY = "BULLET_TRAIN_DB";
 
-const BulletTrain = class {
+const FlagsmithCore = class {
 
     constructor(props) {
         fetch = props.fetch;
@@ -232,5 +232,5 @@ const BulletTrain = class {
 };
 
 module.exports = function ({ fetch }) {
-    return new BulletTrain({ fetch });
+    return new FlagsmithCore({ fetch });
 };

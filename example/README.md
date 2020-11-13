@@ -1,4 +1,4 @@
-Bullet Train example
+Flagsmith example
 ==================================
 
 
@@ -18,4 +18,4 @@ Getting Started
 ```npm run dev```
 
 # The project
-- ``/server/api`` contains a simple express api that interacts with Bullet Train 
+- ``/server/api`` contains a simple express api that interacts with Flagsmith 
