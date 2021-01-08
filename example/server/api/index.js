@@ -16,6 +16,13 @@ module.exports = () => {
             });
     });
 
+    api.get('/flags', (req, res) => {
+        flagsmith.getFlags()
+            .then((flags) => {
+                res.json(flags)
+            });
+    });
+
     api.get('/:user', (req, res) => {
         flagsmith.getValue("font_size", "flagsmith_sample_user")
             .then((font_size) => {
