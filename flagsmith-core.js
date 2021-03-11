@@ -28,7 +28,14 @@ const FlagsmithCore = class {
                 options.headers['Content-Type'] = 'application/json; charset=utf-8';
             }
             return fetch(url, options)
-                .then(res => res.json());
+                .then(res => {
+                    return res.json()
+                    .then(result => {
+                        if (res.status < 200 || res.status >= 400) {
+                            Promise.reject(new Error(result.detail))
+                        } else return result;
+                    })
+                });
         };
     }
 
