@@ -127,15 +127,12 @@ const FlagsmithCore = class {
 
         this.environmentID = environmentID;
 
-        this.api = api;
+        this.api = api || "https://api.bullet-train.io/api/v1/";
         this.disableCache = disableCache;
         this.onError = onError;
 
         if (!environmentID) {
             throw ('Please specify a environment id');
-        }
-        if (api === undefined) {
-            this.api = config.api;
         }
     }
 
