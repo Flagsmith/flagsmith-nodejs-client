@@ -1,5 +1,4 @@
 let fetch;
-const BULLET_TRAIN_KEY = "BULLET_TRAIN_DB";
 
 const FlagsmithCore = class {
 
