@@ -1,5 +1,4 @@
 let fetch;
-const BULLET_TRAIN_KEY = "BULLET_TRAIN_DB";
 
 const FlagsmithCore = class {
 
@@ -28,7 +27,14 @@ const FlagsmithCore = class {
                 options.headers['Content-Type'] = 'application/json; charset=utf-8';
             }
             return fetch(url, options)
-                .then(res => res.json());
+                .then(res => {
+                    return res.json()
+                    .then(result => {
+                        if (res.status < 200 || res.status >= 400) {
+                            Promise.reject(new Error(result.detail))
+                        } else return result;
+                    })
+                });
         };
     }
 
@@ -124,19 +130,15 @@ const FlagsmithCore = class {
              disableCache,
              onError,
          }) {
+        if (!environmentID) {
+            throw new Error('Please specify a environment id');
+        }
 
         this.environmentID = environmentID;
 
-        this.api = api;
+        this.api = api || "https://api.bullet-train.io/api/v1/";
         this.disableCache = disableCache;
         this.onError = onError;
-
-        if (!environmentID) {
-            throw ('Please specify a environment id');
-        }
-        if (api === undefined) {
-            this.api = config.api;
-        }
     }
 
     getValue (key, userId) {
