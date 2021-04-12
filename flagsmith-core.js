@@ -1,7 +1,6 @@
 let fetch;
 
 const FlagsmithCore = class {
-
     constructor(props) {
         fetch = props.fetch;
 
@@ -23,30 +22,28 @@ const FlagsmithCore = class {
                     'x-environment-key': environmentID
                 }
             };
-            if (method !== "GET") {
+            if (method !== 'GET') {
                 options.headers['Content-Type'] = 'application/json; charset=utf-8';
             }
-            return fetch(url, options)
-                .then(res => {
-                    return res.json()
-                    .then(result => {
-                        if (res.status < 200 || res.status >= 400) {
-                            Promise.reject(new Error(result.detail))
-                        } else return result;
-                    })
+            return fetch(url, options).then(res => {
+                return res.json().then(result => {
+                    if (res.status < 200 || res.status >= 400) {
+                        Promise.reject(new Error(result.detail));
+                    } else return result;
                 });
+            });
         };
     }
 
-    getFlagsForUser (identity) {
+    getFlagsForUser(identity) {
         const { onError, api } = this;
 
         if (!identity) {
-            onError && onError({message: 'getFlagsForUser() called without a user identity'});
+            onError && onError({ message: 'getFlagsForUser() called without a user identity' });
             return Promise.reject('getFlagsForUser() called without a user identity');
         }
 
-        const handleResponse = (res) => {
+        const handleResponse = res => {
             // Handle server response
             let flags = {};
             res.flags.forEach(feature => {
@@ -61,21 +58,22 @@ const FlagsmithCore = class {
         return this.getJSON(api + 'identities/?identifier=' + identity)
             .then(res => {
                 return handleResponse(res);
-            }).catch(({ message }) => {
+            })
+            .catch(({ message }) => {
                 onError && onError({ message });
                 return Promise.reject(message);
             });
     }
 
-    getUserIdentity (identity) {
+    getUserIdentity(identity) {
         const { onError, api } = this;
 
         if (!identity) {
-            onError && onError({message: 'getUserIdentity() called without a user identity'});
+            onError && onError({ message: 'getUserIdentity() called without a user identity' });
             return Promise.reject('getUserIdentity() called without a user identity');
         }
 
-        const handleResponse = (res) => {
+        const handleResponse = res => {
             // Handle server response
             let flags = {};
             let traits = {};
@@ -85,7 +83,7 @@ const FlagsmithCore = class {
                     value: feature.feature_state_value
                 };
             });
-            res.traits.forEach(({trait_key, trait_value}) => {
+            res.traits.forEach(({ trait_key, trait_value }) => {
                 traits[trait_key.toLowerCase().replace(/ /g, '_')] = trait_value;
             });
             return { flags, traits };
@@ -94,7 +92,8 @@ const FlagsmithCore = class {
         return this.getJSON(api + 'identities/?identifier=' + identity)
             .then(res => {
                 return handleResponse(res);
-            }).catch(({ message }) => {
+            })
+            .catch(({ message }) => {
                 onError && onError({ message });
                 return Promise.reject(message);
             });
@@ -103,7 +102,7 @@ const FlagsmithCore = class {
     getFlags() {
         const { onError, api } = this;
 
-        const handleResponse = (res) => {
+        const handleResponse = res => {
             // Handle server response
             let flags = {};
             res.forEach(feature => {
@@ -115,55 +114,52 @@ const FlagsmithCore = class {
             return flags;
         };
 
-        return this.getJSON(api + "flags/")
+        return this.getJSON(api + 'flags/')
             .then(res => {
                 return handleResponse(res);
-            }).catch(({ message }) => {
+            })
+            .catch(({ message }) => {
                 onError && onError({ message });
                 return Promise.reject(message);
             });
-    };
+    }
 
-    init({
-             environmentID,
-             api,
-             onError,
-         }) {
+    init({ environmentID, api, onError }) {
         if (!environmentID) {
             throw new Error('Please specify a environment id');
         }
 
         this.environmentID = environmentID;
 
-        this.api = api || "https://api.bullet-train.io/api/v1/";
+        this.api = api || 'https://api.bullet-train.io/api/v1/';
         this.onError = onError;
     }
 
-    getValue (key, userId) {
+    getValue(key, userId) {
         if (userId) {
-            return this.getFlagsForUser(userId).then((flags) => {
+            return this.getFlagsForUser(userId).then(flags => {
                 return this.getValueFromFeatures(key, flags);
-            })
+            });
         } else {
-            return this.getFlags().then((flags) => {
+            return this.getFlags().then(flags => {
                 return this.getValueFromFeatures(key, flags);
             });
         }
     }
 
-    hasFeature (key, userId) {
+    hasFeature(key, userId) {
         if (userId) {
-            return this.getFlagsForUser(userId).then((flags) => {
+            return this.getFlagsForUser(userId).then(flags => {
                 return this.checkFeatureEnabled(key, flags);
-            })
+            });
         } else {
-            return this.getFlags().then((flags) => {
+            return this.getFlags().then(flags => {
                 return this.checkFeatureEnabled(key, flags);
             });
         }
     }
 
-    getValueFromFeatures (key, flags) {
+    getValueFromFeatures(key, flags) {
         if (!flags) {
             return null;
         }
@@ -177,7 +173,7 @@ const FlagsmithCore = class {
         return res;
     }
 
-    checkFeatureEnabled (key, flags) {
+    checkFeatureEnabled(key, flags) {
         if (!flags) {
             return false;
         }
@@ -190,37 +186,51 @@ const FlagsmithCore = class {
         return res;
     }
 
-    getTrait (identity, key) {
+    getTrait(identity, key) {
         const { onError } = this;
 
         if (!identity || !key) {
-            onError && onError({message: `getTrait() called without a ${!identity ? 'user identity' : 'trait key'}`});
-            return Promise.reject(`getTrait() called without a ${!identity ? 'user identity' : 'trait key'}`);
+            onError &&
+                onError({
+                    message: `getTrait() called without a ${
+                        !identity ? 'user identity' : 'trait key'
+                    }`
+                });
+            return Promise.reject(
+                `getTrait() called without a ${!identity ? 'user identity' : 'trait key'}`
+            );
         }
 
         return this.getUserIdentity(identity)
-            .then(({traits}) => traits[key])
+            .then(({ traits }) => traits[key])
             .catch(({ message }) => {
                 onError && onError({ message });
                 return Promise.reject(message);
             });
     }
 
-    setTrait (identity, key, value) {
+    setTrait(identity, key, value) {
         const { onError, api } = this;
 
         if (!identity || !key) {
-            onError && onError({message: `setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`});
-            return Promise.reject(`setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`);
+            onError &&
+                onError({
+                    message: `setTrait() called without a ${
+                        !identity ? 'user identity' : 'trait key'
+                    }`
+                });
+            return Promise.reject(
+                `setTrait() called without a ${!identity ? 'user identity' : 'trait key'}`
+            );
         }
 
         const body = {
-            "identity": {
-                "identifier": identity
+            identity: {
+                identifier: identity
             },
-            "trait_key": key,
-            "trait_value": value
-        }
+            trait_key: key,
+            trait_value: value
+        };
 
         return this.getJSON(`${api}traits/`, 'POST', JSON.stringify(body))
             .then(() => this.getUserIdentity(identity))

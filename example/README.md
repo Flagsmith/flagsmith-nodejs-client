@@ -1,21 +1,21 @@
-Flagsmith example
-==================================
+# Flagsmith example
 
-
-Getting Started
----------------
+## Getting Started
 
 # Setup via cli
 
-```npm i ssg-node -g```
+`npm i ssg-node -g`
 
-```ssg-node PROJECT_NAME```
+`ssg-node PROJECT_NAME`
 
 # Run
-```$ npm start```
+
+`$ npm start`
 
 # Nodemon (Restart server on changes)
-```npm run dev```
+
+`npm run dev`
 
 # The project
-- ``/server/api`` contains a simple express api that interacts with Flagsmith 
+
+-   `/server/api` contains a simple express api that interacts with Flagsmith
