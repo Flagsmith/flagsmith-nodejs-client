@@ -1,9 +1,13 @@
 const Router = require('express').Router;
 const environmentID = 'uCDQzKWgejrutqSYYsKWen';
-const flagsmith = require('flagsmith-nodejs');
+const flagsmith = require('../../../');
+const NodeCache = require('node-cache');
 
 flagsmith.init({
     environmentID
+    /*cache: new NodeCache({
+        stdTTL: 5
+    })*/
 });
 
 module.exports = () => {
