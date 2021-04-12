@@ -1,4 +1,5 @@
 # Contributing
+
 We're always looking to improve this project, open source contribution is encouraged so long as they adhere to our guidelines.
 
 # Pull Requests
@@ -7,7 +8,7 @@ The Solid State team will be monitoring for pull requests. When we get one, a me
 
 **A couple things to keep in mind:**
 
- - If you've changed APIs, update the documentation.
- - Keep the code style (indents, wrapping) consistent.
- - If your PR involves a lot of commits, squash them using ```git rebase -i``` as this makes it easier for us to review.
- - Keep lines under 80 characters.
+-   If you've changed APIs, update the documentation.
+-   Keep the code style (indents, wrapping) consistent.
+-   If your PR involves a lot of commits, squash them using `git rebase -i` as this makes it easier for us to review.
+-   Keep lines under 80 characters.

@@ -1,5 +1,3 @@
-const fetch = require('node-fetch').default;
-const core = require('./flagsmith-core');
-const flagsmith = core({fetch: fetch});
+const FlagsmithCore = require('./flagsmith-core');
 
-module.exports = flagsmith;
+module.exports = new FlagsmithCore();

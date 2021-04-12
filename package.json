@@ -39,7 +39,13 @@
     }
   ],
   "license": "MIT",
+  "scripts": {
+    "lint": "prettier --write ."
+  },
   "dependencies": {
     "node-fetch": "^2.1.2"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
   }
 }
