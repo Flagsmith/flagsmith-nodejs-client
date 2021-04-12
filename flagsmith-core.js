@@ -127,7 +127,6 @@ const FlagsmithCore = class {
     init({
              environmentID,
              api,
-             disableCache,
              onError,
          }) {
         if (!environmentID) {
@@ -137,7 +136,6 @@ const FlagsmithCore = class {
         this.environmentID = environmentID;
 
         this.api = api || "https://api.bullet-train.io/api/v1/";
-        this.disableCache = disableCache;
         this.onError = onError;
     }
 
