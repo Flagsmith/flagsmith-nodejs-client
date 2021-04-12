@@ -7,6 +7,7 @@ declare module 'flagsmith-nodejs' {
         onError?: Function;
         defaultFlags?: string[];
         api?: string;
+        cache?: ICache;
     }): void;
 
     /**
@@ -74,5 +75,11 @@ declare module 'flagsmith-nodejs' {
     interface IUserIdentity {
         flags: IFeature;
         traits: ITraits;
+    }
+
+    interface ICache {
+        has(key: string): boolean | Promise<boolean>;
+        get(key: string): any | Promise<any>;
+        set(key: string, val: any): void | Promise<void>;
     }
 }

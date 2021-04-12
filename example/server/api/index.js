@@ -5,6 +5,7 @@ const NodeCache = require('node-cache');
 
 flagsmith.init({
     environmentID
+    // this is an example of a user-defined cache
     /*cache: new NodeCache({
         stdTTL: 5
     })*/
