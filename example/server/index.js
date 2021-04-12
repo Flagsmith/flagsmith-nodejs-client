@@ -1,5 +1,3 @@
-global.fetch = require('fetchify')(Promise).fetch; // polyfil
-
 const http = require('http');
 const express = require('express');
 const api = require('./api');
