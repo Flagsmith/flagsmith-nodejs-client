@@ -35,7 +35,7 @@ const FlagsmithCore = class {
         };
     }
 
-    init({ environmentID, api, onError }) {
+    init({ environmentID, api, onError, cache }) {
         if (!environmentID) {
             throw new Error('Please specify a environment id');
         }
@@ -44,9 +44,32 @@ const FlagsmithCore = class {
 
         this.api = api || 'https://api.bullet-train.io/api/v1/';
         this.onError = onError;
+
+        if (cache) {
+            const missingMethods = [];
+
+            ['has', 'get', 'set'].forEach(method => {
+                if (!cache[method]) missingMethods.push(method);
+            });
+
+            if (missingMethods.length > 0) {
+                throw new Error(
+                    `Please implement the following methods in your cache: ${missingMethods.join(
+                        ', '
+                    )}`
+                );
+            }
+        }
+        this.cache = cache;
     }
 
-    getFlagsForUser(identity) {
+    async getFlagsForUser(identity) {
+        const cacheKey = `flags-${identity}`;
+
+        if (this.cache && (await this.cache.has(cacheKey))) {
+            return this.cache.get(cacheKey);
+        }
+
         const { onError, api } = this;
 
         if (!identity) {
@@ -54,7 +77,7 @@ const FlagsmithCore = class {
             return Promise.reject('getFlagsForUser() called without a user identity');
         }
 
-        const handleResponse = res => {
+        const handleResponse = async res => {
             // Handle server response
             let flags = {};
             res.flags.forEach(feature => {
@@ -63,6 +86,9 @@ const FlagsmithCore = class {
                     value: feature.feature_state_value
                 };
             });
+
+            if (this.cache) await this.cache.set(cacheKey, flags);
+
             return flags;
         };
 
@@ -76,7 +102,13 @@ const FlagsmithCore = class {
             });
     }
 
-    getUserIdentity(identity) {
+    async getUserIdentity(identity) {
+        const cacheKey = `flags_traits-${identity}`;
+
+        if (this.cache && (await this.cache.has(cacheKey))) {
+            return this.cache.get(cacheKey);
+        }
+
         const { onError, api } = this;
 
         if (!identity) {
@@ -84,7 +116,7 @@ const FlagsmithCore = class {
             return Promise.reject('getUserIdentity() called without a user identity');
         }
 
-        const handleResponse = res => {
+        const handleResponse = async res => {
             // Handle server response
             let flags = {};
             let traits = {};
@@ -97,6 +129,9 @@ const FlagsmithCore = class {
             res.traits.forEach(({ trait_key, trait_value }) => {
                 traits[trait_key.toLowerCase().replace(/ /g, '_')] = trait_value;
             });
+
+            if (this.cache) await this.cache.set(cacheKey, { flags, traits });
+
             return { flags, traits };
         };
 
@@ -110,10 +145,14 @@ const FlagsmithCore = class {
             });
     }
 
-    getFlags() {
+    async getFlags() {
+        if (this.cache && (await this.cache.has('flags'))) {
+            return this.cache.get('flags');
+        }
+
         const { onError, api } = this;
 
-        const handleResponse = res => {
+        const handleResponse = async res => {
             // Handle server response
             let flags = {};
             res.forEach(feature => {
@@ -122,6 +161,9 @@ const FlagsmithCore = class {
                     value: feature.feature_state_value
                 };
             });
+
+            if (this.cache) await this.cache.set('flags', flags);
+
             return flags;
         };
 
