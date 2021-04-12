@@ -35,6 +35,17 @@ const FlagsmithCore = class {
         };
     }
 
+    init({ environmentID, api, onError }) {
+        if (!environmentID) {
+            throw new Error('Please specify a environment id');
+        }
+
+        this.environmentID = environmentID;
+
+        this.api = api || 'https://api.bullet-train.io/api/v1/';
+        this.onError = onError;
+    }
+
     getFlagsForUser(identity) {
         const { onError, api } = this;
 
@@ -122,17 +133,6 @@ const FlagsmithCore = class {
                 onError && onError({ message });
                 return Promise.reject(message);
             });
-    }
-
-    init({ environmentID, api, onError }) {
-        if (!environmentID) {
-            throw new Error('Please specify a environment id');
-        }
-
-        this.environmentID = environmentID;
-
-        this.api = api || 'https://api.bullet-train.io/api/v1/';
-        this.onError = onError;
     }
 
     getValue(key, userId) {
