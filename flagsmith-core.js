@@ -1,4 +1,6 @@
-const fetch = require('node-fetch');
+let fetch = require('node-fetch');
+// https://github.com/node-fetch/node-fetch/issues/450
+if (typeof fetch.default !== "undefined") fetch = fetch.default
 
 module.exports = class FlagsmithCore {
     normalizeFlags(flags) {
