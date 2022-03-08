@@ -40,12 +40,25 @@
   ],
   "license": "MIT",
   "scripts": {
-    "lint": "prettier --write ."
+    "lint": "prettier --write .",
+    "test": "jest --coverage --coverageReporters='text'",
+    "prepare": "husky install"
   },
   "dependencies": {
-    "node-fetch": "^2.1.2"
+    "big-integer": "^1.6.51",
+    "md5": "^2.3.0",
+    "node-fetch": "^2.1.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "prettier": "^2.2.1"
+    "@types/jest": "^27.4.1",
+    "@types/md5": "^2.3.2",
+    "@types/uuid": "^8.3.4",
+    "esbuild": "^0.14.25",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "prettier": "^2.2.1",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.6.2"
   }
 }

@@ -1,0 +1,3 @@
+[submodule "tests/engine-tests/engine-test-data"]
+	path = tests/engine-tests/engine-test-data
+	url = git@github.com:Flagsmith/engine-test-data.git
