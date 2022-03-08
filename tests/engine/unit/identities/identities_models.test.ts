@@ -1,7 +1,7 @@
-import { FeatureStateModel } from '../../../flagsmith-engine/features/models';
-import { IdentityModel } from '../../../flagsmith-engine/identities/models';
-import { TraitModel } from '../../../flagsmith-engine/identities/traits/models';
-import { buildIdentityModel } from '../../../flagsmith-engine/identities/util';
+import { FeatureStateModel } from '../../../../flagsmith-engine/features/models';
+import { IdentityModel } from '../../../../flagsmith-engine/identities/models';
+import { TraitModel } from '../../../../flagsmith-engine/identities/traits/models';
+import { buildIdentityModel } from '../../../../flagsmith-engine/identities/util';
 import { feature1, identityInSegment } from '../utils';
 
 test('test_composite_key', () => {

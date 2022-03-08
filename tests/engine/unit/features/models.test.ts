@@ -1,10 +1,10 @@
-import { CONSTANTS } from '../../../flagsmith-engine/features/constants';
+import { CONSTANTS } from '../../../../flagsmith-engine/features/constants';
 import {
     FeatureModel,
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel
-} from '../../../flagsmith-engine/features/models';
+} from '../../../../flagsmith-engine/features/models';
 import { feature1 } from '../utils';
 
 test('test_initializing_feature_state_creates_default_feature_state_uuid', () => {

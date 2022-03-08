@@ -1,4 +1,4 @@
-import { buildOrganizationModel } from '../../../flagsmith-engine/organisations/util';
+import { buildOrganizationModel } from '../../../../flagsmith-engine/organisations/util';
 
 test('Test builder', () => {
     const model = buildOrganizationModel({

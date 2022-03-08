@@ -1,6 +1,6 @@
-import { ALL_RULE, ANY_RULE, EQUAL } from '../../../flagsmith-engine/segments/constants';
-import { SegmentModel } from '../../../flagsmith-engine/segments/models';
-import { buildSegmentModel, buildSegmentRuleModel } from '../../../flagsmith-engine/segments/util';
+import { ALL_RULE, ANY_RULE, EQUAL } from '../../../../flagsmith-engine/segments/constants';
+import { SegmentModel } from '../../../../flagsmith-engine/segments/models';
+import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util';
 
 export const traitKey1 = 'email';
 export const traitValue1 = 'user@example.com';

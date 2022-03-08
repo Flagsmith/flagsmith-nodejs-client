@@ -3,10 +3,10 @@ import {
     getEnvironmentFeatureStates,
     getIdentityFeatureState,
     getIdentityFeatureStates
-} from '../../flagsmith-engine';
-import { CONSTANTS } from '../../flagsmith-engine/features/constants';
-import { FeatureModel, FeatureStateModel } from '../../flagsmith-engine/features/models';
-import { TraitModel } from '../../flagsmith-engine/identities/traits/models';
+} from '../../../flagsmith-engine';
+import { CONSTANTS } from '../../../flagsmith-engine/features/constants';
+import { FeatureModel, FeatureStateModel } from '../../../flagsmith-engine/features/models';
+import { TraitModel } from '../../../flagsmith-engine/identities/traits/models';
 import {
     environment,
     environmentWithSegmentOverride,

@@ -3,13 +3,13 @@ import {
     ANY_RULE,
     CONDITION_OPERATORS,
     NONE_RULE
-} from '../../../flagsmith-engine/segments/constants';
+} from '../../../../flagsmith-engine/segments/constants';
 import {
     all,
     any,
     SegmentConditionModel,
     SegmentRuleModel
-} from '../../../flagsmith-engine/segments/models';
+} from '../../../../flagsmith-engine/segments/models';
 
 const conditionMatchCases: [string, string | number | boolean, string, boolean][] = [
     [CONDITION_OPERATORS.EQUAL, 'bar', 'bar', true],

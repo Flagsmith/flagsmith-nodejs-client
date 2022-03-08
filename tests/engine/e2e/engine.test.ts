@@ -1,10 +1,9 @@
 import { readFileSync } from 'fs';
-import { getIdentityFeatureStates } from '../../flagsmith-engine';
-import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
-import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util';
-import { IdentityModel } from '../../flagsmith-engine/identities/models';
-import { buildIdentityModel } from '../../flagsmith-engine/identities/util';
-import { identityInSegment } from '../unit/utils';
+import { getIdentityFeatureStates } from '../../../flagsmith-engine';
+import { EnvironmentModel } from '../../../flagsmith-engine/environments/models';
+import { buildEnvironmentModel } from '../../../flagsmith-engine/environments/util';
+import { IdentityModel } from '../../../flagsmith-engine/identities/models';
+import { buildIdentityModel } from '../../../flagsmith-engine/identities/util';
 
 function extractTestCases(
     filePath: string
@@ -29,7 +28,7 @@ function extractTestCases(
 
 test('Test Engine', () => {
     const testCases = extractTestCases(
-        __dirname + '/engine-test-data/data/environment_n9fbf9h3v4fFgH3U3ngWhb.json'
+        __dirname + '/../engine-tests/engine-test-data/data/environment_n9fbf9h3v4fFgH3U3ngWhb.json'
     );
     for (const testCase of testCases) {
         const engine_response = getIdentityFeatureStates(testCase.environment, testCase.identity);

@@ -1,6 +1,6 @@
-import { FeatureStateModel } from '../../../flagsmith-engine/features/models';
-import { IdentityModel } from '../../../flagsmith-engine/identities/models';
-import { buildIdentityModel } from '../../../flagsmith-engine/identities/util';
+import { FeatureStateModel } from '../../../../flagsmith-engine/features/models';
+import { IdentityModel } from '../../../../flagsmith-engine/identities/models';
+import { buildIdentityModel } from '../../../../flagsmith-engine/identities/util';
 
 test('test_build_identity_model_from_dictionary_no_feature_states', () => {
     const identity = {

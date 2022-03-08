@@ -1,13 +1,13 @@
-import { EnvironmentModel } from '../../../flagsmith-engine/environments/models';
+import { EnvironmentModel } from '../../../../flagsmith-engine/environments/models';
 import {
     buildEnvironmentAPIKeyModel,
     buildEnvironmentModel
-} from '../../../flagsmith-engine/environments/util';
-import { CONSTANTS } from '../../../flagsmith-engine/features/constants';
+} from '../../../../flagsmith-engine/environments/util';
+import { CONSTANTS } from '../../../../flagsmith-engine/features/constants';
 import {
     FeatureStateModel,
     MultivariateFeatureStateValueModel
-} from '../../../flagsmith-engine/features/models';
+} from '../../../../flagsmith-engine/features/models';
 import { getEnvironmentFeatureStateForFeatureByName } from '../utils';
 
 test('test_get_flags_for_environment_returns_feature_states_for_environment_dictionary', () => {

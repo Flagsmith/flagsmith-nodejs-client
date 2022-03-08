@@ -1,4 +1,4 @@
-import { EnvironmentAPIKeyModel } from '../../../flagsmith-engine/environments/models';
+import { EnvironmentAPIKeyModel } from '../../../../flagsmith-engine/environments/models';
 
 test('test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key', () => {
     const environmentAPIKeyModel = new EnvironmentAPIKeyModel(

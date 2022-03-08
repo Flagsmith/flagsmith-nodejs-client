@@ -1,16 +1,16 @@
-import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
-import { CONSTANTS } from '../../flagsmith-engine/features/constants';
-import { FeatureModel, FeatureStateModel } from '../../flagsmith-engine/features/models';
-import { IdentityModel } from '../../flagsmith-engine/identities/models';
-import { TraitModel } from '../../flagsmith-engine/identities/traits/models';
-import { OrganisationModel } from '../../flagsmith-engine/organisations/models';
-import { ProjectModel } from '../../flagsmith-engine/projects/models';
-import { ALL_RULE, EQUAL } from '../../flagsmith-engine/segments/constants';
+import { EnvironmentModel } from '../../../flagsmith-engine/environments/models';
+import { CONSTANTS } from '../../../flagsmith-engine/features/constants';
+import { FeatureModel, FeatureStateModel } from '../../../flagsmith-engine/features/models';
+import { IdentityModel } from '../../../flagsmith-engine/identities/models';
+import { TraitModel } from '../../../flagsmith-engine/identities/traits/models';
+import { OrganisationModel } from '../../../flagsmith-engine/organisations/models';
+import { ProjectModel } from '../../../flagsmith-engine/projects/models';
+import { ALL_RULE, EQUAL } from '../../../flagsmith-engine/segments/constants';
 import {
     SegmentConditionModel,
     SegmentModel,
     SegmentRuleModel
-} from '../../flagsmith-engine/segments/models';
+} from '../../../flagsmith-engine/segments/models';
 
 export const segmentConditionProperty = 'foo';
 export const segmentConditionStringValue = 'bar';
