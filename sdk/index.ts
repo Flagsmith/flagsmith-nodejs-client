@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
@@ -10,10 +9,8 @@ import { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 import { DefaultFlag, Flags } from './models';
 import { EnvironmentDataPollingManager } from './polling_manager';
-import { generateIdentitiesData } from './utils';
+import { generateIdentitiesData, retryFetch } from './utils';
 
-// @ts-ignore
-if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
 
 export class Flagsmith {
@@ -160,12 +157,18 @@ export class Flagsmith {
             }
         }
 
-        const data = await fetch(url, {
-            method: method,
-            timeout: this.requestTimeoutSeconds || undefined,
-            body: JSON.stringify(body),
-            headers: headers
-        });
+        const data = await retryFetch(
+            url,
+            {
+                method: method,
+                timeout: this.requestTimeoutSeconds || undefined,
+                body: JSON.stringify(body),
+                headers: headers
+            },
+            this.retries,
+            1000,
+            (this.requestTimeoutSeconds || 10) * 1000
+        );
 
         if (data.status !== 200) {
             throw new FlagsmithAPIError(
