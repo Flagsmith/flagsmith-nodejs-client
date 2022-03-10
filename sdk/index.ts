@@ -32,7 +32,36 @@ export class Flagsmith {
     environmentDataPollingManager?: EnvironmentDataPollingManager;
     environment?: EnvironmentModel;
     private analyticsProcessor?: AnalyticsProcessor;
-
+    /**
+     * A Flagsmith client.
+     * 
+     * Provides an interface for interacting with the Flagsmith http API.
+     * Basic Usage::
+     * 
+     * import flagsmith from Flagsmith
+     * const flagsmith = new Flagsmith({environmentKey: '<your API key>'});
+     * const environmentFlags = flagsmith.getEnvironmentFlags();
+     * const featureEnabled = environmentFlags.isFeatureEnabled('foo');
+     * const identityFlags = flagsmith.getIdentityFlags('identifier', {'foo': 'bar'});
+     * const featureEnabledForIdentity = identityFlags.isFeatureEnabled("foo")
+     * 
+     *  @param {string} data.environmentKey: The environment key obtained from Flagsmith interface
+        @param {string} data.apiUrl: Override the URL of the Flagsmith API to communicate with
+        @param  data.customHeaders: Additional headers to add to requests made to the
+            Flagsmith API
+        @param {number} data.requestTimeoutSeconds: Number of seconds to wait for a request to
+            complete before terminating the request
+        @param {boolean} data.enableLocalEvaluation: Enables local evaluation of flags
+        @param {number} data.environmentRefreshIntervalSeconds: If using local evaluation,
+            specify the interval period between refreshes of local environment data
+        @param {number} data.retries: a urllib3.Retry object to use on all http requests to the
+            Flagsmith API
+        @param {boolean} data.enableAnalytics: if enabled, sends additional requests to the Flagsmith
+            API to power flag analytics charts
+        @param data.defaultFlagHandler: callable which will be used in the case where
+            flags cannot be retrieved from the API or a non existent feature is
+            requested
+     */
     constructor(data: {
         environmentKey: string;
         apiUrl?: string;
@@ -70,13 +99,17 @@ export class Flagsmith {
 
         this.analyticsProcessor = data.enableAnalytics
             ? new AnalyticsProcessor({
-                  environmentKey: this.environmentKey,
-                  baseApiUrl: this.apiUrl,
-                  timeout: this.requestTimeoutSeconds
-              })
+                environmentKey: this.environmentKey,
+                baseApiUrl: this.apiUrl,
+                timeout: this.requestTimeoutSeconds
+            })
             : undefined;
     }
-
+    /**
+     * Get all the default for flags for the current environment.
+     * 
+     * @returns Flags object holding all the flags for the current environment.
+     */
     async getEnvironmentFlags(): Promise<Flags> {
         if (this.environment) {
             return new Promise(resolve => resolve(this.getEnvironmentFlagsFromDocument()));
@@ -84,7 +117,17 @@ export class Flagsmith {
 
         return this.getEnvironmentFlagsFromApi();
     }
-
+    /**
+     * Get all the flags for the current environment for a given identity. Will also
+        upsert all traits to the Flagsmith API for future evaluations. Providing a
+        trait with a value of None will remove the trait from the identity if it exists.
+     * 
+     * @param  {string} identifier a unique identifier for the identity in the current
+            environment, e.g. email address, username, uuid
+     * @param  {{[key:string]:any}} traits? a dictionary of traits to add / update on the identity in
+            Flagsmith, e.g. {"num_orders": 10}
+     * @returns Flags object holding all the flags for the given identity.
+     */
     getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
         traits = traits || {};
         if (this.environment) {
@@ -219,7 +262,7 @@ export class Flagsmith {
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }
 
-    stop() {}
+    stop() { }
 }
 
 export default Flagsmith;
