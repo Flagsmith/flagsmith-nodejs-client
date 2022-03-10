@@ -9,17 +9,17 @@ afterEach(() => {
 test('test_analytics_processor_track_feature_updates_analytics_data', () => {
     const aP = analyticsProcessor();
     aP.trackFeature(1);
-    expect(aP.analytics_data[1]).toBe(1);
+    expect(aP.analyticsData[1]).toBe(1);
 
     aP.trackFeature(1);
-    expect(aP.analytics_data[1]).toBe(2);
+    expect(aP.analyticsData[1]).toBe(2);
 });
 
 test('test_analytics_processor_flush_clears_analytics_data', async () => {
     const aP = analyticsProcessor();
     aP.trackFeature(1);
     await aP.flush();
-    expect(aP.analytics_data).toStrictEqual({});
+    expect(aP.analyticsData).toStrictEqual({});
 });
 
 test('test_analytics_processor_flush_post_request_data_match_ananlytics_data', async () => {

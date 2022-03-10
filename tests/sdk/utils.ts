@@ -1,14 +1,14 @@
 import { readFileSync } from 'fs';
 import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util';
 import { AnalyticsProcessor } from '../../sdk/analytics';
-import { Flagsmith } from '../../sdk/flagsmith';
+import { Flagsmith } from '../../sdk';
 
 const DATA_DIR = __dirname + '/data/';
 
 export function analyticsProcessor() {
     return new AnalyticsProcessor({
-        environment_key: 'test-key',
-        base_api_url: 'http://testUrl'
+        environmentKey: 'test-key',
+        baseApiUrl: 'http://testUrl'
     });
 }
 
@@ -18,7 +18,7 @@ export function apiKey(): string {
 
 export function flagsmith() {
     return new Flagsmith({
-        environment_key: apiKey()
+        environmentKey: apiKey()
     });
 }
 

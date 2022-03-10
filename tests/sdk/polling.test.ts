@@ -1,6 +1,6 @@
-import { Flagsmith } from '../../sdk/flagsmith';
+import { Flagsmith } from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-jest.mock('../../sdk/flagsmith');
+jest.mock('../../sdk');
 jest.mock('node-fetch');
 
 beforeEach(() => {
@@ -16,7 +16,7 @@ function sleep(ms: number) {
 
 test('test_polling_manager_calls_update_environment_on_start', async () => {
     const flagsmith = new Flagsmith({
-        environment_key: 'key'
+        environmentKey: 'key'
     });
 
     const pollingManager = new EnvironmentDataPollingManager(flagsmith, 0.1);
@@ -28,7 +28,7 @@ test('test_polling_manager_calls_update_environment_on_start', async () => {
 
 test('test_polling_manager_calls_update_environment_on_each_refresh', async () => {
     const flagsmith = new Flagsmith({
-        environment_key: 'key'
+        environmentKey: 'key'
     });
 
     const pollingManager = new EnvironmentDataPollingManager(flagsmith, 0.1);

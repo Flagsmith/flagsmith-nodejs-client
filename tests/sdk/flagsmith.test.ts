@@ -1,4 +1,4 @@
-import { Flagsmith } from '../../sdk/flagsmith';
+import { Flagsmith } from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
 import fetch, { Headers } from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
@@ -15,8 +15,8 @@ beforeEach(() => {
 
 test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
     new Flagsmith({
-        environment_key: 'key',
-        enable_local_evaluation: true
+        environmentKey: 'key',
+        enableLocalEvaluation: true
     });
     expect(EnvironmentDataPollingManager).toBeCalled();
 });
@@ -98,8 +98,8 @@ test('test_default_flag_is_used_when_no_environment_flags_returned', async () =>
     const defaultFlagHandler = (featureName: string) => defaultFlag;
 
     const flg = new Flagsmith({
-        environment_key: 'key',
-        default_flag_handler: defaultFlagHandler
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
     });
 
     const flags = await flg.getEnvironmentFlags();
@@ -117,7 +117,7 @@ test('test_non_200_response_raises_flagsmith_api_error', async () => {
     fetch.mockReturnValue(Promise.resolve(errorResponse403));
 
     const flg = new Flagsmith({
-        environment_key: 'some'
+        environmentKey: 'some'
     });
 
     await expect(flg.getEnvironmentFlags()).rejects.toThrow();
@@ -131,8 +131,8 @@ test('test_default_flag_is_not_used_when_environment_flags_returned', async () =
     const defaultFlagHandler = (featureName: string) => defaultFlag;
 
     const flg = new Flagsmith({
-        environment_key: 'key',
-        default_flag_handler: defaultFlagHandler
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
     });
 
     const flags = await flg.getEnvironmentFlags();
@@ -151,8 +151,8 @@ test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
     const defaultFlagHandler = (featureName: string) => defaultFlag;
 
     const flg = new Flagsmith({
-        environment_key: 'key',
-        default_flag_handler: defaultFlagHandler
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
     });
 
     const flags = await flg.getIdentityFlags('identifier');
@@ -171,8 +171,8 @@ test('test_default_flag_is_used_when_no_identity_flags_returned', async () => {
     const defaultFlagHandler = (featureName: string) => defaultFlag;
 
     const flg = new Flagsmith({
-        environment_key: 'key',
-        default_flag_handler: defaultFlagHandler
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
     });
 
     const flags = await flg.getIdentityFlags('identifier');
