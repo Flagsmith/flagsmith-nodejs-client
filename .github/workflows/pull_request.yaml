@@ -9,7 +9,7 @@ on:
             - ready_for_review
     push:
         branches:
-            - sdk-rewrite
+            - main
 jobs:
     build-and-test:
         runs-on: ubuntu-latest

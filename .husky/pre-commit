@@ -2,5 +2,5 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npm run lint
-git add ./flagsmith-engine ./sdk ./tests ./example ./index.ts
+git add ./flagsmith-engine ./sdk ./tests ./example ./index.ts ./.github
 npm run test
