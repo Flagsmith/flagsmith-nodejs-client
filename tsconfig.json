@@ -1,6 +1,7 @@
 {
   "include": [
-    "./flagsmith-engine"
+    "./flagsmith-engine",
+    "./sdk"
   ],
   "compilerOptions": {
     "outDir": "./build",

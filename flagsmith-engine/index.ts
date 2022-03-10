@@ -32,7 +32,7 @@ function getIdentityFeatureStatesDict(
     }
 
     // Override with any feature states defined directly the identity
-    for (const fs of identity.identityFeatures) {
+    for (const fs of identity.identityFeatures || []) {
         if (feature_states[fs.feature.id]) {
             feature_states[fs.feature.id] = fs;
         }

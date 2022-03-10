@@ -13,7 +13,7 @@ test('test_build_identity_model_from_dictionary_no_feature_states', () => {
 
     const identityModel = buildIdentityModel(identity);
 
-    expect(identityModel.identityFeatures.length).toBe(0);
+    expect(identityModel.identityFeatures?.length).toBe(0);
     expect(identityModel.identityTraits.length).toBe(1);
 });
 
@@ -39,7 +39,7 @@ test('test_build_identity_model_from_dictionary_uses_identity_feature_list_for_i
 
     const identityModel = buildIdentityModel(identity_dict);
 
-    expect(identityModel.identityFeatures.length).toBe(1);
+    expect(identityModel.identityFeatures?.length).toBe(1);
 });
 
 test('test_build_build_identity_model_from_dict_creates_identity_uuid', () => {
@@ -73,8 +73,8 @@ test('test_build_identity_model_from_dictionary_with_feature_states', () => {
     const identityModel = buildIdentityModel(identity_dict);
 
     expect(identityModel).toBeInstanceOf(IdentityModel);
-    expect(identityModel.identityFeatures.length).toBe(1);
-    expect(identityModel.identityFeatures[0]).toBeInstanceOf(FeatureStateModel);
+    expect(identityModel.identityFeatures?.length).toBe(1);
+    expect(identityModel?.identityFeatures![0]).toBeInstanceOf(FeatureStateModel);
 });
 
 test('test_identity_dict_created_using_model_can_convert_back_to_model', () => {

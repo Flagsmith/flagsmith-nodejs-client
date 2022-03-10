@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 export class IdentityModel {
     identifier: string;
     environmentApiKey: string;
-    createdDate;
+    createdDate?: number;
     identityFeatures: IdentityFeaturesList;
     identityTraits: TraitModel[];
     identityUuid: string;
