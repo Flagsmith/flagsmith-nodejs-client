@@ -12,6 +12,8 @@ import { DefaultFlag, Flags } from './models';
 import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData } from './utils';
 
+// @ts-ignore
+if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
 
 export class Flagsmith {
@@ -99,15 +101,15 @@ export class Flagsmith {
 
         this.analyticsProcessor = data.enableAnalytics
             ? new AnalyticsProcessor({
-                environmentKey: this.environmentKey,
-                baseApiUrl: this.apiUrl,
-                timeout: this.requestTimeoutSeconds
-            })
+                  environmentKey: this.environmentKey,
+                  baseApiUrl: this.apiUrl,
+                  timeout: this.requestTimeoutSeconds
+              })
             : undefined;
     }
     /**
      * Get all the default for flags for the current environment.
-     * 
+     *
      * @returns Flags object holding all the flags for the current environment.
      */
     async getEnvironmentFlags(): Promise<Flags> {
@@ -262,7 +264,7 @@ export class Flagsmith {
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }
 
-    stop() { }
+    stop() {}
 }
 
 export default Flagsmith;

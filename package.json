@@ -42,6 +42,7 @@
   "scripts": {
     "lint": "prettier --write .",
     "test": "jest --coverage --coverageReporters='text'",
+    "build": "tsc",
     "prepare": "husky install"
   },
   "dependencies": {
