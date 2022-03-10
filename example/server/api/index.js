@@ -2,7 +2,7 @@ const Router = require('express').Router;
 const { Flagsmith } = require('../../../sdk');
 
 const flagsmith = new Flagsmith({
-    environmentKey: 'some-key',
+    environmentKey: 'some-key'
 });
 
 module.exports = () => {
