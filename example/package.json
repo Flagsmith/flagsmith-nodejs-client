@@ -4,7 +4,7 @@
   "description": "Node Express Boilerplate",
   "main": "index.js",
   "scripts": {
-    "start": "node --inspect ./server",
+    "start": "cd ../ && npm run build && cd ./example && node --inspect ./server",
     "dev": "nodemon --exec npm start",
     "test": "nodemon ./server/tests/"
   },

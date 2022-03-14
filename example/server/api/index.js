@@ -1,8 +1,12 @@
 const Router = require('express').Router;
-const { Flagsmith } = require('../../../sdk');
+const { Flagsmith } = require('../../../build/sdk');
 
 const flagsmith = new Flagsmith({
-    environmentKey: 'some-key'
+    environmentKey: 'ser.dCxh8XoQc3Sw3JqMqMbhXz',
+    enableLocalEvaluation: true,
+    defaultFlagHandler: (str)=> {
+        return {enabled:false, isDefault:true, value:null}
+    }
 });
 
 module.exports = () => {
@@ -14,9 +18,10 @@ module.exports = () => {
     });
 
     api.get('/:user', async (req, res) => {
-        const flags = await flagsmith.getIdentityFlags(req.params.user);
+        const flags = await flagsmith.getIdentityFlags(req.params.user, {checkout_v2: 1});
         const fontSize = flags.getFeatureValue('font_size');
-        res.json({ fontSize });
+        const checkoutV2 = flags.isFeatureEnabled('checkout_v2');
+        res.json({ fontSize, checkoutV2 });
     });
 
     return api;

@@ -16,8 +16,9 @@ export class EnvironmentDataPollingManager {
                 await this.main.update_environment();
             }, this.refreshIntervalSeconds * 1000);
         };
-
-        this.interval = setTimeout(updateEnvironemnt, this.refreshIntervalSeconds * 1000);
+        // todo: this call should be awaited for getIdentityFlags/getEnvironmentFlags when enableLocalEvaluation is true
+        this.main.update_environment()
+        updateEnvironemnt()
     }
 
     stop() {
