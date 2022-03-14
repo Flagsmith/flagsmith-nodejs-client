@@ -136,7 +136,11 @@ export class Flagsmith {
         return this.getIdentityFlagsFromApi(identifier, traits);
     }
 
-    async update_environment() {
+    /**
+     * Updates the environment state for local flag evaluation.
+     * You only need to call this if you wish to bypass environmentRefreshIntervalSeconds.
+     */
+    async updateEnvironment() {
         this.environment = await this.getEnvironmentFromApi();
     }
 
