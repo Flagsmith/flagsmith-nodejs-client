@@ -87,7 +87,6 @@ export class Flagsmith {
         this.identitiesUrl = `${this.apiUrl}identities/`;
         this.environmentUrl = `${this.apiUrl}environment-document/`;
 
-        this.environment;
         if (this.enableLocalEvaluation) {
             this.environmentDataPollingManager = new EnvironmentDataPollingManager(
                 this,
