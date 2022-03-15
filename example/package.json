@@ -1,7 +1,7 @@
 {
-  "name": "node-minimal",
+  "name": "flagsmith-nodejs-example",
   "version": "0.1.1",
-  "description": "Node Express Boilerplate",
+  "description": "An example using the flagsmith nodejs library",
   "main": "index.js",
   "scripts": {
     "start": "cd ../ && npm run build && cd ./example && node --inspect ./server",
