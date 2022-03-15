@@ -1,5 +1,5 @@
 const Router = require('express').Router;
-const { Flagsmith } = require('../../../build/sdk');
+const Flagsmith = require('flagsmith-nodejs').default;
 const environmentKey = ""
 if(!environmentKey) {
     throw new Error("Please generate a Server Side SDK Key in environment settings to run the example")
