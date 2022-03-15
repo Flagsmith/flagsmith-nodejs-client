@@ -5,20 +5,21 @@
   "main": "build/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SolidStateGroup/bullet-train-nodejs-client"
+    "url": "https://github.com/Flagsmith/flagsmith-nodejs-client"
   },
   "keywords": [
     "nodejs",
-    "bullet train",
     "flagsmith",
-    "feature flagger",
+    "feature flags",
+    "feature toggles",
+    "remote configuration",
     "continuous deployment"
   ],
   "bugs": {
-    "url": "https://github.com/SolidStateGroup/bullet-train-nodejs-client/issues"
+    "url": "https://github.com/Flagsmith/flagsmith-nodejs-client/issues"
   },
-  "homepage": "http://bullet-train.io",
-  "author": "SSG",
+  "homepage": "http://flagsmith.com/",
+  "author": "Flagsmith",
   "contributors": [
     {
       "name": "Tom Stuart",
@@ -26,7 +27,7 @@
     },
     {
       "name": "Kyle Johnson",
-      "email": "kyle@solidstategroup.com",
+      "email": "kyle.johnson@flagsmith.com",
       "url": "https://www.npmjs.com/~kyle-ssg"
     },
     {
