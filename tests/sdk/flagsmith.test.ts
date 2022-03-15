@@ -25,7 +25,7 @@ test('test_update_environment_sets_environment', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
     const flg = flagsmith();
-    await flg.update_environment();
+    await flg.updateEnvironment();
     expect(flg.environment).toBeDefined();
 
     // @ts-ignore

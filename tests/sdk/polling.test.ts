@@ -18,7 +18,7 @@ test('test_polling_manager_calls_update_environment_on_start', async () => {
     pollingManager.start();
     await delay(500);
     pollingManager.stop();
-    expect(flagsmith.update_environment).toHaveBeenCalled();
+    expect(flagsmith.updateEnvironment).toHaveBeenCalled();
 });
 
 test('test_polling_manager_calls_update_environment_on_each_refresh', async () => {
@@ -30,5 +30,5 @@ test('test_polling_manager_calls_update_environment_on_each_refresh', async () =
     pollingManager.start();
     await delay(450);
     pollingManager.stop();
-    expect(flagsmith.update_environment).toHaveBeenCalledTimes(3);
+    expect(flagsmith.updateEnvironment).toHaveBeenCalledTimes(5);
 });

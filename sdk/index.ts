@@ -33,17 +33,17 @@ export class Flagsmith {
     private analyticsProcessor?: AnalyticsProcessor;
     /**
      * A Flagsmith client.
-     * 
+     *
      * Provides an interface for interacting with the Flagsmith http API.
      * Basic Usage::
-     * 
+     *
      * import flagsmith from Flagsmith
      * const flagsmith = new Flagsmith({environmentKey: '<your API key>'});
      * const environmentFlags = flagsmith.getEnvironmentFlags();
      * const featureEnabled = environmentFlags.isFeatureEnabled('foo');
      * const identityFlags = flagsmith.getIdentityFlags('identifier', {'foo': 'bar'});
      * const featureEnabledForIdentity = identityFlags.isFeatureEnabled("foo")
-     * 
+     *
      *  @param {string} data.environmentKey: The environment key obtained from Flagsmith interface
         @param {string} data.apiUrl: Override the URL of the Flagsmith API to communicate with
         @param  data.customHeaders: Additional headers to add to requests made to the
@@ -87,7 +87,6 @@ export class Flagsmith {
         this.identitiesUrl = `${this.apiUrl}identities/`;
         this.environmentUrl = `${this.apiUrl}environment-document/`;
 
-        this.environment;
         if (this.enableLocalEvaluation) {
             this.environmentDataPollingManager = new EnvironmentDataPollingManager(
                 this,
@@ -120,7 +119,7 @@ export class Flagsmith {
      * Get all the flags for the current environment for a given identity. Will also
         upsert all traits to the Flagsmith API for future evaluations. Providing a
         trait with a value of None will remove the trait from the identity if it exists.
-     * 
+     *
      * @param  {string} identifier a unique identifier for the identity in the current
             environment, e.g. email address, username, uuid
      * @param  {{[key:string]:any}} traits? a dictionary of traits to add / update on the identity in
@@ -137,7 +136,11 @@ export class Flagsmith {
         return this.getIdentityFlagsFromApi(identifier, traits);
     }
 
-    async update_environment() {
+    /**
+     * Updates the environment state for local flag evaluation.
+     * You only need to call this if you wish to bypass environmentRefreshIntervalSeconds.
+     */
+    async updateEnvironment() {
         this.environment = await this.getEnvironmentFromApi();
     }
 
@@ -205,7 +208,13 @@ export class Flagsmith {
             );
         }
 
-        const identityModel = this.buildIdentityModel(identifier, Object.values(traits));
+        const identityModel = this.buildIdentityModel(identifier, Object.keys(traits).map((key)=>(
+            {
+                key,
+                value: traits[key]
+            }
+        )));
+
         const featureStates = getIdentityFeatureStates(this.environment, identityModel);
 
         return Flags.fromFeatureStateModels({
@@ -256,7 +265,7 @@ export class Flagsmith {
         }
     }
 
-    private buildIdentityModel(identifier: string, traits: any[]) {
+    private buildIdentityModel(identifier: string, traits: { key:string, value:any }[]) {
         if (!this.environment) {
             throw new FlagsmithClientError(
                 'Unable to build identity model when no local environment present.'
