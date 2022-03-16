@@ -1,4 +1,4 @@
-import { Flagsmith } from '.';
+import Flagsmith from '.';
 
 export class EnvironmentDataPollingManager {
     private interval?: NodeJS.Timer;

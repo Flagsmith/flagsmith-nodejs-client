@@ -1,4 +1,4 @@
-import { Flagsmith } from '../../sdk';
+import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
 import { delay } from '../../sdk/utils';
 jest.mock('../../sdk');

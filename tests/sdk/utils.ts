@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util';
 import { AnalyticsProcessor } from '../../sdk/analytics';
-import { Flagsmith } from '../../sdk';
+import Flagsmith from '../../sdk';
 
 const DATA_DIR = __dirname + '/data/';
 

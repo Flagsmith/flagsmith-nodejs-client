@@ -1,4 +1,4 @@
-import { Flagsmith } from '../../sdk';
+import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
 import fetch, { Headers } from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';

@@ -13,7 +13,7 @@ import { generateIdentitiesData, retryFetch } from './utils';
 
 const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
 
-export class Flagsmith {
+class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
@@ -266,4 +266,5 @@ export class Flagsmith {
     }
 }
 
-export default Flagsmith;
+// export default Flagsmith;
+export = Flagsmith;
