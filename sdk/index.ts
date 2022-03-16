@@ -29,7 +29,7 @@ export class Flagsmith {
     environmentUrl: string;
 
     environmentDataPollingManager?: EnvironmentDataPollingManager;
-    environment?: EnvironmentModel;
+    environment!: EnvironmentModel;
     private analyticsProcessor?: AnalyticsProcessor;
     /**
      * A Flagsmith client.
@@ -188,12 +188,6 @@ export class Flagsmith {
     }
 
     private getEnvironmentFlagsFromDocument() {
-        if (!this.environment) {
-            throw new FlagsmithClientError(
-                'Unable to build identity model when no local environment present.'
-            );
-        }
-
         return Flags.fromFeatureStateModels({
             featureStates: getEnvironmentFeatureStates(this.environment),
             analyticsProcessor: this.analyticsProcessor,
@@ -202,18 +196,13 @@ export class Flagsmith {
     }
 
     private getIdentityFlagsFromDocument(identifier: string, traits: { [key: string]: any }) {
-        if (!this.environment) {
-            throw new FlagsmithClientError(
-                'Unable to build identity model when no local environment present.'
-            );
-        }
-
-        const identityModel = this.buildIdentityModel(identifier, Object.keys(traits).map((key)=>(
-            {
+        const identityModel = this.buildIdentityModel(
+            identifier,
+            Object.keys(traits).map(key => ({
                 key,
                 value: traits[key]
-            }
-        )));
+            }))
+        );
 
         const featureStates = getIdentityFeatureStates(this.environment, identityModel);
 
@@ -265,7 +254,7 @@ export class Flagsmith {
         }
     }
 
-    private buildIdentityModel(identifier: string, traits: { key:string, value:any }[]) {
+    private buildIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
         if (!this.environment) {
             throw new FlagsmithClientError(
                 'Unable to build identity model when no local environment present.'
@@ -275,8 +264,6 @@ export class Flagsmith {
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }
-
-    stop() {}
 }
 
 export default Flagsmith;

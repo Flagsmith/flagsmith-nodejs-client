@@ -15,17 +15,17 @@ export class IdentityModel {
 
     constructor(
         created_date: string,
-        identity_traits: TraitModel[],
-        identity_features: IdentityFeaturesList,
-        environment_api_key: string,
+        identityTraits: TraitModel[],
+        identityFeatures: IdentityFeaturesList,
+        environmentApiKey: string,
         identifier: string,
-        identity_uuid?: string
+        identityUuid?: string
     ) {
-        this.identityUuid = identity_uuid || uuidv4();
+        this.identityUuid = identityUuid || uuidv4();
         this.createdDate = Date.parse(created_date) || Date.now();
-        this.identityTraits = identity_traits;
-        this.identityFeatures = new IdentityFeaturesList(...identity_features);
-        this.environmentApiKey = environment_api_key;
+        this.identityTraits = identityTraits;
+        this.identityFeatures = new IdentityFeaturesList(...identityFeatures);
+        this.environmentApiKey = environmentApiKey;
         this.identifier = identifier;
     }
 

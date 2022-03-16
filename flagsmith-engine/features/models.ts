@@ -51,7 +51,7 @@ export class FeatureStateModel {
     enabled: boolean;
     djangoID: number;
     featurestateUUID: string = uuidv4();
-    _value: any;
+    private value: any;
     multivariateFeatureStateValues: MultivariateFeatureStateValueModel[] = [];
 
     constructor(
@@ -59,24 +59,24 @@ export class FeatureStateModel {
         enabled: boolean,
         djangoID: number,
         value?: any,
-        featurestate_uuid: string = uuidv4()
+        featurestateUuid: string = uuidv4()
     ) {
         this.feature = feature;
         this.enabled = enabled;
         this.djangoID = djangoID;
-        this._value = value;
-        this.featurestateUUID = featurestate_uuid;
+        this.value = value;
+        this.featurestateUUID = featurestateUuid;
     }
 
     setValue(value: any) {
-        this._value = value;
+        this.value = value;
     }
 
     getValue(identityId?: number | string) {
         if (!!identityId && this.multivariateFeatureStateValues.length > 0) {
             return this.getMultivariateValue(identityId);
         }
-        return this._value;
+        return this.value;
     }
 
     get_feature_state_value() {
@@ -100,6 +100,6 @@ export class FeatureStateModel {
             }
             startPercentage = limit;
         }
-        return this._value;
+        return this.value;
     }
 }

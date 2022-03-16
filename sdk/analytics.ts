@@ -7,34 +7,6 @@ const ANALYTICS_TIMER = 10;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(() => resolve(undefined), ms));
 
-const retryFetch = (
-    url: string,
-    fetchOptions = {},
-    retries = 3,
-    retryDelay = 1000,
-    timeout: number
-) => {
-    return new Promise((resolve, reject) => {
-        // check for timeout
-        if (timeout) setTimeout(() => reject('error: timeout'), timeout);
-
-        const wrapper = (n: number) => {
-            fetch(url, fetchOptions)
-                .then(res => resolve(res))
-                .catch(async err => {
-                    if (n > 0) {
-                        await delay(retryDelay);
-                        wrapper(--n);
-                    } else {
-                        reject(err);
-                    }
-                });
-        };
-
-        wrapper(retries);
-    });
-};
-
 export class AnalyticsProcessor {
     private analyticsEndpoint: string;
     private environmentKey: string;

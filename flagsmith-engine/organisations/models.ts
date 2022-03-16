@@ -8,15 +8,15 @@ export class OrganisationModel {
     constructor(
         id: number,
         name: string,
-        feature_analytics: boolean,
-        stop_serving_flags: boolean,
-        persist_trait_data: boolean
+        featureAnalytics: boolean,
+        stopServingFlags: boolean,
+        persistTraitData: boolean
     ) {
         this.id = id;
         this.name = name;
-        this.featureAnalytics = feature_analytics;
-        this.stopServingFlags = stop_serving_flags;
-        this.persistTraitData = persist_trait_data;
+        this.featureAnalytics = featureAnalytics;
+        this.stopServingFlags = stopServingFlags;
+        this.persistTraitData = persistTraitData;
     }
 
     get unique_slug() {

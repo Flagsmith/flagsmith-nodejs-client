@@ -14,17 +14,17 @@ export class EnvironmentAPIKeyModel {
     constructor(
         id: number,
         key: string,
-        created_at: number,
+        createdAt: number,
         name: string,
-        client_api_key: string,
-        expires_at?: number
+        clientApiKey: string,
+        expiresAt?: number
     ) {
         this.id = id;
         this.key = key;
-        this.createdAt = created_at;
+        this.createdAt = createdAt;
         this.name = name;
-        this.clientApiKey = client_api_key;
-        this.expiresAt = expires_at;
+        this.clientApiKey = clientApiKey;
+        this.expiresAt = expiresAt;
     }
 
     isValid() {
@@ -42,9 +42,9 @@ export class EnvironmentModel {
     mixpanel_config?: IntegrationModel;
     heap_config?: IntegrationModel;
 
-    constructor(id: number, api_key: string, project: ProjectModel) {
+    constructor(id: number, apiKey: string, project: ProjectModel) {
         this.id = id;
-        this.apiKey = api_key;
+        this.apiKey = apiKey;
         this.project = project;
     }
 }

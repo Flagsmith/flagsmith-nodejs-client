@@ -25,6 +25,6 @@ export function buildIdentityModel(identityJSON: any): IdentityModel {
         identityJSON.identity_uuid
     );
 
-    model.djangoID = identityJSON['django_id'];
+    model.djangoID = identityJSON.django_id;
     return model;
 }

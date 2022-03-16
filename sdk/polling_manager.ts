@@ -12,14 +12,14 @@ export class EnvironmentDataPollingManager {
 
     start() {
         const updateEnvironment = () => {
-            if(this.interval) clearInterval(this.interval)
+            if (this.interval) clearInterval(this.interval);
             this.interval = setInterval(async () => {
                 await this.main.updateEnvironment();
             }, this.refreshIntervalSeconds * 1000);
         };
         // todo: this call should be awaited for getIdentityFlags/getEnvironmentFlags when enableLocalEvaluation is true
-        this.main.updateEnvironment()
-        updateEnvironment()
+        this.main.updateEnvironment();
+        updateEnvironment();
     }
 
     stop() {

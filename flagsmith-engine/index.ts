@@ -4,56 +4,57 @@ import { IdentityModel } from './identities/models';
 import { TraitModel } from './identities/traits/models';
 import { getIdentitySegments } from './segments/evaluators';
 import { SegmentModel } from './segments/models';
+import { FeatureStateNotFound } from './utils/errors';
 
 function getIdentityFeatureStatesDict(
     environment: EnvironmentModel,
     identity: IdentityModel,
-    override_traits?: TraitModel[]
+    overrideTraits?: TraitModel[]
 ) {
     // Get feature states from the environment
-    const feature_states: { [key: number]: FeatureStateModel } = {};
+    const featureStates: { [key: number]: FeatureStateModel } = {};
     for (const fs of environment.featureStates) {
-        feature_states[fs.feature.id] = fs;
+        featureStates[fs.feature.id] = fs;
     }
 
     // Override with any feature states defined by matching segments
-    const identity_segments: SegmentModel[] = getIdentitySegments(
+    const identitySegments: SegmentModel[] = getIdentitySegments(
         environment,
         identity,
-        override_traits
+        overrideTraits
     );
-    for (const matching_segment of identity_segments) {
-        for (const feature_state of matching_segment.featureStates) {
+    for (const matchingSegment of identitySegments) {
+        for (const featureState of matchingSegment.featureStates) {
             // note that feature states are stored on the segment in descending priority
             // order so we only care that the last one is added
             // TODO: can we optimise this?
-            feature_states[feature_state.feature.id] = feature_state;
+            featureStates[featureState.feature.id] = featureState;
         }
     }
 
     // Override with any feature states defined directly the identity
     for (const fs of identity.identityFeatures || []) {
-        if (feature_states[fs.feature.id]) {
-            feature_states[fs.feature.id] = fs;
+        if (featureStates[fs.feature.id]) {
+            featureStates[fs.feature.id] = fs;
         }
     }
-    return feature_states;
+    return featureStates;
 }
 
 export function getIdentityFeatureState(
     environment: EnvironmentModel,
     identity: IdentityModel,
-    feature_name: string,
-    override_traits?: TraitModel[]
+    featureName: string,
+    overrideTraits?: TraitModel[]
 ): FeatureStateModel {
-    const featureStates = getIdentityFeatureStatesDict(environment, identity, override_traits);
+    const featureStates = getIdentityFeatureStatesDict(environment, identity, overrideTraits);
 
     const matchingFeature = Object.values(featureStates).filter(
-        f => f.feature.name === feature_name
+        f => f.feature.name === featureName
     );
 
     if (matchingFeature.length === 0) {
-        throw new Error('Feature State Not Found');
+        throw new FeatureStateNotFound('Feature State Not Found');
     }
 
     return matchingFeature[0];
@@ -64,14 +65,14 @@ export function getIdentityFeatureStates(
     identity: IdentityModel,
     overrideTraits?: TraitModel[]
 ): FeatureStateModel[] {
-    const feature_states = Object.values(
+    const featureStates = Object.values(
         getIdentityFeatureStatesDict(environment, identity, overrideTraits)
     );
 
     if (environment.project.hideDisabledFlags) {
-        return feature_states.filter(fs => !!fs.enabled);
+        return featureStates.filter(fs => !!fs.enabled);
     }
-    return feature_states;
+    return featureStates;
 }
 
 export function getEnvironmentFeatureState(environment: EnvironmentModel, featureName: string) {

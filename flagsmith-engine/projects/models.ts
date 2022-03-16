@@ -6,18 +6,17 @@ export class ProjectModel {
     name: string;
     organisation: OrganisationModel;
     hideDisabledFlags: boolean;
-    // FIXME
     segments: SegmentModel[] = [];
 
     constructor(
         id: number,
         name: string,
-        hide_disabled_flags: boolean,
+        hideDisabledFlags: boolean,
         organization: OrganisationModel
     ) {
         this.id = id;
         this.name = name;
-        this.hideDisabledFlags = hide_disabled_flags;
+        this.hideDisabledFlags = hideDisabledFlags;
         this.organisation = organization;
     }
 }

@@ -1,22 +1,10 @@
 import md5 from 'md5';
 import bigInt from 'big-integer';
 
-// def get_hashed_percentage_for_object_ids(
-//   object_ids: typing.Iterable[typing.Any], iterations: int = 1
-// ) -> float:
-//   """
-//   Given a list of object ids, get a floating point number between 0 and 1 based on
-//   the hash of those ids. This should give the same value every time for any
-//   list of ids.
-
-//   :param object_ids: list of object ids to calculate the has for
-//   :param iterations: num times to include each id in the generated string to hash
-//   :return: (float) number between 0 (inclusive) and 100 (exclusive)
-//   """
-
 const makeRepeated = (arr: Array<any>, repeats: number) =>
     Array.from({ length: repeats }, () => arr).flat();
 
+// https://stackoverflow.com/questions/12532871/how-to-convert-a-very-large-hex-number-to-decimal-in-javascript
 function h2d(s: any): string {
     function add(x: any, y: any) {
         var c = 0,
@@ -42,7 +30,14 @@ function h2d(s: any): string {
     });
     return dec;
 }
-
+/**
+ * Given a list of object ids, get a floating point number between 0 and 1 based on
+ * the hash of those ids. This should give the same value every time for any list of ids.
+ *
+ * @param  {Array<any>} objectIds list of object ids to calculate the has for
+ * @param  {} iterations=1 num times to include each id in the generated string to hash
+ * @returns number number between 0 (inclusive) and 100 (exclusive)
+ */
 export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations = 1): number {
     let to_hash = makeRepeated(objectIds, iterations).join(',');
     const hashedValue = md5(to_hash);

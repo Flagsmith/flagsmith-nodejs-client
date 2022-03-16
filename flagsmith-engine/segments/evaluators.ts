@@ -56,7 +56,7 @@ function traitsMatchSegmentRule(
 }
 
 function traitsMatchSegmentCondition(
-    identity_traits: TraitModel[],
+    identityTraits: TraitModel[],
     condition: SegmentConditionModel,
     segmentId: number | string,
     identityId: number | string
@@ -65,7 +65,7 @@ function traitsMatchSegmentCondition(
         return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(condition.value);
     }
 
-    const traits = identity_traits.filter(t => t.traitKey === condition.property_);
+    const traits = identityTraits.filter(t => t.traitKey === condition.property_);
     const trait = traits.length > 0 ? traits[0] : undefined;
 
     return trait ? condition.matchesTraitValue(trait.traitValue) : false;
