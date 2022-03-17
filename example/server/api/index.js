@@ -1,5 +1,5 @@
 const Router = require('express').Router;
-const Flagsmith = require('flagsmith-nodejs').default;
+const Flagsmith = require('../../../build');
 const environmentKey = '';
 if (!environmentKey) {
     throw new Error(
