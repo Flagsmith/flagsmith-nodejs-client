@@ -3,7 +3,7 @@ import fetch, { Response } from 'node-fetch';
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
 export function generateIdentitiesData(identifier: string, traits?: { [key: string]: any }) {
-    const traitsGenerated = Object.values(traits || {}).map(trait => ({
+    const traitsGenerated = Object.entries(traits || {}).map(trait => ({
         trait_key: trait[0],
         trait_value: trait[1]
     }));

@@ -149,7 +149,7 @@ export class Flagsmith {
         method: string,
         body?: { [key: string]: any }
     ): Promise<any> {
-        const headers: { [key: string]: any } = {};
+        const headers: { [key: string]: any } = {'Content-Type': 'application/json'};
         if (this.environmentKey) {
             headers['X-Environment-Key'] = this.environmentKey as string;
         }
