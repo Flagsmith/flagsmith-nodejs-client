@@ -57,7 +57,7 @@ declare module 'flagsmith-nodejs' {
         userId: string,
         key: string,
         value: string | number | boolean
-    ): IUserIdentity;
+    ): Promise<IUserIdentity>;
 
     interface IFeature {
         enabled: boolean;
