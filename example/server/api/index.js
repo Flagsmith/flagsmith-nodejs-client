@@ -29,5 +29,10 @@ module.exports = () => {
         res.json({ fontSize, checkoutV2 });
     });
 
+    api.get('/:user/segments', async (req, res) => {
+        const segments = await flagsmith.getIdentitySegments(req.params.user, { checkout_v2: 1 });
+        res.json(segments.map(v => v.name));
+    });
+
     return api;
 };

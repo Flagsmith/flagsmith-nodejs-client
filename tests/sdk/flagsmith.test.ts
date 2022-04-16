@@ -14,8 +14,10 @@ beforeEach(() => {
 });
 
 test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
     new Flagsmith({
-        environmentKey: 'key',
+        environmentKey: 'ser.key',
         enableLocalEvaluation: true
     });
     expect(EnvironmentDataPollingManager).toBeCalled();
@@ -31,10 +33,27 @@ test('test_update_environment_sets_environment', async () => {
     // @ts-ignore
     flg.environment.featureStates[0].featurestateUUID = undefined;
     // @ts-ignore
+    flg.environment.project.segments[0].featureStates[0].featurestateUUID = undefined;
+    // @ts-ignore
     const model = environmentModel(JSON.parse(environmentJSON()));
     // @ts-ignore
     model.featureStates[0].featurestateUUID = undefined;
+    // @ts-ignore
+    model.project.segments[0].featureStates[0].featurestateUUID = undefined;
     expect(flg.environment).toStrictEqual(model);
+});
+
+test('test_get_identity_segments', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+    const segments = await flg.getIdentitySegments("user", {age:21} )
+    expect(segments[0].name).toEqual("regular_segment")
+    const segments2 = await flg.getIdentitySegments("user", {age:41} )
+    expect(segments2.length).toEqual(0)
 });
 test('test_get_environment_flags_calls_api_when_no_local_environment', async () => {
     // @ts-ignore

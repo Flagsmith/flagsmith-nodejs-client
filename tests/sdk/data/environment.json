@@ -11,7 +11,44 @@
     },
     "id": 1,
     "hide_disabled_flags": false,
-    "segments": []
+    "segments": [
+      {
+        "name": "regular_segment",
+        "feature_states": [
+          {
+            "feature_state_value": "segment_override",
+            "multivariate_feature_state_values": [],
+            "django_id": 81027,
+            "feature": {
+              "name": "some_feature",
+              "type": "STANDARD",
+              "id": 1
+            },
+            "enabled": false
+          }
+        ],
+        "id": 1,
+        "rules": [
+          {
+            "type": "ALL",
+            "conditions": [],
+            "rules": [
+              {
+                "type": "ANY",
+                "conditions": [
+                  {
+                    "value": "40",
+                    "property_": "age",
+                    "operator": "LESS_THAN"
+                  }
+                ],
+                "rules": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "segment_overrides": [],
   "id": 1,

@@ -22,5 +22,8 @@ console.log('To get an example response for getFlags');
 console.log();
 console.log('Go to http://localhost:' + PORT + '/api/flagsmith_sample_user');
 console.log('To get an example feature state for a user');
+console.log();
+console.log('Go to http://localhost:' + PORT + '/api/flagsmith_sample_user/segments');
+console.log('To get the segments which the user belongs to');
 
 module.exports = app;
