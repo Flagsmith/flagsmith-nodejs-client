@@ -138,8 +138,8 @@ export class Flagsmith {
         traits = traits || {};
         if (this.enableLocalEvaluation) {
             return new Promise(resolve =>
-                this.environmentPromise!.then(()=>{
-                    resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}))
+                this.environmentPromise!.then(() => {
+                    resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
                 })
             );
         }
@@ -163,7 +163,7 @@ export class Flagsmith {
     ): Promise<SegmentModel[]> {
         traits = traits || {};
         if (this.enableLocalEvaluation) {
-            return this.environmentPromise!.then(()=>{
+            return this.environmentPromise!.then(() => {
                 return new Promise(resolve => {
                     const identityModel = this.buildIdentityModel(
                         identifier,
@@ -176,7 +176,7 @@ export class Flagsmith {
                     const segments = getIdentitySegments(this.environment, identityModel);
                     return resolve(segments);
                 });
-            })
+            });
         }
         console.error('This function is only permitted with local evaluation.');
         return Promise.resolve([]);
@@ -189,11 +189,11 @@ export class Flagsmith {
      */
     async updateEnvironment() {
         const request = this.getEnvironmentFromApi();
-        if(!this.environmentPromise) {
-            this.environmentPromise = request.then((res)=>{
+        if (!this.environmentPromise) {
+            this.environmentPromise = request.then(res => {
                 this.environment = res;
-            })
-            await this.environmentPromise
+            });
+            await this.environmentPromise;
         } else {
             this.environment = await request;
         }
@@ -240,7 +240,7 @@ export class Flagsmith {
     /**
      * This promise ensures that the environment is retrieved before attempting to locally evaluate.
      */
-    private environmentPromise: Promise<any>|undefined;
+    private environmentPromise: Promise<any> | undefined;
 
     private async getEnvironmentFromApi() {
         const environment_data = await this.getJSONResponse(this.environmentUrl, 'GET');

@@ -50,10 +50,10 @@ test('test_get_identity_segments', async () => {
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
     });
-    const segments = await flg.getIdentitySegments("user", {age:21} )
-    expect(segments[0].name).toEqual("regular_segment")
-    const segments2 = await flg.getIdentitySegments("user", {age:41} )
-    expect(segments2.length).toEqual(0)
+    const segments = await flg.getIdentitySegments('user', { age: 21 });
+    expect(segments[0].name).toEqual('regular_segment');
+    const segments2 = await flg.getIdentitySegments('user', { age: 41 });
+    expect(segments2.length).toEqual(0);
 });
 test('test_get_environment_flags_calls_api_when_no_local_environment', async () => {
     // @ts-ignore
