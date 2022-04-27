@@ -22,7 +22,7 @@ export class Flagsmith {
     requestTimeoutSeconds?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
-    retries?: any;
+    retries?: number;
     enableAnalytics: boolean = false;
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
 
