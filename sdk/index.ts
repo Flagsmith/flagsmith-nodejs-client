@@ -70,7 +70,7 @@ export class Flagsmith {
         requestTimeoutSeconds?: number;
         enableLocalEvaluation?: boolean;
         environmentRefreshIntervalSeconds?: number;
-        retries?: any;
+        retries?: number;
         enableAnalytics?: boolean;
         defaultFlagHandler?: (featureName: string) => DefaultFlag;
     }) {
