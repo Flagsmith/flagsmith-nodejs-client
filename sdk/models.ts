@@ -123,9 +123,9 @@ export class Flags {
             if (this.defaultFlagHandler) {
                 return this.defaultFlagHandler(featureName);
             }
-            throw new FlagsmithClientError(
-                `Feature does not exist: ${featureName}, implement defaultFlagHandler to handle this case.`
-            );
+
+            return { enabled: false, isDefault: true, value: undefined };
+
         }
 
         if (this.analyticsProcessor && flag.featureId) {

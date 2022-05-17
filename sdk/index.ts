@@ -10,6 +10,8 @@ import { FlagsmithAPIError, FlagsmithClientError } from './errors';
 import { DefaultFlag, Flags } from './models';
 import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
+import { SegmentModel } from '../flagsmith-engine/segments/models';
+import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 
 const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
 
@@ -20,7 +22,7 @@ export class Flagsmith {
     requestTimeoutSeconds?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
-    retries?: any;
+    retries?: number;
     enableAnalytics: boolean = false;
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
 
@@ -68,7 +70,7 @@ export class Flagsmith {
         requestTimeoutSeconds?: number;
         enableLocalEvaluation?: boolean;
         environmentRefreshIntervalSeconds?: number;
-        retries?: any;
+        retries?: number;
         enableAnalytics?: boolean;
         defaultFlagHandler?: (featureName: string) => DefaultFlag;
     }) {
@@ -88,11 +90,17 @@ export class Flagsmith {
         this.environmentUrl = `${this.apiUrl}environment-document/`;
 
         if (this.enableLocalEvaluation) {
+            if (!this.environmentKey.startsWith('ser.')) {
+                console.error(
+                    'In order to use local evaluation, please generate a server key in the environment settings page.'
+                );
+            }
             this.environmentDataPollingManager = new EnvironmentDataPollingManager(
                 this,
                 this.environmentRefreshIntervalSeconds
             );
             this.environmentDataPollingManager.start();
+            this.updateEnvironment();
         }
 
         this.analyticsProcessor = data.enableAnalytics
@@ -128,20 +136,67 @@ export class Flagsmith {
      */
     getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
         traits = traits || {};
-        if (this.environment) {
+        if (this.enableLocalEvaluation) {
             return new Promise(resolve =>
-                resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}))
+                this.environmentPromise!.then(() => {
+                    resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
+                })
             );
         }
         return this.getIdentityFlagsFromApi(identifier, traits);
     }
 
     /**
+     * Get the segments for the current environment for a given identity. Will also
+        upsert all traits to the Flagsmith API for future evaluations. Providing a
+        trait with a value of None will remove the trait from the identity if it exists.
+     *
+     * @param  {string} identifier a unique identifier for the identity in the current
+            environment, e.g. email address, username, uuid
+     * @param  {{[key:string]:any}} traits? a dictionary of traits to add / update on the identity in
+            Flagsmith, e.g. {"num_orders": 10}
+     * @returns Segments that the given identity belongs to.
+     */
+    getIdentitySegments(
+        identifier: string,
+        traits?: { [key: string]: any }
+    ): Promise<SegmentModel[]> {
+        traits = traits || {};
+        if (this.enableLocalEvaluation) {
+            return this.environmentPromise!.then(() => {
+                return new Promise(resolve => {
+                    const identityModel = this.buildIdentityModel(
+                        identifier,
+                        Object.keys(traits || {}).map(key => ({
+                            key,
+                            value: traits?.[key]
+                        }))
+                    );
+
+                    const segments = getIdentitySegments(this.environment, identityModel);
+                    return resolve(segments);
+                });
+            });
+        }
+        console.error('This function is only permitted with local evaluation.');
+        return Promise.resolve([]);
+    }
+
+    /**
      * Updates the environment state for local flag evaluation.
+     * Sets a local promise to prevent race conditions in getIdentityFlags / getIdentitySegments.
      * You only need to call this if you wish to bypass environmentRefreshIntervalSeconds.
      */
     async updateEnvironment() {
-        this.environment = await this.getEnvironmentFromApi();
+        const request = this.getEnvironmentFromApi();
+        if (!this.environmentPromise) {
+            this.environmentPromise = request.then(res => {
+                this.environment = res;
+            });
+            await this.environmentPromise;
+        } else {
+            this.environment = await request;
+        }
     }
 
     private async getJSONResponse(
@@ -149,7 +204,7 @@ export class Flagsmith {
         method: string,
         body?: { [key: string]: any }
     ): Promise<any> {
-        const headers: { [key: string]: any } = {'Content-Type': 'application/json'};
+        const headers: { [key: string]: any } = { 'Content-Type': 'application/json' };
         if (this.environmentKey) {
             headers['X-Environment-Key'] = this.environmentKey as string;
         }
@@ -181,6 +236,11 @@ export class Flagsmith {
 
         return data.json();
     }
+
+    /**
+     * This promise ensures that the environment is retrieved before attempting to locally evaluate.
+     */
+    private environmentPromise: Promise<any> | undefined;
 
     private async getEnvironmentFromApi() {
         const environment_data = await this.getJSONResponse(this.environmentUrl, 'GET');
@@ -267,4 +327,3 @@ export class Flagsmith {
 }
 
 export default Flagsmith;
-// export = Flagsmith;
