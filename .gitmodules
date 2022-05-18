@@ -1,6 +1,3 @@
 [submodule "tests/engine/engine-tests/engine-test-data"]
 	path = tests/engine/engine-tests/engine-test-data
 	url = git@github.com:Flagsmith/engine-test-data.git
-[submodule "tests/engine_tests/engine-test-data"]
-	path = tests/engine_tests/engine-test-data
-	url = git@github.com:Flagsmith/engine-test-data.git
