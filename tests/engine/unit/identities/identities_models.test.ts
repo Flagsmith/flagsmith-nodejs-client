@@ -92,14 +92,3 @@ test('test_append_feature_state', () => {
 
     expect(ident.identityFeatures).toContain(fs1);
 });
-
-test('test_appending_feature_states_raises_duplicate_feature_state_if_fs_for_the_feature_already_exists', () => {
-    const ident = identityInSegment();
-
-    const fs1 = new FeatureStateModel(feature1(), false, 1);
-    const fs2 = new FeatureStateModel(feature1(), true, 1);
-    ident.identityFeatures.push(fs1);
-    expect(() => {
-        ident.identityFeatures.push(fs2);
-    }).toThrowError();
-});
