@@ -54,7 +54,7 @@ test('test_update_traits_remove_traits_with_none_value', () => {
     const trait_key = ident.identityTraits[0].traitKey;
     const trait_to_remove = new TraitModel(trait_key, undefined);
 
-    ident.update_traits([trait_to_remove]);
+    ident.updateTraits([trait_to_remove]);
 
     expect(ident.identityTraits.length).toBe(0);
 });
@@ -66,7 +66,7 @@ test('test_update_identity_traits_updates_trait_value', () => {
     const traitValue = 'updated_trait_value';
     const traitToUpdate = new TraitModel(traitKey, traitValue);
 
-    identity.update_traits([traitToUpdate]);
+    identity.updateTraits([traitToUpdate]);
 
     expect(identity.identityTraits.length).toBe(1);
     expect(identity.identityTraits[0]).toBe(traitToUpdate);
@@ -77,7 +77,7 @@ test('test_update_traits_adds_new_traits', () => {
 
     const newTrait = new TraitModel('new_key', 'foobar');
 
-    identity.update_traits([newTrait]);
+    identity.updateTraits([newTrait]);
 
     expect(identity.identityTraits.length).toBe(2);
     expect(identity.identityTraits).toContain(newTrait);

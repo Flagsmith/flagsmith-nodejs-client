@@ -19,7 +19,7 @@ export class OrganisationModel {
         this.persistTraitData = persistTraitData;
     }
 
-    get unique_slug() {
+    get uniqueSlug() {
         return this.id.toString() + '-' + this.name;
     }
 }

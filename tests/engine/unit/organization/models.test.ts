@@ -8,5 +8,5 @@ test('Test builder', () => {
         stop_serving_flags: false,
         id: 13
     });
-    expect(model.unique_slug).toBe('13-Flagsmith');
+    expect(model.uniqueSlug).toBe('13-Flagsmith');
 });

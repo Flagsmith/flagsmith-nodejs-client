@@ -37,7 +37,7 @@ export class IdentityModel {
         return `${env_key}_${identifier}`;
     }
 
-    update_traits(traits: TraitModel[]) {
+    updateTraits(traits: TraitModel[]) {
         const existingTraits: Map<string, TraitModel> = new Map();
         for (const trait of this.identityTraits) {
             existingTraits.set(trait.traitKey, trait);

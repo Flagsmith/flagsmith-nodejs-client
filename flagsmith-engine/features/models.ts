@@ -79,10 +79,6 @@ export class FeatureStateModel {
         return this.value;
     }
 
-    get_feature_state_value() {
-        return this.getValue();
-    }
-
     getMultivariateValue(identityID: number | string) {
         const percentageValue = getHashedPercentateForObjIds([
             this.djangoID || this.featurestateUUID,

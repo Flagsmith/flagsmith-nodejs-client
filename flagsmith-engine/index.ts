@@ -79,7 +79,7 @@ export function getEnvironmentFeatureState(environment: EnvironmentModel, featur
     const featuresStates = environment.featureStates.filter(f => f.feature.name === featureName);
 
     if (featuresStates.length === 0) {
-        throw new Error('Feature State Not Found');
+        throw new FeatureStateNotFound('Feature State Not Found');
     }
 
     return featuresStates[0];
