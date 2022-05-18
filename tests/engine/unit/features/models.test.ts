@@ -71,8 +71,6 @@ test('test_feature_state_get_value_mv_values', () => {
 
         mvFeatureState.setValue(mvFeatureControlValue);
 
-        // TODO
-        // expect(mvFeatureState.getValue(3)).toBe(testCase[1]);
-        expect(1).toBe(1);
+        expect(mvFeatureState.getValue("test")).toBe(mvFeatureValue2);
     }
 });
