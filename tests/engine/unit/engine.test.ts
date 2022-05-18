@@ -25,6 +25,12 @@ test('test_identity_get_feature_state_without_any_override', () => {
     expect(feature_state.feature).toStrictEqual(feature1());
 });
 
+test('test_identity_get_feature_state_without_any_override_no_fs', () => {
+    expect(() => {
+        getIdentityFeatureState(environment(), identity(), 'nonExistentName');
+    }).toThrowError('Feature State Not Found');
+});
+
 test('test_identity_get_all_feature_states_no_segments', () => {
     const env = environment();
     const ident = identity();
@@ -59,6 +65,20 @@ test('test_identity_get_all_feature_states_with_traits', () => {
         [trait_models]
     );
     expect(featureStates[0].getValue()).toBe('segment_override');
+});
+
+test('test_identity_get_all_feature_states_with_traits_hideDisabledFlags', () => {
+    const trait_models = new TraitModel(segmentConditionProperty, segmentConditionStringValue);
+
+    const env = environmentWithSegmentOverride();
+    env.project.hideDisabledFlags = true;
+
+    const featureStates = getIdentityFeatureStates(
+        env,
+        identityInSegment(),
+        [trait_models]
+    );
+    expect(featureStates.length).toBe(0);
 });
 
 test('test_environment_get_all_feature_states', () => {

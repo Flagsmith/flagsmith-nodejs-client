@@ -39,8 +39,8 @@ function h2d(s: any): string {
  * @returns number number between 0 (inclusive) and 100 (exclusive)
  */
 export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations = 1): number {
-    let to_hash = makeRepeated(objectIds, iterations).join(',');
-    const hashedValue = md5(to_hash);
+    let toHash = makeRepeated(objectIds, iterations).join(',');
+    const hashedValue = md5(toHash);
     const hashedInt = bigInt(h2d(hashedValue));
     const value = (hashedInt.mod(9999).toJSNumber() / 9998) * 100;
 

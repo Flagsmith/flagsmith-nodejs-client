@@ -61,7 +61,8 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'bar', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'baz', true],
     [CONDITION_OPERATORS.REGEX, 'foo', '[a-z]+', true],
-    [CONDITION_OPERATORS.REGEX, 'FOO', '[a-z]+', false]
+    [CONDITION_OPERATORS.REGEX, 'FOO', '[a-z]+', false],
+    ['BAD_OP', 'a', 'a', false]
 ];
 
 test('test_segment_condition_matches_trait_value', () => {

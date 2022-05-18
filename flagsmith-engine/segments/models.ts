@@ -23,8 +23,6 @@ export const matchingFunctions = {
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
         otherValue.includes(thisValue),
-    [CONDITION_OPERATORS.NOT_CONTAINS]: (thisValue: any, otherValue: any) =>
-        !otherValue.includes(thisValue)
 };
 
 export class SegmentConditionModel {

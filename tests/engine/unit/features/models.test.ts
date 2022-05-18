@@ -7,6 +7,12 @@ import {
 } from '../../../../flagsmith-engine/features/models';
 import { feature1 } from '../utils';
 
+test('test_compare_feature_model', () => {
+    const fm1 = new FeatureModel(1, 'a', 'test');
+    const fm2 = new FeatureModel(1, 'a', 'test');
+    expect(fm1.eq(fm2)).toBe(true);
+});
+
 test('test_initializing_feature_state_creates_default_feature_state_uuid', () => {
     const featureState = new FeatureStateModel(feature1(), true, 1);
     expect(featureState.featurestateUUID).toBeDefined();
