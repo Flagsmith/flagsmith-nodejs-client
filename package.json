@@ -42,8 +42,8 @@
   "license": "MIT",
   "scripts": {
     "lint": "prettier --write .",
-    "get_test_data": "git submodule add git@github.com:Flagsmith/engine-test-data.git tests/engine/engine-tests/engine-test-data/",
     "test": "npm run get_test_data; jest --coverage --coverageReporters='text'",
+    "get_test_data": "git submodule update --init",
     "test:watch": "jest --coverage --watch --coverageReporters='text'",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --coverage --watch --coverageReporters='text'",
     "build": "tsc",
