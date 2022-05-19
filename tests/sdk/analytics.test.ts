@@ -36,6 +36,17 @@ test('test_analytics_processor_flush_post_request_data_match_ananlytics_data', a
     });
 });
 
+jest.useFakeTimers()
+test('test_analytics_processor_flush_post_request_data_match_ananlytics_data_test', async () => {
+    const aP = analyticsProcessor();
+    aP.trackFeature(1);
+    setTimeout(() => {
+        aP.trackFeature(2);
+        expect(fetch).toHaveBeenCalledTimes(1);
+    }, 15000);
+    jest.runOnlyPendingTimers();
+});
+
 test('test_analytics_processor_flush_early_exit_if_analytics_data_is_empty', async () => {
     const aP = analyticsProcessor();
     await aP.flush();

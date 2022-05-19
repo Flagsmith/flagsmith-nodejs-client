@@ -23,6 +23,16 @@ test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
     expect(EnvironmentDataPollingManager).toBeCalled();
 });
 
+test('test_flagsmith_local_evaluation_key_required', () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    new Flagsmith({
+        environmentKey: 'bad.key',
+        enableLocalEvaluation: true
+    });
+    expect(EnvironmentDataPollingManager).toBeCalled();
+});
+
 test('test_update_environment_sets_environment', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
