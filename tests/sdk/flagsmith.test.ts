@@ -1,8 +1,9 @@
 import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-import fetch, { Headers } from 'node-fetch';
+import fetch from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
 import { DefaultFlag } from '../../sdk/models';
+import { delay } from '../../sdk/utils';
 
 jest.mock('node-fetch');
 jest.mock('../../sdk/polling_manager');
@@ -26,11 +27,12 @@ test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
 test('test_flagsmith_local_evaluation_key_required', () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    console.error = jest.fn();
     new Flagsmith({
         environmentKey: 'bad.key',
         enableLocalEvaluation: true
     });
-    expect(EnvironmentDataPollingManager).toBeCalled();
+    expect(console.error).toBeCalled();
 });
 
 test('test_update_environment_sets_environment', async () => {
@@ -65,6 +67,19 @@ test('test_get_identity_segments', async () => {
     const segments2 = await flg.getIdentitySegments('user', { age: 41 });
     expect(segments2.length).toEqual(0);
 });
+
+
+test('test_get_identity_segments_empty_without_local_eval', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: false
+    });
+    const segments = await flg.getIdentitySegments('user', { age: 21 });
+    expect(segments.length).toBe(0);
+});
+
 test('test_get_environment_flags_calls_api_when_no_local_environment', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
@@ -128,6 +143,107 @@ test('test_default_flag_is_used_when_no_environment_flags_returned', async () =>
 
     const flg = new Flagsmith({
         environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        customHeaders: {
+            'X-Test-Header': '1',
+        }
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+    expect(flag.isDefault).toBe(true);
+    expect(flag.enabled).toBe(defaultFlag.enabled);
+    expect(flag.value).toBe(defaultFlag.value);
+});
+
+test('test_analytics_processor_tracks_flags', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        enableAnalytics: true,
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+
+    expect(flag.isDefault).toBe(false);
+    expect(flag.enabled).toBe(true);
+    expect(flag.value).toBe('some-value');
+});
+
+test('test_getFeatureValue', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        enableAnalytics: true,
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const featureValue = flags.getFeatureValue('some_feature');
+
+    expect(featureValue).toBe('some-value');
+});
+
+test('test_isFeatureEnabled', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        enableAnalytics: true,
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const featureValue = flags.isFeatureEnabled('some_feature');
+
+    expect(featureValue).toBe(true);
+});
+
+test('test_fetch_recovers_after_single_API_error', async () => {
+    fetch
+        // @ts-ignore
+        .mockRejectedValueOnce(new Error('Error during fetching the API response'))
+        .mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+    expect(flag.isDefault).toBe(false);
+    expect(flag.enabled).toBe(true);
+    expect(flag.value).toBe('some-value');
+});
+
+test('test_default_flag_used_after_multiple_API_errors', async () => {
+    fetch
+        // @ts-ignore
+        .mockRejectedValue(new Error('Error during fetching the API response'));
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
         defaultFlagHandler: defaultFlagHandler
     });
 
@@ -136,6 +252,21 @@ test('test_default_flag_is_used_when_no_environment_flags_returned', async () =>
     expect(flag.isDefault).toBe(true);
     expect(flag.enabled).toBe(defaultFlag.enabled);
     expect(flag.value).toBe(defaultFlag.value);
+});
+
+test('test_throws_when_no_default_flag_handler_after_multiple_API_errors', async () => {
+    fetch
+        // @ts-ignore
+        .mockRejectedValue(new Error('Error during fetching the API response'));
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    await expect(async () => {
+        const flags = await flg.getEnvironmentFlags();
+        const flag = flags.getFlag('some_feature');
+    }).rejects.toThrow('Error during fetching the API response');
 });
 
 test('test_non_200_response_raises_flagsmith_api_error', async () => {
@@ -171,6 +302,51 @@ test('test_default_flag_is_not_used_when_environment_flags_returned', async () =
     expect(flag.value).not.toBe(defaultFlag.value);
     expect(flag.value).toBe('some-value');
 });
+
+test('test_default_flag_is_used_when_bad_api_response_happens', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response('bad-data')));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+
+    expect(flag.isDefault).toBe(true);
+    expect(flag.value).toBe(defaultFlag.value);
+});
+
+test('test_local_evaluation', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        defaultFlagHandler: defaultFlagHandler
+    });
+
+    await delay(200);
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+
+    expect(flag.isDefault).toBe(false);
+    expect(flag.value).not.toBe(defaultFlag.value);
+    expect(flag.value).toBe('some-value');
+});
+
 test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
@@ -210,4 +386,21 @@ test('test_default_flag_is_used_when_no_identity_flags_returned', async () => {
     expect(flag.isDefault).toBe(true);
     expect(flag.value).toBe(defaultFlag.value);
     expect(flag.enabled).toBe(defaultFlag.enabled);
+});
+
+test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_default_flag_handler', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(JSON.stringify({ flags: [], traits: [] }))));
+
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    const flags = await flg.getIdentityFlags('identifier');
+    const flag = flags.getFlag('some_feature');
+
+    expect(flag.isDefault).toBe(true);
+    expect(flag.value).toBe(undefined);
+    expect(flag.enabled).toBe(false);
 });

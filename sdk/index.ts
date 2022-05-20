@@ -12,6 +12,7 @@ import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
+import { FlagsmithCache } from './types';
 
 const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
 
@@ -25,6 +26,8 @@ export class Flagsmith {
     retries?: number;
     enableAnalytics: boolean = false;
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
+
+    cache?: FlagsmithCache;
 
     environmentFlagsUrl: string;
     identitiesUrl: string;
@@ -73,6 +76,7 @@ export class Flagsmith {
         retries?: number;
         enableAnalytics?: boolean;
         defaultFlagHandler?: (featureName: string) => DefaultFlag;
+        cache?: FlagsmithCache,
     }) {
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
@@ -88,6 +92,19 @@ export class Flagsmith {
         this.environmentFlagsUrl = `${this.apiUrl}flags/`;
         this.identitiesUrl = `${this.apiUrl}identities/`;
         this.environmentUrl = `${this.apiUrl}environment-document/`;
+
+        if (!!data.cache) {
+            const missingMethods: string[] = ['has', 'get', 'set'].filter(method => data.cache && !data.cache[method]);
+
+            if (missingMethods.length > 0) {
+                throw new Error(
+                    `Please implement the following methods in your cache: ${missingMethods.join(
+                        ', '
+                    )}`
+                );
+            }
+            this.cache = data.cache;
+        }
 
         if (this.enableLocalEvaluation) {
             if (!this.environmentKey.startsWith('ser.')) {
@@ -105,10 +122,10 @@ export class Flagsmith {
 
         this.analyticsProcessor = data.enableAnalytics
             ? new AnalyticsProcessor({
-                  environmentKey: this.environmentKey,
-                  baseApiUrl: this.apiUrl,
-                  timeout: this.requestTimeoutSeconds
-              })
+                environmentKey: this.environmentKey,
+                baseApiUrl: this.apiUrl,
+                timeout: this.requestTimeoutSeconds
+            })
             : undefined;
     }
     /**
@@ -117,8 +134,12 @@ export class Flagsmith {
      * @returns Flags object holding all the flags for the current environment.
      */
     async getEnvironmentFlags(): Promise<Flags> {
+        const cachedItem = !!this.cache && await this.cache.get(`flags`);
+        if (!!cachedItem) {
+            return cachedItem;
+        }
         if (this.environment) {
-            return new Promise(resolve => resolve(this.getEnvironmentFlagsFromDocument()));
+            return this.getEnvironmentFlagsFromDocument();
         }
 
         return this.getEnvironmentFlagsFromApi();
@@ -134,7 +155,11 @@ export class Flagsmith {
             Flagsmith, e.g. {"num_orders": 10}
      * @returns Flags object holding all the flags for the given identity.
      */
-    getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
+    async getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
+        const cachedItem = !!this.cache && await this.cache.get(`flags-${identifier}`);
+        if (!!cachedItem) {
+            return cachedItem;
+        }
         traits = traits || {};
         if (this.enableLocalEvaluation) {
             return new Promise(resolve =>
@@ -247,15 +272,19 @@ export class Flagsmith {
         return buildEnvironmentModel(environment_data);
     }
 
-    private getEnvironmentFlagsFromDocument() {
-        return Flags.fromFeatureStateModels({
+    private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
+        const flags = Flags.fromFeatureStateModels({
             featureStates: getEnvironmentFeatureStates(this.environment),
             analyticsProcessor: this.analyticsProcessor,
             defaultFlagHandler: this.defaultFlagHandler
         });
+        if (!!this.cache) {
+            await this.cache.set('flags', flags);
+        }
+        return flags;
     }
 
-    private getIdentityFlagsFromDocument(identifier: string, traits: { [key: string]: any }) {
+    private async getIdentityFlagsFromDocument(identifier: string, traits: { [key: string]: any }): Promise<Flags> {
         const identityModel = this.buildIdentityModel(
             identifier,
             Object.keys(traits).map(key => ({
@@ -266,21 +295,31 @@ export class Flagsmith {
 
         const featureStates = getIdentityFeatureStates(this.environment, identityModel);
 
-        return Flags.fromFeatureStateModels({
+        const flags = Flags.fromFeatureStateModels({
             featureStates: featureStates,
             analyticsProcessor: this.analyticsProcessor,
             defaultFlagHandler: this.defaultFlagHandler
         });
+
+        if (!!this.cache) {
+            await this.cache.set(`flags-${identifier}`, flags);
+        }
+
+        return flags;
     }
 
     private async getEnvironmentFlagsFromApi() {
         try {
             const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
-            return Flags.fromAPIFlags({
+            const flags = Flags.fromAPIFlags({
                 apiFlags: apiFlags,
                 analyticsProcessor: this.analyticsProcessor,
                 defaultFlagHandler: this.defaultFlagHandler
             });
+            if (!!this.cache) {
+                await this.cache.set('flags', flags);
+            }
+            return flags;
         } catch (e) {
             if (this.defaultFlagHandler) {
                 return new Flags({
@@ -297,11 +336,15 @@ export class Flagsmith {
         try {
             const data = generateIdentitiesData(identifier, traits);
             const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
-            return Flags.fromAPIFlags({
+            const flags = Flags.fromAPIFlags({
                 apiFlags: jsonResponse['flags'],
                 analyticsProcessor: this.analyticsProcessor,
                 defaultFlagHandler: this.defaultFlagHandler
             });
+            if (!!this.cache) {
+                await this.cache.set(`flags-${identifier}`, flags);
+            }
+            return flags;
         } catch (e) {
             if (this.defaultFlagHandler) {
                 return new Flags({
