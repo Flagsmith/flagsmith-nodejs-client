@@ -378,12 +378,6 @@ export class Flagsmith {
     }
 
     private buildIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
-        if (!this.environment) {
-            throw new FlagsmithClientError(
-                'Unable to build identity model when no local environment present.'
-            );
-        }
-
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }

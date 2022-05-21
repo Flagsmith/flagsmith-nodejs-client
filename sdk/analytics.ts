@@ -5,8 +5,6 @@ const ANALYTICS_ENDPOINT = 'analytics/flags/';
 // Used to control how often we send data(in seconds)
 const ANALYTICS_TIMER = 10;
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(() => resolve(undefined), ms));
-
 export class AnalyticsProcessor {
     private analyticsEndpoint: string;
     private environmentKey: string;

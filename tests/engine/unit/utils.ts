@@ -87,7 +87,7 @@ export function getEnvironmentFeatureStateForFeatureByName(
     feature_name: string
 ): FeatureStateModel | undefined {
     const features = environment.featureStates.filter(fs => fs.feature.name === feature_name);
-    return features.length > 0 ? features[0] : undefined;
+    return features[0];
 }
 
 export function getEnvironmentFeatureStateForFeature(

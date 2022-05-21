@@ -119,4 +119,32 @@ test('test_cache_used_for_identity_flags', async () => {
   expect(identityFlags[0].featureName).toBe('some_feature');
 });
 
+test('test_cache_used_for_identity_flags_local_evaluation', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+  const cache = new TestCache();
+  const set = jest.spyOn(cache, 'set');
+
+  const identifier = 'identifier';
+  const traits = { some_trait: 'some_value' };
+  const flg = flagsmith({
+    cache,
+    environmentKey: 'ser.key',
+    enableLocalEvaluation: true,
+  });
+
+  (await flg.getIdentityFlags(identifier, traits)).allFlags();
+  const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
+
+  expect(set).toBeCalled();
+  expect(await cache.has('flags-identifier')).toBe(true);
+
+  expect(fetch).toBeCalledTimes(1);
+
+  expect(identityFlags[0].enabled).toBe(true);
+  expect(identityFlags[0].value).toBe('some-value');
+  expect(identityFlags[0].featureName).toBe('some_feature');
+});
+
 test('test_cache_used_for_all_flags', async () => { });

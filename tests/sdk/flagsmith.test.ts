@@ -219,6 +219,24 @@ test('test_getFeatureValue', async () => {
     expect(featureValue).toBe('some-value');
 });
 
+test('test_update_environment_uses_req_when_inited', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    const identifier = 'identifier';
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+
+    });
+
+    delay(400);
+
+    expect(async () => {
+        await flg.updateEnvironment();
+    }).not.toThrow();
+});
+
 test('test_isFeatureEnabled', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
@@ -405,6 +423,41 @@ test('test_default_flag_is_used_when_no_identity_flags_returned', async () => {
     expect(flag.isDefault).toBe(true);
     expect(flag.value).toBe(defaultFlag.value);
     expect(flag.enabled).toBe(defaultFlag.enabled);
+});
+
+test('test_default_flag_is_used_when_no_identity_flags_returned_due_to_error', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler
+    });
+
+    const flags = await flg.getIdentityFlags('identifier');
+    const flag = flags.getFlag('some_feature');
+
+    expect(flag.isDefault).toBe(true);
+    expect(flag.value).toBe(defaultFlag.value);
+    expect(flag.enabled).toBe(defaultFlag.enabled);
+});
+
+test('test_throws_when_no_identity_flags_returned_due_to_error', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
+
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    expect(async () => {
+        await flg.getIdentityFlags('identifier');
+    }).rejects.toThrow();
+
 });
 
 test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_default_flag_handler', async () => {
