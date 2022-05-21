@@ -358,8 +358,6 @@ test('test_local_evaluation', async () => {
         defaultFlagHandler: defaultFlagHandler
     });
 
-    await delay(200);
-
     const flags = await flg.getEnvironmentFlags();
     const flag = flags.getFlag('some_feature');
 

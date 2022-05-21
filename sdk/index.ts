@@ -142,6 +142,13 @@ export class Flagsmith {
         if (!!cachedItem) {
             return cachedItem;
         }
+        if (this.enableLocalEvaluation) {
+            return new Promise(resolve =>
+                this.environmentPromise!.then(() => {
+                    resolve(this.getEnvironmentFlagsFromDocument());
+                })
+            );
+        }
         if (this.environment) {
             return this.getEnvironmentFlagsFromDocument();
         }
