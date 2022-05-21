@@ -44,8 +44,9 @@ export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations =
     const hashedInt = bigInt(h2d(hashedValue));
     const value = (hashedInt.mod(9999).toJSNumber() / 9998) * 100;
 
+    // we ignore this for it's nearly impossible use case to catch
+    /* istanbul ignore next */
     if (value === 100) {
-        // we ignore this for it's nearly impossible use case to catch
         /* istanbul ignore next */
         return getHashedPercentateForObjIds(objectIds, iterations + 1);
     }
