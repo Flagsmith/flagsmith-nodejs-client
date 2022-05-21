@@ -27,7 +27,6 @@ export class Flagsmith {
     enableAnalytics: boolean = false;
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
 
-    cache?: FlagsmithCache;
 
     environmentFlagsUrl: string;
     identitiesUrl: string;
@@ -35,6 +34,9 @@ export class Flagsmith {
 
     environmentDataPollingManager?: EnvironmentDataPollingManager;
     environment!: EnvironmentModel;
+
+    private cache?: FlagsmithCache;
+    private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
     /**
      * A Flagsmith client.
@@ -77,6 +79,7 @@ export class Flagsmith {
         enableAnalytics?: boolean;
         defaultFlagHandler?: (featureName: string) => DefaultFlag;
         cache?: FlagsmithCache,
+        onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
     }) {
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
@@ -92,6 +95,7 @@ export class Flagsmith {
         this.environmentFlagsUrl = `${this.apiUrl}flags/`;
         this.identitiesUrl = `${this.apiUrl}identities/`;
         this.environmentUrl = `${this.apiUrl}environment-document/`;
+        this.onEnvironmentChange = data.onEnvironmentChange;
 
         if (!!data.cache) {
             const missingMethods: string[] = ['has', 'get', 'set'].filter(method => data.cache && !data.cache[method]);
@@ -213,14 +217,23 @@ export class Flagsmith {
      * You only need to call this if you wish to bypass environmentRefreshIntervalSeconds.
      */
     async updateEnvironment() {
-        const request = this.getEnvironmentFromApi();
-        if (!this.environmentPromise) {
-            this.environmentPromise = request.then(res => {
-                this.environment = res;
-            });
-            await this.environmentPromise;
-        } else {
-            this.environment = await request;
+        try {
+            const request = this.getEnvironmentFromApi();
+            if (!this.environmentPromise) {
+                this.environmentPromise = request.then(res => {
+                    this.environment = res;
+                });
+                await this.environmentPromise;
+            } else {
+                this.environment = await request;
+            }
+            if (this.onEnvironmentChange) {
+                this.onEnvironmentChange(null, this.environment);
+            }
+        } catch (e) {
+            if (this.onEnvironmentChange) {
+                this.onEnvironmentChange(e as Error, this.environment);
+            }
         }
     }
 

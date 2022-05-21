@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
 import { DefaultFlag } from '../../sdk/models';
 import { delay } from '../../sdk/utils';
+import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
 
 jest.mock('node-fetch');
 jest.mock('../../sdk/polling_manager');
@@ -403,4 +404,44 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
     expect(flag.isDefault).toBe(true);
     expect(flag.value).toBe(undefined);
     expect(flag.enabled).toBe(false);
+});
+
+test('test onEnvironmentChange is called when provided', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response('environmentJSON()')));
+
+    const callback = {
+        callback: (e: Error | null, result: EnvironmentModel) => { }
+    };
+    const callbackSpy = jest.spyOn(callback, 'callback');
+
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        onEnvironmentChange: callback.callback,
+    });
+
+    await delay(200);
+
+    expect(callbackSpy).toBeCalled();
+});
+
+test('test onEnvironmentChange is called after error', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response('aaa')));
+
+    const callback = {
+        callback: (e: Error | null, result: EnvironmentModel) => { }
+    };
+    const callbackSpy = jest.spyOn(callback, 'callback');
+
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        onEnvironmentChange: callback.callback,
+    });
+
+    await delay(200);
+
+    expect(callbackSpy).toBeCalled();
 });
