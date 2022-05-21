@@ -120,6 +120,26 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', as
     expect(identityFlags[0].value).toBe('some-value');
     expect(identityFlags[0].featureName).toBe('some_feature');
 });
+
+test('test_get_identity_flags_calls_api_when_local_environment_no_traits', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    const identifier = 'identifier';
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+
+    });
+
+
+    const identityFlags = (await flg.getIdentityFlags(identifier)).allFlags();
+
+    expect(identityFlags[0].enabled).toBe(true);
+    expect(identityFlags[0].value).toBe('some-value');
+    expect(identityFlags[0].featureName).toBe('some_feature');
+});
+
 test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
@@ -408,7 +428,7 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
 
 test('test onEnvironmentChange is called when provided', async () => {
     // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response('environmentJSON()')));
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
 
     const callback = {
         callback: (e: Error | null, result: EnvironmentModel) => { }
