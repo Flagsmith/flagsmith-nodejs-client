@@ -2,8 +2,8 @@ import fetch, { Response } from 'node-fetch';
 // @ts-ignore
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
-export function generateIdentitiesData(identifier: string, traits?: { [key: string]: any }) {
-    const traitsGenerated = Object.entries(traits || {}).map(trait => ({
+export function generateIdentitiesData(identifier: string, traits: { [key: string]: any }) {
+    const traitsGenerated = Object.entries(traits).map(trait => ({
         trait_key: trait[0],
         trait_value: trait[1]
     }));
@@ -18,9 +18,8 @@ export const delay = (ms: number) =>
 
 export const retryFetch = (
     url: string,
-    fetchOptions = {},
+    fetchOptions: any,
     retries = 3,
-    retryDelay = 1000,
     timeout: number
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
@@ -32,7 +31,7 @@ export const retryFetch = (
                 .then(res => resolve(res))
                 .catch(async err => {
                     if (n > 0) {
-                        await delay(retryDelay);
+                        await delay(1000);
                         wrapper(--n);
                     } else {
                         reject(err);

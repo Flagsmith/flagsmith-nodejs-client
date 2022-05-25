@@ -269,7 +269,6 @@ export class Flagsmith {
                 headers: headers
             },
             this.retries,
-            1000,
             (this.requestTimeoutSeconds || 10) * 1000
         );
 

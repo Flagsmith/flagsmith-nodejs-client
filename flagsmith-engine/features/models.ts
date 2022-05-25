@@ -86,9 +86,9 @@ export class FeatureStateModel {
         ]);
 
         let startPercentage = 0;
-        const sortedF = this.multivariateFeatureStateValues.sort((a, b) =>
-            !!(a.id && b.id) ? a.id - b.id : a.mvFsValueUuid > b.mvFsValueUuid ? -1 : 1
-        );
+        const sortedF = this.multivariateFeatureStateValues.sort((a, b) =>{
+            return a.id - b.id;
+        });
         for (const myValue of sortedF) {
             const limit = myValue.percentageAllocation + startPercentage;
             if (startPercentage <= percentageValue && percentageValue < limit) {
