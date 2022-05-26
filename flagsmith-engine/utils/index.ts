@@ -1,3 +1,5 @@
+import { FeatureSegment } from "../features/models";
+
 export function getCastingFunction(input: any): CallableFunction {
     switch (typeof input) {
         case 'boolean':
@@ -7,4 +9,8 @@ export function getCastingFunction(input: any): CallableFunction {
         default:
             return (x: any) => String(x);
     }
+}
+
+export function filterFeatureSegments(featureSegments: FeatureSegment[], environmentApiKey: string): FeatureSegment[] {
+    return featureSegments.filter(fs => fs.environment === environmentApiKey);
 }

@@ -1,5 +1,6 @@
 import {
     FeatureModel,
+    FeatureSegment,
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel
@@ -18,6 +19,10 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
         featuresStateModelJSON.uuid
     );
 
+    featureStateModel.featureSegment = featuresStateModelJSON.feature_segment ? 
+        buildFeatureSegment(featuresStateModelJSON.feature_segment) : 
+        undefined;
+
     const multivariateFeatureStateValues = featuresStateModelJSON.multivariate_feature_state_values
         ? featuresStateModelJSON.multivariate_feature_state_values.map((fsv: any) => {
               const featureOption = new MultivariateFeatureOptionModel(
@@ -35,4 +40,13 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
     featureStateModel.multivariateFeatureStateValues = multivariateFeatureStateValues;
 
     return featureStateModel;
+}
+
+export function buildFeatureSegment(featureSegmentJSON: any): FeatureSegment {
+    const featureStates = featureSegmentJSON.feature_states ? featureSegmentJSON.feature_states.map(buildFeatureStateModel) : [];
+    return new FeatureSegment(
+        featureSegmentJSON.id,
+        featureSegmentJSON.priority,
+        featureSegmentJSON.environment,
+        featureStates);
 }

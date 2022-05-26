@@ -51,6 +51,7 @@ export class FeatureStateModel {
     enabled: boolean;
     djangoID: number;
     featurestateUUID: string = uuidv4();
+    featureSegment?: FeatureSegment;
     private value: any;
     multivariateFeatureStateValues: MultivariateFeatureStateValueModel[] = [];
 
@@ -79,6 +80,23 @@ export class FeatureStateModel {
         return this.value;
     }
 
+    /* 
+        Returns `True` if `this` is higher segment priority than `other`
+        (i.e. has lower value for featureSegment.priority)
+        NOTE:
+            A segment will be considered higher priority only if:
+            1. `other` does not have a feature segment(i.e: it is an environment feature state or it's a
+            feature state with feature segment but from an old document that does not have `featureSegment.priority`)
+            but `this` does.
+            2. `other` have a feature segment with high priority
+    */
+    isHigherSegmentPriority(other: FeatureStateModel): boolean {
+        if (!other.featureSegment || !this.featureSegment) {
+            return false;
+        }
+        return this.featureSegment.priority < other.featureSegment.priority;
+    }
+
     getMultivariateValue(identityID: number | string) {
         const percentageValue = getHashedPercentateForObjIds([
             this.djangoID || this.featurestateUUID,
@@ -97,5 +115,19 @@ export class FeatureStateModel {
             startPercentage = limit;
         }
         return this.value;
+    }
+}
+
+export class FeatureSegment {
+    id: number;
+    priority: number;
+    environment: string;
+    featureStates: FeatureStateModel[] = [];
+
+    constructor(id: number, priority: number, environment: string, featureStates: FeatureStateModel[]) {
+        this.id = id;
+        this.priority = priority;
+        this.environment = environment;
+        this.featureStates = featureStates || [];
     }
 }

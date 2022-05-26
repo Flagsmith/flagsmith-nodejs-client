@@ -25,9 +25,13 @@ function getIdentityFeatureStatesDict(
     );
     for (const matchingSegment of identitySegments) {
         for (const featureState of matchingSegment.featureStates) {
+            if (featureStates[featureState.feature.id]) {
+                if (featureStates[featureState.feature.id].isHigherSegmentPriority(featureState)) {
+                    continue;
+                }
+            }
             // note that feature states are stored on the segment in descending priority
             // order so we only care that the last one is added
-            // TODO: can we optimise this?
             featureStates[featureState.feature.id] = featureState;
         }
     }
