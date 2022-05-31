@@ -30,8 +30,6 @@ function getIdentityFeatureStatesDict(
                     continue;
                 }
             }
-            // note that feature states are stored on the segment in descending priority
-            // order so we only care that the last one is added
             featureStates[featureState.feature.id] = featureState;
         }
     }

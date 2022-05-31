@@ -92,11 +92,11 @@ export class FeatureStateModel {
     */
     isHigherSegmentPriority(other: FeatureStateModel): boolean {
         if (!other.featureSegment || !this.featureSegment) {
-            return false;
+            return !!this.featureSegment && !other.featureSegment;
         }
         return this.featureSegment.priority < other.featureSegment.priority;
     }
-
+    
     getMultivariateValue(identityID: number | string) {
         const percentageValue = getHashedPercentateForObjIds([
             this.djangoID || this.featurestateUUID,
@@ -119,15 +119,9 @@ export class FeatureStateModel {
 }
 
 export class FeatureSegment {
-    id: number;
     priority: number;
-    environment: string;
-    featureStates: FeatureStateModel[] = [];
 
-    constructor(id: number, priority: number, environment: string, featureStates: FeatureStateModel[]) {
-        this.id = id;
+    constructor(priority: number) {
         this.priority = priority;
-        this.environment = environment;
-        this.featureStates = featureStates || [];
     }
 }

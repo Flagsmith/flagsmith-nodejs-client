@@ -43,10 +43,5 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
 }
 
 export function buildFeatureSegment(featureSegmentJSON: any): FeatureSegment {
-    const featureStates = featureSegmentJSON.feature_states ? featureSegmentJSON.feature_states.map(buildFeatureStateModel) : [];
-    return new FeatureSegment(
-        featureSegmentJSON.id,
-        featureSegmentJSON.priority,
-        featureSegmentJSON.environment,
-        featureStates);
+    return new FeatureSegment(featureSegmentJSON.priority);
 }
