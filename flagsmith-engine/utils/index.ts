@@ -10,7 +10,3 @@ export function getCastingFunction(input: any): CallableFunction {
             return (x: any) => String(x);
     }
 }
-
-// export function filterFeatureSegments(featureSegments: FeatureSegment[], environmentApiKey: string): FeatureSegment[] {
-//     return featureSegments.filter(fs => fs.environment === environmentApiKey);
-// }
