@@ -1,11 +1,13 @@
-import { FeatureSegment } from "../features/models";
+import { removeSemverSuffix } from "../segments/util";
 
-export function getCastingFunction(input: any): CallableFunction {
-    switch (typeof input) {
+export function getCastingFunction(traitType: 'boolean' | 'string' | 'number' | 'semver' | any): CallableFunction {
+    switch (traitType) {
         case 'boolean':
             return (x: any) => !['False', 'false'].includes(x);
         case 'number':
             return (x: any) => parseFloat(x);
+        case 'semver':
+            return (x: any) => removeSemverSuffix(x);
         default:
             return (x: any) => String(x);
     }
