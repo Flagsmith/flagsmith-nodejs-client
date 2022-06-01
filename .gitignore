@@ -7,3 +7,6 @@
 .idea/*
 
 node_modules/
+build/
+
+.tool-versions

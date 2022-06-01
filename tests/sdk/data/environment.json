@@ -1,0 +1,70 @@
+{
+  "api_key": "B62qaMZNwfiqT76p38ggrQ",
+  "project": {
+    "name": "Test project",
+    "organisation": {
+      "feature_analytics": false,
+      "name": "Test Org",
+      "id": 1,
+      "persist_trait_data": true,
+      "stop_serving_flags": false
+    },
+    "id": 1,
+    "hide_disabled_flags": false,
+    "segments": [
+      {
+        "name": "regular_segment",
+        "feature_states": [
+          {
+            "feature_state_value": "segment_override",
+            "multivariate_feature_state_values": [],
+            "django_id": 81027,
+            "feature": {
+              "name": "some_feature",
+              "type": "STANDARD",
+              "id": 1
+            },
+            "enabled": false
+          }
+        ],
+        "id": 1,
+        "rules": [
+          {
+            "type": "ALL",
+            "conditions": [],
+            "rules": [
+              {
+                "type": "ANY",
+                "conditions": [
+                  {
+                    "value": "40",
+                    "property_": "age",
+                    "operator": "LESS_THAN"
+                  }
+                ],
+                "rules": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "segment_overrides": [],
+  "id": 1,
+  "feature_states": [
+    {
+      "multivariate_feature_state_values": [],
+      "feature_state_value": "some-value",
+      "id": 1,
+      "featurestate_uuid": "40eb539d-3713-4720-bbd4-829dbef10d51",
+      "feature": {
+        "name": "some_feature",
+        "type": "STANDARD",
+        "id": 1
+      },
+      "segment_id": null,
+      "enabled": true
+    }
+  ]
+}
