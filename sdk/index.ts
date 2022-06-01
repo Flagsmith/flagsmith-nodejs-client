@@ -14,7 +14,7 @@ import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache } from './types';
 
-const DEFAULT_API_URL = 'https://api.flagsmith.com/api/v1/';
+const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 
 export class Flagsmith {
     environmentKey?: string;
