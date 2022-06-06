@@ -27,3 +27,11 @@ export function buildSegmentModel(segmentModelJSON: any): SegmentModel {
 
     return model;
 }
+
+export function isSemver(value: any) {
+    return typeof value == 'string' && value.endsWith(':semver');
+}
+
+export function removeSemverSuffix(value: string) {
+    return value.replace(':semver', '');
+}

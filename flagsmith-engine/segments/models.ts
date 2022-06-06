@@ -1,3 +1,5 @@
+import semver from 'semver';
+
 import { FeatureStateModel } from '../features/models';
 import { getCastingFunction as getCastingFunction } from '../utils';
 import {
@@ -8,6 +10,7 @@ import {
     REGEX,
     CONDITION_OPERATORS
 } from './constants';
+import { isSemver } from './util';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;
@@ -24,6 +27,19 @@ export const matchingFunctions = {
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
         otherValue.includes(thisValue),
 };
+
+export const semverMatchingFunction = {
+    ...matchingFunctions,
+    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) => semver.eq(thisValue, otherValue),
+    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) => semver.gt(otherValue, thisValue),
+    [CONDITION_OPERATORS.GREATER_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
+        semver.gte(otherValue, thisValue),
+    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) => semver.gt(thisValue, otherValue),
+    [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
+        semver.gte(thisValue, otherValue),
+}
+
+export const getMatchingFunctions = (semver: boolean) => (semver ? semverMatchingFunction : matchingFunctions);
 
 export class SegmentConditionModel {
     EXCEPTION_OPERATOR_METHODS: { [key: string]: string } = {
@@ -59,9 +75,12 @@ export class SegmentConditionModel {
 
         const defaultFunction = (x: any, y: any) => false;
 
-        const matchingFunction = matchingFunctions[this.operator] || defaultFunction;
+        const matchingFunctionSet = getMatchingFunctions(isSemver(this.value));
+        const matchingFunction = matchingFunctionSet[this.operator] || defaultFunction;
 
-        const castToTypeOfTraitValue = getCastingFunction(traitValue);
+        const traitType = isSemver(this.value) ? 'semver' : typeof traitValue;
+        const castToTypeOfTraitValue = getCastingFunction(traitType);
+
         return matchingFunction(castToTypeOfTraitValue(this.value), traitValue);
     }
 }
