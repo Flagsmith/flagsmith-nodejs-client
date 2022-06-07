@@ -1,10 +1,10 @@
 {
-  "name": "node-minimal",
+  "name": "flagsmith-nodejs-example",
   "version": "0.1.1",
-  "description": "Node Express Boilerplate",
+  "description": "An example using the flagsmith nodejs library",
   "main": "index.js",
   "scripts": {
-    "start": "node --inspect ./server",
+    "start": "cd ../ && npm run build && cd ./example && node --inspect ./server",
     "dev": "nodemon --exec npm start",
     "test": "nodemon ./server/tests/"
   },
@@ -15,6 +15,7 @@
     "npm": "3.10.x"
   },
   "dependencies": {
+    "flagsmith-nodejs": "^2.0.0-beta.1",
     "node-cache": "^5.1.2",
     "ssg-node-express": "4.16.4",
     "ssg-util": "0.0.3"

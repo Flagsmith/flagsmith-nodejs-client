@@ -19,6 +19,13 @@ Please read [CONTRIBUTING.md](https://gist.github.com/kyle-ssg/c36a03aebe492e45c
 
 If you encounter a bug or feature request we would like to hear about it. Before you submit an issue please search existing issues in order to prevent duplicates.
 
+## Testing
+
+To run the local tests you need to run following command beforehand:
+```
+git submodule add git@github.com:Flagsmith/engine-test-data.git tests/engine/engine-tests/engine-test-data/
+```
+
 ## Get in touch
 
 If you have any questions about our projects you can email <a href="mailto:support@flagsmith.com">support@flagsmith.com</a>.

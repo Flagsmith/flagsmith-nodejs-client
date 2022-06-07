@@ -2,12 +2,6 @@
 
 ## Getting Started
 
-# Setup via cli
-
-`npm i ssg-node -g`
-
-`ssg-node PROJECT_NAME`
-
 # Run
 
 `$ npm start`
