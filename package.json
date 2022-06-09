@@ -47,6 +47,7 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --coverage --watch --coverageReporters='text'",
     "build": "tsc",
     "deploy": "npm i && npm run build && npm run publish",
+    "deploy:beta": "npm i && npm run build && npm publish --tag beta",
     "prepare": "husky install"
   },
   "dependencies": {
