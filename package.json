@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-nodejs",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "Flagsmith lets you manage features flags and remote config across web, mobile and server side applications. Deliver true Continuous Integration. Get builds out faster. Control who has access to new features.",
   "main": "build/index.js",
   "repository": {
@@ -46,7 +46,7 @@
     "test:watch": "jest --coverage --watch --coverageReporters='text'",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --coverage --watch --coverageReporters='text'",
     "build": "tsc",
-    "prepublish": "npm run build",
+    "deploy": "npm i && npm run build && npm run publish",
     "prepare": "husky install"
   },
   "dependencies": {
