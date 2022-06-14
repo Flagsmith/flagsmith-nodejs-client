@@ -9,7 +9,7 @@ The SDK clients for NodeJS [https://www.flagsmith.com/](https://www.flagsmith.co
 
 ## Adding to your project
 
-For full documentation visit [https://docs.flagsmith.com/clients/node/](https://docs.flagsmith.com/clients/node/)
+For full documentation visit [https://docs.flagsmith.com/clients/server-side](https://docs.flagsmith.com/clients/server-side).
 
 ## Contributing
 
