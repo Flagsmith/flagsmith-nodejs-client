@@ -1,6 +1,8 @@
 const Router = require('express').Router;
 const Flagsmith = require('../../../build');
 const environmentKey = '';
+const nodecache = require("node-cache");
+
 if (!environmentKey) {
     throw new Error(
         'Please generate a Server Side SDK Key in environment settings to run the example'
@@ -9,9 +11,10 @@ if (!environmentKey) {
 const flagsmith = new Flagsmith({
     environmentKey,
     enableLocalEvaluation: true,
-    defaultFlagHandler: str => {
-        return { enabled: false, isDefault: true, value: null };
-    }
+    cache: new nodecache({
+        stdTTL: 10,
+        checkperiod: 10,
+    }),
 });
 
 module.exports = () => {
