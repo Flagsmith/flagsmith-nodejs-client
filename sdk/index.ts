@@ -14,6 +14,13 @@ import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache } from './types';
 
+export { AnalyticsProcessor } from './analytics';
+export { FlagsmithAPIError, FlagsmithClientError } from './errors';
+
+export { DefaultFlag, Flags } from './models';
+export { EnvironmentDataPollingManager } from './polling_manager';
+export { FlagsmithCache } from './types';
+
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 
 export class Flagsmith {
@@ -383,3 +390,4 @@ export class Flagsmith {
 }
 
 export default Flagsmith;
+
