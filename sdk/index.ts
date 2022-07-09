@@ -260,17 +260,22 @@ export class Flagsmith {
             }
         }
 
-        const data = await retryFetch(
-            url,
-            {
-                method: method,
-                timeout: this.requestTimeoutSeconds || undefined,
-                body: JSON.stringify(body),
-                headers: headers
-            },
-            this.retries,
-            (this.requestTimeoutSeconds || 10) * 1000
-        );
+        let data;
+        try {
+            data = await retryFetch(
+                url,
+                {
+                    method: method,
+                    timeout: this.requestTimeoutSeconds || undefined,
+                    body: JSON.stringify(body),
+                    headers: headers
+                },
+                this.retries,
+                (this.requestTimeoutSeconds || 10) * 1000
+            );
+        } catch(e) {
+            throw new FlagsmithAPIError(`Failed during the fetching. Error: ${(e as Error).toString()}`);
+        }
 
         if (data.status !== 200) {
             throw new FlagsmithAPIError(

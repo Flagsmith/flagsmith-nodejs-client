@@ -35,7 +35,7 @@ export class AnalyticsProcessor {
             return;
         }
 
-        await fetch(this.analyticsEndpoint, {
+        const response = await fetch(this.analyticsEndpoint, {
             method: 'POST',
             body: JSON.stringify(this.analyticsData),
             timeout: this.timeout,
@@ -44,6 +44,11 @@ export class AnalyticsProcessor {
                 'X-Environment-Key': this.environmentKey
             }
         });
+
+        if (response.status !== 200) {
+            throw new Error(`Could not successfully flush the analytics data, status received: ${response.status}`);
+        }
+
 
         this.analyticsData = {};
         this.lastFlushed = Date.now();
