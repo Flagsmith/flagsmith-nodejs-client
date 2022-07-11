@@ -298,6 +298,7 @@ export class Flagsmith {
             defaultFlagHandler: this.defaultFlagHandler
         });
         if (!!this.cache) {
+            // @ts-ignore node-cache types are incorrect, ttl should be optional
             await this.cache.set('flags', flags);
         }
         return flags;
@@ -321,6 +322,7 @@ export class Flagsmith {
         });
 
         if (!!this.cache) {
+            // @ts-ignore node-cache types are incorrect, ttl should be optional
             await this.cache.set(`flags-${identifier}`, flags);
         }
 
@@ -336,6 +338,7 @@ export class Flagsmith {
                 defaultFlagHandler: this.defaultFlagHandler
             });
             if (!!this.cache) {
+                // @ts-ignore node-cache types are incorrect, ttl should be optional
                 await this.cache.set('flags', flags);
             }
             return flags;
@@ -361,6 +364,7 @@ export class Flagsmith {
                 defaultFlagHandler: this.defaultFlagHandler
             });
             if (!!this.cache) {
+                // @ts-ignore node-cache types are incorrect, ttl should be optional
                 await this.cache.set(`flags-${identifier}`, flags);
             }
             return flags;

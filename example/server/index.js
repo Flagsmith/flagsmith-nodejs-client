@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.use('/api', api());
 
 app.server.listen(PORT);
-console.log('Server started on port ' + app.server.address().port);
+console.log('Server started on port ' + PORT);
 console.log();
 console.log('Go to http://localhost:' + PORT + '/api');
 console.log('To get an example response for getFlags');
