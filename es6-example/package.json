@@ -1,0 +1,54 @@
+{
+  "name": "nodejs-es6-boilerplate",
+  "version": "1.0.1",
+  "description": "Node.js boilerplate with ES6, ESLint, and Prettier",
+  "main": "src/index.js",
+  "browserslist": [
+    "last 2 Chrome versions"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf build && mkdir build",
+    "build-babel": "babel -d ./build ./src -s",
+    "build": "npm run clean && npm run build-babel",
+    "dev": "nodemon --exec npm start --ignore ./build",
+    "node-cache": "^5.1.2",
+    "ssg-node-express": "4.16.4",
+    "start": "npm run build && node ./build/index.js",
+    "format": "prettier --write \"src/**/*.js\"",
+    "format:check": "prettier --list-different \"src/**/*.js\"",
+    "lint": "eslint \"src/**/*.js\"",
+    "lint:fix": "eslint --fix \"src/**/*.js\""
+  },
+  "repository": "github:vferdiansyah/nodejs-es6-boilerplate",
+  "keywords": [
+    "javascript",
+    "node",
+    "nodejs",
+    "es6",
+    "eslint",
+    "prettier",
+    "boilerplate"
+  ],
+  "author": {
+    "name": "Veri Ferdiansyah",
+    "email": "veri.ferdi@gmail.com",
+    "url": "https://vferdiansyah.github.io"
+  },
+  "license": "MIT",
+  "bugs": "https://github.com/vferdiansyah/nodejs-es6-boilerplate/issues",
+  "homepage": "https://github.com/vferdiansyah/nodejs-es6-boilerplate#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "eslint": "^6.2.1",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "nodemon": "^2.0.19",
+    "prettier": "^1.18.2"
+  },
+  "dependencies": {
+    "node-cache": "^5.1.2"
+  }
+}
