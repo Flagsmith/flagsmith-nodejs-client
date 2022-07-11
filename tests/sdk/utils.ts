@@ -18,8 +18,9 @@ export class TestCache implements FlagsmithCache {
         return !!this.cache[name];
     }
 
-    async set(name: string, value: Flags) {
+    async set(name: string, value: Flags, ttl: number|string) {
         this.cache[name] = value;
+        return true
     }
 }
 
