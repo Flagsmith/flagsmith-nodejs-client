@@ -49,8 +49,8 @@ export class AnalyticsProcessor {
         this.lastFlushed = Date.now();
     }
 
-    trackFeature(featureId: number) {
-        this.analyticsData[featureId] = (this.analyticsData[featureId] || 0) + 1;
+    trackFeature(featureName: string) {
+        this.analyticsData[featureName] = (this.analyticsData[featureName] || 0) + 1;
         if (Date.now() - this.lastFlushed > ANALYTICS_TIMER * 1000) {
             this.flush();
         }
