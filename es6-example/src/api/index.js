@@ -1,6 +1,7 @@
 import {Router}  from 'express'
-import { Flagsmith }  from '../../../build'
-const environmentKey = '';
+import Flagsmith from '../../../build'
+
+const environmentKey = 'ser.axSFHJmzrBTKKkzxbnBgtD';
 import nodecache from "node-cache";
 
 if (!environmentKey) {

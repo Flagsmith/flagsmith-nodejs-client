@@ -1,14 +1,13 @@
 import Flagsmith from './sdk';
 
-export { 
-  Flagsmith, 
+export {
   AnalyticsProcessor,
   FlagsmithAPIError,
   FlagsmithClientError,
   EnvironmentDataPollingManager,
   FlagsmithCache,
   DefaultFlag,
-  Flags 
+  Flags
 } from './sdk';
 
 export {
