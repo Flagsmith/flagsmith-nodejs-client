@@ -20,5 +20,8 @@
     "ssg-node-express": "4.16.4",
     "ssg-util": "0.0.3"
   },
-  "keywords": []
+  "keywords": [],
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
 }
