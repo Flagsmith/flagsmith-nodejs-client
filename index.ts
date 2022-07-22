@@ -19,5 +19,5 @@ export {
   SegmentModel,
   OrganisationModel
 } from './flagsmith-engine';
-
+export default Flagsmith
 module.exports = Flagsmith;

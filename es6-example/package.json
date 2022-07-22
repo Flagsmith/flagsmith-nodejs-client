@@ -50,6 +50,7 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
+    "flagsmith-nodejs": "^2.1.0",
     "node-cache": "^5.1.2"
   }
 }

@@ -1,5 +1,5 @@
 import {Router}  from 'express'
-import Flagsmith from '../../../build'
+import Flagsmith, {Flags} from '../../../build'
 
 const environmentKey = '';
 import nodecache from "node-cache";
