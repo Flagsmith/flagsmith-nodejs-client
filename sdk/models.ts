@@ -129,7 +129,7 @@ export class Flags {
         }
 
         if (this.analyticsProcessor && flag.featureId) {
-            this.analyticsProcessor.trackFeature(flag.featureId);
+            this.analyticsProcessor.trackFeature(flag.featureName);
         }
 
         return flag;
