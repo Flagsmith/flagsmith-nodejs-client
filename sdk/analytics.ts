@@ -10,7 +10,7 @@ export class AnalyticsProcessor {
     private environmentKey: string;
     private lastFlushed: number;
     analyticsData: { [key: string]: any };
-    private timeout: number = 3;
+    private timeout: number = 3; // seconds
     /**
      * AnalyticsProcessor is used to track how often individual Flags are evaluated within 
      * the Flagsmith SDK. Docs: https://docs.flagsmith.com/advanced-use/flag-analytics.
@@ -38,7 +38,7 @@ export class AnalyticsProcessor {
         await fetch(this.analyticsEndpoint, {
             method: 'POST',
             body: JSON.stringify(this.analyticsData),
-            timeout: this.timeout,
+            timeout: this.timeout * 1000, // ms
             headers: {
                 'Content-Type': 'application/json',
                 'X-Environment-Key': this.environmentKey

@@ -20,11 +20,11 @@ export const retryFetch = (
     url: string,
     fetchOptions: any,
     retries = 3,
-    timeout: number
+    timeout: number // seconds
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
         // check for timeout
-        if (timeout) setTimeout(() => reject('error: timeout'), timeout);
+        if (timeout) setTimeout(() => reject('error: timeout'), timeout * 1000);
 
         const wrapper = (n: number) => {
             fetch(url, fetchOptions)
