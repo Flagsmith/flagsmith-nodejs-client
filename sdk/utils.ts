@@ -20,7 +20,7 @@ export const retryFetch = (
     url: string,
     fetchOptions: any,
     retries = 3,
-    timeout: number
+    timeout?: number // set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
         // check for timeout
