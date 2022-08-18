@@ -28,6 +28,7 @@ export class Flagsmith {
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
     requestTimeoutSeconds?: number;
+    requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
     retries?: number;
@@ -92,6 +93,7 @@ export class Flagsmith {
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
         this.requestTimeoutSeconds = data.requestTimeoutSeconds;
+        this.requestTimeoutMs = data.requestTimeoutSeconds ? data.requestTimeoutSeconds * 1000 : undefined;
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
@@ -135,7 +137,7 @@ export class Flagsmith {
             ? new AnalyticsProcessor({
                 environmentKey: this.environmentKey,
                 baseApiUrl: this.apiUrl,
-                timeout: this.requestTimeoutSeconds
+                requestTimeoutMs: this.requestTimeoutMs
             })
             : undefined;
     }
@@ -271,12 +273,11 @@ export class Flagsmith {
             url,
             {
                 method: method,
-                timeout: this.requestTimeoutSeconds || undefined,
+                timeout: this.requestTimeoutMs || undefined,
                 body: JSON.stringify(body),
                 headers: headers
             },
-            this.retries,
-            (this.requestTimeoutSeconds || 10) * 1000
+            this.retries
         );
 
         if (data.status !== 200) {
