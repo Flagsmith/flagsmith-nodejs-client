@@ -10,22 +10,22 @@ export class AnalyticsProcessor {
     private environmentKey: string;
     private lastFlushed: number;
     analyticsData: { [key: string]: any };
-    private timeout: number = 3;
+    private requestTimeoutMs: number = 3000;
     /**
      * AnalyticsProcessor is used to track how often individual Flags are evaluated within 
      * the Flagsmith SDK. Docs: https://docs.flagsmith.com/advanced-use/flag-analytics.
      * 
      * @param data.environmentKey environment key obtained from the Flagsmith UI
      * @param data.baseApiUrl base api url to override when using self hosted version
-     * @param data.timeout used to tell requests to stop waiting for a response after a
-            given number of seconds
+     * @param data.requestTimeoutMs used to tell requests to stop waiting for a response after a
+            given number of milliseconds
      */
-    constructor(data: { environmentKey: string; baseApiUrl: string; timeout?: number }) {
+    constructor(data: { environmentKey: string; baseApiUrl: string; requestTimeoutMs?: number }) {
         this.analyticsEndpoint = data.baseApiUrl + ANALYTICS_ENDPOINT;
         this.environmentKey = data.environmentKey;
         this.lastFlushed = Date.now();
         this.analyticsData = {};
-        this.timeout = data.timeout || this.timeout;
+        this.requestTimeoutMs = data.requestTimeoutMs || this.requestTimeoutMs;
     }
     /**
      * Sends all the collected data to the api asynchronously and resets the timer
@@ -38,7 +38,7 @@ export class AnalyticsProcessor {
         await fetch(this.analyticsEndpoint, {
             method: 'POST',
             body: JSON.stringify(this.analyticsData),
-            timeout: this.timeout,
+            timeout: this.requestTimeoutMs,
             headers: {
                 'Content-Type': 'application/json',
                 'X-Environment-Key': this.environmentKey
