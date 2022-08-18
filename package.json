@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-nodejs",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "description": "Flagsmith lets you manage features flags and remote config across web, mobile and server side applications. Deliver true Continuous Integration. Get builds out faster. Control who has access to new features.",
   "main": "build/index.js",
   "repository": {
