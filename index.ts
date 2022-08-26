@@ -1,5 +1,3 @@
-import Flagsmith from './sdk';
-
 export {
   AnalyticsProcessor,
   FlagsmithAPIError,
@@ -7,7 +5,8 @@ export {
   EnvironmentDataPollingManager,
   FlagsmithCache,
   DefaultFlag,
-  Flags
+  Flags,
+  default
 } from './sdk';
 
 export {
@@ -19,5 +18,3 @@ export {
   SegmentModel,
   OrganisationModel
 } from './flagsmith-engine';
-
-module.exports = Flagsmith;
