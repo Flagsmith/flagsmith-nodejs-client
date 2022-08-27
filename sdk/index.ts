@@ -152,10 +152,10 @@ export class Flagsmith {
             return cachedItem;
         }
         if (this.enableLocalEvaluation) {
-            return new Promise(resolve =>
+            return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getEnvironmentFlagsFromDocument());
-                })
+                }).catch((e) => reject(e))
             );
         }
         if (this.environment) {
@@ -182,10 +182,10 @@ export class Flagsmith {
         }
         traits = traits || {};
         if (this.enableLocalEvaluation) {
-            return new Promise(resolve =>
+            return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
-                })
+                }).catch(e => reject(e))
             );
         }
         return this.getIdentityFlagsFromApi(identifier, traits);
@@ -208,8 +208,8 @@ export class Flagsmith {
     ): Promise<SegmentModel[]> {
         traits = traits || {};
         if (this.enableLocalEvaluation) {
-            return this.environmentPromise!.then(() => {
-                return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
+                return this.environmentPromise!.then(() => {
                     const identityModel = this.buildIdentityModel(
                         identifier,
                         Object.keys(traits || {}).map(key => ({
@@ -220,7 +220,7 @@ export class Flagsmith {
 
                     const segments = getIdentitySegments(this.environment, identityModel);
                     return resolve(segments);
-                });
+                }).catch((e) => reject(e));
             });
         }
         console.error('This function is only permitted with local evaluation.');
