@@ -1,4 +1,4 @@
-import Flagsmith from './sdk';
+import Flagsmith from "./sdk";
 
 export {
   AnalyticsProcessor,
@@ -7,7 +7,8 @@ export {
   EnvironmentDataPollingManager,
   FlagsmithCache,
   DefaultFlag,
-  Flags
+  Flags,
+  default
 } from './sdk';
 
 export {
