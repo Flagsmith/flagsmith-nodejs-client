@@ -18,14 +18,14 @@ import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
-import { FlagsmithCache } from './types';
+import {FlagsmithCache, FlagsmithConfig} from './types';
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 export { DefaultFlag, Flags } from './models';
 export { EnvironmentDataPollingManager } from './polling_manager';
-export { FlagsmithCache } from './types';
+export { FlagsmithCache, FlagsmithConfig  } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 
@@ -84,20 +84,7 @@ export class Flagsmith {
             flags cannot be retrieved from the API or a non existent feature is
             requested
      */
-    constructor(data: {
-        environmentKey: string;
-        apiUrl?: string;
-        agentOptions?:AgentOptions;
-        customHeaders?: { [key: string]: any };
-        requestTimeoutSeconds?: number;
-        enableLocalEvaluation?: boolean;
-        environmentRefreshIntervalSeconds?: number;
-        retries?: number;
-        enableAnalytics?: boolean;
-        defaultFlagHandler?: (featureName: string) => DefaultFlag;
-        cache?: FlagsmithCache,
-        onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
-    }) {
+    constructor(data: FlagsmithConfig) {
         const httpAgent = new http.Agent(data.agentOptions);
         const httpsAgent = new https.Agent(data.agentOptions);
         this.agent = (_parsedURL:URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
