@@ -1,3 +1,9 @@
+import http from 'http';
+import https from 'https';
+import {RequestInit} from "node-fetch";
+import {URL} from "url";
+import {AgentOptions} from "https";
+
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
@@ -13,8 +19,6 @@ import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache } from './types';
-import {URL} from "url";
-import {AgentOptions} from "https";
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
@@ -24,17 +28,14 @@ export { EnvironmentDataPollingManager } from './polling_manager';
 export { FlagsmithCache } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
-const http = require('http');
-const https = require('https');
 
-const agentOptions: AgentOptions = { keepAlive: true, keepAliveMsecs: 6000 };
 
 export class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
     requestTimeoutSeconds?: number;
-    agent: (_parsedURL:URL) => typeof http.Agent | typeof https.Agent
+    agent: RequestInit['agent'];
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
@@ -97,8 +98,8 @@ export class Flagsmith {
         cache?: FlagsmithCache,
         onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
     }) {
-        const httpAgent = new http.Agent(agentOptions);
-        const httpsAgent = new https.Agent(agentOptions);
+        const httpAgent = new http.Agent(data.agentOptions);
+        const httpsAgent = new https.Agent(data.agentOptions);
         this.agent = (_parsedURL:URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
 
         this.environmentKey = data.environmentKey;
