@@ -253,6 +253,10 @@ export class Flagsmith {
         }
     }
 
+    async close() {
+        this.environmentDataPollingManager?.stop();
+    }
+
     private async getJSONResponse(
         url: string,
         method: string,
