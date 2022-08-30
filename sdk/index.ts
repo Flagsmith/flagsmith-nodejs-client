@@ -13,6 +13,8 @@ import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache } from './types';
+import {URL} from "url";
+import {AgentOptions} from "https";
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
@@ -22,12 +24,17 @@ export { EnvironmentDataPollingManager } from './polling_manager';
 export { FlagsmithCache } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
+const http = require('http');
+const https = require('https');
+
+const agentOptions: AgentOptions = { keepAlive: true, keepAliveMsecs: 6000 };
 
 export class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
     requestTimeoutSeconds?: number;
+    agent: (_parsedURL:URL) => typeof http.Agent | typeof https.Agent
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
@@ -79,6 +86,7 @@ export class Flagsmith {
     constructor(data: {
         environmentKey: string;
         apiUrl?: string;
+        agentOptions?:AgentOptions;
         customHeaders?: { [key: string]: any };
         requestTimeoutSeconds?: number;
         enableLocalEvaluation?: boolean;
@@ -89,6 +97,10 @@ export class Flagsmith {
         cache?: FlagsmithCache,
         onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
     }) {
+        const httpAgent = new http.Agent(agentOptions);
+        const httpsAgent = new https.Agent(agentOptions);
+        this.agent = (_parsedURL:URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
+
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
@@ -276,6 +288,7 @@ export class Flagsmith {
         const data = await retryFetch(
             url,
             {
+                agent: this.agent,
                 method: method,
                 timeout: this.requestTimeoutMs || undefined,
                 body: JSON.stringify(body),
