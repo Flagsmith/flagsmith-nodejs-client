@@ -1,24 +1,18 @@
-const Router = require('express').Router;
-const Flagsmith = require('flagsmith-nodejs');
-const environmentKey = '';
+import {Router}  from 'express'
+import Flagsmith from '../../../../build'
 
-const nodecache = require("node-cache");
+const environmentKey = 'NowEDzKzNJXZVTVanLVdMQ';
+import nodecache from "node-cache";
 
-if (!environmentKey) {
-    throw new Error(
-        'Please generate a Server Side SDK Key in environment settings to run the example'
-    );
-}
 const flagsmith = new Flagsmith({
     environmentKey,
-    enableLocalEvaluation: true,
     cache: new nodecache({
         stdTTL: 10,
         checkperiod: 10,
     }),
 });
 
-module.exports = () => {
+const api =  () => {
     const api = Router();
 
     api.get('/', async (req, res) => {
@@ -40,3 +34,5 @@ module.exports = () => {
 
     return api;
 };
+
+export default api

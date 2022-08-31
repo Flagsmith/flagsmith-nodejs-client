@@ -1,9 +1,9 @@
-const http = require('http');
-const express = require('express');
-const api = require('./api');
+import http from 'http'
+import express from 'express'
+import bodyParser from 'body-parser'
+import api from './api'
 const PORT = process.env.PORT || 3000;
 const app = express();
-const bodyParser = require('body-parser');
 
 app.server = http.createServer(app);
 
