@@ -1,62 +1,10 @@
-# Nodejs-ES6-Boilerplate
-[![Made in Indonesia](https://made-in-indonesia.github.io/made-in-indonesia.svg)](https://github.com/made-in-indonesia/made-in-indonesia)
+<img width="100%" src="https://github.com/Flagsmith/flagsmith/raw/main/static-files/hero.png"/>
 
-A Node.js boilerplate with ES6, ESLint, and Prettier
+# Flagsmith Node.js example with custom fetch agent
 
-## Background
+This is a simple Flagsmith Node.js example in local evaluation modes with a custom fetch agent. Using a custom fetch agent lets allows you to specify networking related options such as keep alive and socket timeout, read more on this [here](https://github.com/node-fetch/node-fetch#custom-agent).
 
-I created this boilerplate because I have several coding interviews that needs to be done using JavaScript.
-
-## Scripts
-
-```bash
-# Run the project without nodemon
-npm run start
-
-# Build the project
-npm run build
-
-# Clean build
-npm run clean
-
-# Check the lint errors
-npm run lint
-
-# Fix the lint errors
-npm run lint:fix
-
-# Run prettier
-npm run format
-
-# Check prettier errors
-npm run format:check
+```shell
+npm i
+npm run dev
 ```
-
-## Usage
-
-1. Clone the repository and init new git project
-
-```bash
-$ git clone git@github.com:vferdiansyah/nodejs-es6-boilerplate.git ./your/project/folder
-$ cd ./your/project/folder
-$ rm -rf .git
-$ git init
-```
-
-2. Change project specific information in the following places
-
-- [package.json](./package.json)
-- [README.md](./README.md)
-
-3. Install dependencies
-
-```bash
-$ npm i
-```
-
-4. Start coding
-
-## License
-
-Copyright (c) 2020 Veri Ferdiansyah  
-Licensed under the MIT license.
