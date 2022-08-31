@@ -18,12 +18,6 @@ const flagsmith = new Flagsmith({
     }),
 });
 
-
-// solicitor
-
-// read only
- // sra authorisation date
-
 const api =  () => {
     const api = Router();
 
