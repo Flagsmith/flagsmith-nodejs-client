@@ -1,6 +1,7 @@
 const Router = require('express').Router;
-const Flagsmith = require('../../../build');
+const Flagsmith = require('flagsmith-nodejs');
 const environmentKey = '';
+
 const nodecache = require("node-cache");
 
 if (!environmentKey) {

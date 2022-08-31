@@ -15,7 +15,7 @@
     "npm": "3.10.x"
   },
   "dependencies": {
-    "flagsmith-nodejs": "^2.0.0-beta.1",
+    "flagsmith-nodejs": "^2.2.2",
     "node-cache": "^5.1.2",
     "ssg-node-express": "4.16.4",
     "ssg-util": "0.0.3"
