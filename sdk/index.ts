@@ -1,8 +1,4 @@
-import http from 'http';
-import https from 'https';
 import {RequestInit} from "node-fetch";
-import {URL} from "url";
-import {AgentOptions} from "https";
 
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
@@ -10,14 +6,14 @@ import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
 import { IdentityModel } from '../flagsmith-engine/identities/models';
 import { TraitModel } from '../flagsmith-engine/identities/traits/models';
 
-import { AnalyticsProcessor } from './analytics';
-import { FlagsmithAPIError, FlagsmithClientError } from './errors';
+import {AnalyticsProcessor} from './analytics';
+import {FlagsmithAPIError, FlagsmithClientError} from './errors';
 
-import { DefaultFlag, Flags } from './models';
-import { EnvironmentDataPollingManager } from './polling_manager';
-import { generateIdentitiesData, retryFetch } from './utils';
-import { SegmentModel } from '../flagsmith-engine/segments/models';
-import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
+import {DefaultFlag, Flags} from './models';
+import {EnvironmentDataPollingManager} from './polling_manager';
+import {generateIdentitiesData, retryFetch} from './utils';
+import {SegmentModel} from '../flagsmith-engine/segments/models';
+import {getIdentitySegments} from '../flagsmith-engine/segments/evaluators';
 import {FlagsmithCache, FlagsmithConfig} from './types';
 
 export { AnalyticsProcessor } from './analytics';
@@ -85,10 +81,7 @@ export class Flagsmith {
             requested
      */
     constructor(data: FlagsmithConfig) {
-        const httpAgent = new http.Agent(data.agentOptions);
-        const httpsAgent = new https.Agent(data.agentOptions);
-        this.agent = (_parsedURL:URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
-
+        this.agent = data.agent;
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;

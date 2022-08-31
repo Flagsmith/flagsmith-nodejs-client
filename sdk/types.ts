@@ -1,6 +1,6 @@
 import {DefaultFlag, Flags} from "./models";
-import {AgentOptions} from "https";
 import {EnvironmentModel} from "../flagsmith-engine";
+import {RequestInit} from "node-fetch";
 
 export interface FlagsmithCache {
   get(key: string): Promise<Flags|undefined> | undefined;
@@ -12,7 +12,7 @@ export interface FlagsmithCache {
 export interface FlagsmithConfig {
   environmentKey: string;
   apiUrl?: string;
-  agentOptions?:AgentOptions;
+  agent?:RequestInit['agent'];
   customHeaders?: { [key: string]: any };
   requestTimeoutSeconds?: number;
   enableLocalEvaluation?: boolean;
