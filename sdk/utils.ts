@@ -1,4 +1,4 @@
-import fetch, { Response } from 'node-fetch';
+import fetch, { RequestInit, Response } from 'node-fetch';
 // @ts-ignore
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
@@ -18,7 +18,7 @@ export const delay = (ms: number) =>
 
 export const retryFetch = (
     url: string,
-    fetchOptions: any,
+    fetchOptions: RequestInit,
     retries = 3,
     timeout?: number // set an overall timeout for this function
 ): Promise<Response> => {

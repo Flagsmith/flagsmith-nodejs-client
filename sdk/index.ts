@@ -1,3 +1,4 @@
+import { RequestInit } from "node-fetch";
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
@@ -12,22 +13,24 @@ import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
-import { FlagsmithCache } from './types';
+import { FlagsmithCache, FlagsmithConfig } from './types';
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 export { DefaultFlag, Flags } from './models';
 export { EnvironmentDataPollingManager } from './polling_manager';
-export { FlagsmithCache } from './types';
+export { FlagsmithCache, FlagsmithConfig } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
+
 
 export class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
     requestTimeoutSeconds?: number;
+    agent: RequestInit['agent'];
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
@@ -76,19 +79,8 @@ export class Flagsmith {
             flags cannot be retrieved from the API or a non existent feature is
             requested
      */
-    constructor(data: {
-        environmentKey: string;
-        apiUrl?: string;
-        customHeaders?: { [key: string]: any };
-        requestTimeoutSeconds?: number;
-        enableLocalEvaluation?: boolean;
-        environmentRefreshIntervalSeconds?: number;
-        retries?: number;
-        enableAnalytics?: boolean;
-        defaultFlagHandler?: (featureName: string) => DefaultFlag;
-        cache?: FlagsmithCache,
-        onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
-    }) {
+    constructor(data: FlagsmithConfig) {
+        this.agent = data.agent;
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
@@ -276,6 +268,7 @@ export class Flagsmith {
         const data = await retryFetch(
             url,
             {
+                agent: this.agent,
                 method: method,
                 timeout: this.requestTimeoutMs || undefined,
                 body: JSON.stringify(body),

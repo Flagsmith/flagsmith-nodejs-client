@@ -1,8 +1,7 @@
 import {Router}  from 'express'
-import Flagsmith from 'flagsmith-nodejs'
+import Flagsmith from '../../../../build'
 
 const environmentKey = '';
-import nodecache from "node-cache";
 
 if (!environmentKey) {
     throw new Error(
@@ -11,11 +10,7 @@ if (!environmentKey) {
 }
 const flagsmith = new Flagsmith({
     environmentKey,
-    enableLocalEvaluation: true,
-    cache: new nodecache({
-        stdTTL: 10,
-        checkperiod: 10,
-    }),
+    enableLocalEvaluation: true
 });
 
 const api =  () => {
