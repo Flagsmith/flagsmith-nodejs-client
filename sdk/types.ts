@@ -1,6 +1,6 @@
-import {DefaultFlag, Flags} from "./models";
-import {EnvironmentModel} from "../flagsmith-engine";
-import {RequestInit} from "node-fetch";
+import { DefaultFlag, Flags } from "./models";
+import { EnvironmentModel } from "../flagsmith-engine";
+import { RequestInit } from "node-fetch";
 
 export interface FlagsmithCache {
   get(key: string): Promise<Flags|undefined> | undefined;

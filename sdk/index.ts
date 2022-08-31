@@ -1,5 +1,4 @@
-import {RequestInit} from "node-fetch";
-
+import { RequestInit } from "node-fetch";
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
@@ -10,7 +9,7 @@ import { AnalyticsProcessor } from './analytics';
 import { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 import { DefaultFlag, Flags } from './models';
-import { EnvironmentDataPollingManager} from './polling_manager';
+import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
@@ -21,6 +20,7 @@ export { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 export { DefaultFlag, Flags } from './models';
 export { EnvironmentDataPollingManager } from './polling_manager';
+export { FlagsmithCache, FlagsmithConfig } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 

@@ -1,4 +1,4 @@
-import fetch, {RequestInit, Response} from 'node-fetch';
+import fetch, { RequestInit, Response } from 'node-fetch';
 // @ts-ignore
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
