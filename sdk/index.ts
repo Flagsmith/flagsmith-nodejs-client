@@ -6,22 +6,21 @@ import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
 import { IdentityModel } from '../flagsmith-engine/identities/models';
 import { TraitModel } from '../flagsmith-engine/identities/traits/models';
 
-import {AnalyticsProcessor} from './analytics';
-import {FlagsmithAPIError, FlagsmithClientError} from './errors';
+import { AnalyticsProcessor } from './analytics';
+import { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
-import {DefaultFlag, Flags} from './models';
-import {EnvironmentDataPollingManager} from './polling_manager';
-import {generateIdentitiesData, retryFetch} from './utils';
-import {SegmentModel} from '../flagsmith-engine/segments/models';
-import {getIdentitySegments} from '../flagsmith-engine/segments/evaluators';
-import {FlagsmithCache, FlagsmithConfig} from './types';
+import { DefaultFlag, Flags } from './models';
+import { EnvironmentDataPollingManager} from './polling_manager';
+import { generateIdentitiesData, retryFetch } from './utils';
+import { SegmentModel } from '../flagsmith-engine/segments/models';
+import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
+import { FlagsmithCache, FlagsmithConfig } from './types';
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 export { DefaultFlag, Flags } from './models';
 export { EnvironmentDataPollingManager } from './polling_manager';
-export { FlagsmithCache, FlagsmithConfig  } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 
