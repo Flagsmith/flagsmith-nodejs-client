@@ -1,10 +1,12 @@
 import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-import fetch from 'node-fetch';
+import fetch, {RequestInit} from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
 import { DefaultFlag } from '../../sdk/models';
-import { delay } from '../../sdk/utils';
+import {delay, retryFetch} from '../../sdk/utils';
+import * as utils from '../../sdk/utils';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
+import https from 'https'
 
 jest.mock('node-fetch');
 jest.mock('../../sdk/polling_manager');
@@ -56,6 +58,26 @@ test('test_update_environment_sets_environment', async () => {
     expect(flg.environment).toStrictEqual(model);
 });
 
+test('test_set_agent_options', async () => {
+    const agent = new https.Agent({})
+
+    // @ts-ignore
+    fetch.mockImplementation((url:string, options:RequestInit)=>{
+        if(options.agent!==agent) {
+            throw new Error("Agent has not been set on retry fetch")
+        }
+        return Promise.resolve(new Response(environmentJSON()))
+    });
+
+    const flg = flagsmith({
+        agent
+    });
+
+    await flg.updateEnvironment();
+    expect(flg.environment).toBeDefined();
+
+});
+
 test('test_get_identity_segments', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
@@ -80,11 +102,6 @@ test('test_get_identity_segments_empty_without_local_eval', async () => {
     const segments = await flg.getIdentitySegments('user', { age: 21 });
     expect(segments.length).toBe(0);
 });
-
-
-
-
-
 
 test('test_update_environment_uses_req_when_inited', async () => {
     // @ts-ignore
@@ -159,8 +176,6 @@ test('test_default_flag_used_after_multiple_API_errors', async () => {
     expect(flag.enabled).toBe(defaultFlag.enabled);
     expect(flag.value).toBe(defaultFlag.value);
 });
-
-
 
 test('test_throws_when_no_identity_flags_returned_due_to_error', async () => {
     // @ts-ignore
