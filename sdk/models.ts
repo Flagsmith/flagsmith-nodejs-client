@@ -125,7 +125,6 @@ export class Flags {
             }
 
             return { enabled: false, isDefault: true, value: undefined };
-
         }
 
         if (this.analyticsProcessor && flag.featureId) {
