@@ -52,10 +52,10 @@ export class SegmentConditionModel {
     };
 
     operator: string;
-    value: string;
+    value: string | null | undefined;
     property_: string | undefined;
 
-    constructor(operator: string, value: string, property?: string) {
+    constructor(operator: string, value?: string | null, property?: string) {
         this.operator = operator;
         this.value = value;
         this.property_ = property;
@@ -67,6 +67,7 @@ export class SegmentConditionModel {
                 return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
+                // @ts-ignore
                 return !!traitValue.match(new RegExp(this.value));
             }
         };

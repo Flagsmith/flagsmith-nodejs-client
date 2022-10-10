@@ -12,7 +12,6 @@ import {
 } from '../../../../flagsmith-engine/segments/models';
 
 const conditionMatchCases: [string, string | number | boolean, string, boolean][] = [
-    [CONDITION_OPERATORS.IS_SET, 'bar', 'bar', false],
     [CONDITION_OPERATORS.EQUAL, 'bar', 'bar', true],
     [CONDITION_OPERATORS.EQUAL, 'bar', 'baz', false],
     [CONDITION_OPERATORS.EQUAL, 1, '1', true],
@@ -83,7 +82,6 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, '1.0.0', '1.0.1:semver', true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, '1.0.0', '1.0.0:semver', true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, '1.0.1', '1.0.0:semver', false],
-    [CONDITION_OPERATORS.IS_SET, 'bar', 'bar', false],
     ['BAD_OP', 'a', 'a', false]
 ];
 
