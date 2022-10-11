@@ -26,6 +26,8 @@ export const matchingFunctions = {
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
         otherValue.includes(thisValue),
+    [CONDITION_OPERATORS.IS_SET]: (thisValue: any, otherValue: any) => thisValue == otherValue,
+    [CONDITION_OPERATORS.IS_NOT_SET]: (thisValue: any, otherValue: any) => thisValue != otherValue,
 };
 
 export const semverMatchingFunction = {

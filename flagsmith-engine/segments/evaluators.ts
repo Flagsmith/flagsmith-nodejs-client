@@ -62,7 +62,7 @@ function traitsMatchSegmentCondition(
     identityId: number | string
 ): boolean {
     if (condition.operator == PERCENTAGE_SPLIT) {
-        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(condition.value);
+        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(<string>condition.value);
     }
 
     const traits = identityTraits.filter(t => t.traitKey === condition.property_);
