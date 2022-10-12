@@ -2,8 +2,9 @@ import { EnvironmentModel } from '../environments/models';
 import { IdentityModel } from '../identities/models';
 import { TraitModel } from '../identities/traits/models';
 import { getHashedPercentateForObjIds } from '../utils/hashing';
-import { PERCENTAGE_SPLIT } from './constants';
+import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants';
 import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models';
+import constants_1 from "../../build/flagsmith-engine/segments/constants";
 
 export function getIdentitySegments(
     environment: EnvironmentModel,
@@ -55,7 +56,7 @@ function traitsMatchSegmentRule(
     );
 }
 
-function traitsMatchSegmentCondition(
+export function traitsMatchSegmentCondition(
     identityTraits: TraitModel[],
     condition: SegmentConditionModel,
     segmentId: number | string,
@@ -63,10 +64,21 @@ function traitsMatchSegmentCondition(
 ): boolean {
     if (condition.operator == PERCENTAGE_SPLIT) {
         return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(<string>condition.value);
+    } else if (condition.operator === IS_SET || condition.operator === IS_NOT_SET) {
+        // @ts-ignore
+        return handleTraitExistenceConditions (condition, identityTraits);
+    } else {
+        const traits = identityTraits.filter(t => t.traitKey === condition.property_);
+        const trait = traits.length > 0 ? traits[0] : undefined;
+
+        return trait ? condition.matchesTraitValue(trait.traitValue) : false;
     }
-
-    const traits = identityTraits.filter(t => t.traitKey === condition.property_);
-    const trait = traits.length > 0 ? traits[0] : undefined;
-
-    return trait ? condition.matchesTraitValue(trait.traitValue) : false;
 }
+function handleTraitExistenceConditions (condition: SegmentConditionModel, identityTraits: TraitModel[] ) {
+    let traitIdentityKey=Object.keys(identityTraits[0])
+    if (condition.operator === IS_SET  ) {
+        return traitIdentityKey[0] === condition.property_
+    }
+    return !(traitIdentityKey[0] === condition.property_)
+}
+
