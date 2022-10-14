@@ -72,11 +72,17 @@ export function traitsMatchSegmentCondition(
     }
 }
 function handleTraitExistenceConditions (condition: SegmentConditionModel, identityTraits: TraitModel[] ) {
-
-    let traitIdentityKey=Object.keys(identityTraits)
-    if (condition.operator === IS_SET  ) {
-        return traitIdentityKey[0] === condition.property_
+    let traitKeysArray: string[]=[]
+    identityTraits.map(function (e){
+        let objectKey = Object.keys (e);
+        traitKeysArray.push(objectKey[0])
+    })
+    if (condition.operator === IS_SET && condition.property_ != undefined) {
+        return traitKeysArray.includes(condition.property_)
     }
-    return !(traitIdentityKey[0] === condition.property_)
+    else
+    {
+        // @ts-ignore
+        return !(traitKeysArray.includes(condition.property_))
+    }
 }
-

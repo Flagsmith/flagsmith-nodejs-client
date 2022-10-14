@@ -55,9 +55,9 @@ export class SegmentConditionModel {
 
     operator: string;
     value: string | null | undefined;
-    property_: string | undefined;
+    property_: string | null | undefined;
 
-    constructor(operator: string, value?: string | null, property?: string) {
+    constructor(operator: string, value?: string | null | undefined, property?: string | null | undefined) {
         this.operator = operator;
         this.value = value;
         this.property_ = property;
