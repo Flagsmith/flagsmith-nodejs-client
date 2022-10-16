@@ -4,7 +4,6 @@ import { TraitModel } from '../identities/traits/models';
 import { getHashedPercentateForObjIds } from '../utils/hashing';
 import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants';
 import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models';
-import constants_1 from "../../build/flagsmith-engine/segments/constants";
 
 export function getIdentitySegments(
     environment: EnvironmentModel,
@@ -62,27 +61,15 @@ export function traitsMatchSegmentCondition(
     segmentId: number | string,
     identityId: number | string
 ): boolean {
+    const traits = identityTraits.filter(t => t.traitKey === condition.property_);
+    const trait = traits.length > 0 ? traits[0] : undefined;
     if (condition.operator == PERCENTAGE_SPLIT) {
         return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(<string>condition.value);
-    } else if (condition.operator === IS_SET || condition.operator === IS_NOT_SET) {
-        return handleTraitExistenceConditions (condition, identityTraits);
+    } else if (condition.operator === IS_SET ) {
+        return traits.length > 0
+    } else if (condition.operator === IS_NOT_SET){
+        return !(traits.length > 0)
     } else {
-        const traits = identityTraits.filter(t => t.traitKey === condition.property_);const trait = traits.length > 0 ? traits[0] : undefined;
         return trait ? condition.matchesTraitValue(trait.traitValue) : false;
-    }
-}
-function handleTraitExistenceConditions (condition: SegmentConditionModel, identityTraits: TraitModel[] ) {
-    let traitKeysArray: string[]=[]
-    identityTraits.map(function (e){
-        let objectKey = Object.keys (e);
-        traitKeysArray.push(objectKey[0])
-    })
-    if (condition.operator === IS_SET && condition.property_ != undefined) {
-        return traitKeysArray.includes(condition.property_)
-    }
-    else
-    {
-        // @ts-ignore
-        return !(traitKeysArray.includes(condition.property_))
     }
 }
