@@ -26,26 +26,20 @@ export const matchingFunctions = {
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
         otherValue.includes(thisValue),
-    [CONDITION_OPERATORS.IS_SET]: (thisValue: any, otherValue: any) => thisValue == otherValue,
-    [CONDITION_OPERATORS.IS_NOT_SET]: (thisValue: any, otherValue: any) => thisValue != otherValue,
 };
 
 export const semverMatchingFunction = {
     ...matchingFunctions,
-    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) =>
-        semver.eq(thisValue, otherValue),
-    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) =>
-        semver.gt(otherValue, thisValue),
+    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) => semver.eq(thisValue, otherValue),
+    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) => semver.gt(otherValue, thisValue),
     [CONDITION_OPERATORS.GREATER_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
         semver.gte(otherValue, thisValue),
-    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) =>
-        semver.gt(thisValue, otherValue),
+    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) => semver.gt(thisValue, otherValue),
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
-        semver.gte(thisValue, otherValue)
-};
+        semver.gte(thisValue, otherValue),
+}
 
-export const getMatchingFunctions = (semver: boolean) =>
-    semver ? semverMatchingFunction : matchingFunctions;
+export const getMatchingFunctions = (semver: boolean) => (semver ? semverMatchingFunction : matchingFunctions);
 
 export class SegmentConditionModel {
     EXCEPTION_OPERATOR_METHODS: { [key: string]: string } = {
@@ -66,10 +60,10 @@ export class SegmentConditionModel {
     matchesTraitValue(traitValue: any) {
         const evaluators: { [key: string]: CallableFunction } = {
             evaluateNotContains: (traitValue: any) => {
-                return !traitValue.includes(this.value)
+                return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
-                if (this.value != null || this.value != undefined){
+                if (this.value != null){
                     return !!traitValue.match(new RegExp(this.value))
                 }
             }

@@ -61,15 +61,16 @@ export function traitsMatchSegmentCondition(
     segmentId: number | string,
     identityId: number | string
 ): boolean {
+    if (condition.operator == PERCENTAGE_SPLIT) {
+        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(String(condition.value));
+    }
     const traits = identityTraits.filter(t => t.traitKey === condition.property_);
     const trait = traits.length > 0 ? traits[0] : undefined;
-    if (condition.operator == PERCENTAGE_SPLIT) {
-        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(<string>condition.value);
-    } else if (condition.operator === IS_SET ) {
-        return traits.length > 0
+    if (condition.operator === IS_SET ) {
+        return !!trait;
     } else if (condition.operator === IS_NOT_SET){
-        return !(traits.length > 0)
-    } else {
-        return trait ? condition.matchesTraitValue(trait.traitValue) : false;
+        return trait == undefined;
     }
+    return trait ? condition.matchesTraitValue(trait.traitValue) : false;
+
 }

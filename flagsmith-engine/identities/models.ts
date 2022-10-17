@@ -40,14 +40,18 @@ export class IdentityModel {
     updateTraits(traits: TraitModel[]) {
         const existingTraits: Map<string, TraitModel> = new Map();
         for (const trait of this.identityTraits) {
-            existingTraits.set(trait.traitKey, trait);
+            if (trait.traitKey!= null){
+                existingTraits.set(trait.traitKey, trait);
+            }
         }
 
         for (const trait of traits) {
-            if (!!trait.traitValue) {
-                existingTraits.set(trait.traitKey, trait);
-            } else {
-                existingTraits.delete(trait.traitKey);
+            if (trait.traitKey!= null) {
+                if (!!trait.traitValue) {
+                    existingTraits.set(trait.traitKey, trait);
+                } else {
+                    existingTraits.delete(trait.traitKey);
+                }
             }
         }
 
