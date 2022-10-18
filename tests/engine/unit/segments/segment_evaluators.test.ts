@@ -8,12 +8,12 @@ import {traitsMatchSegmentCondition} from "../../../../flagsmith-engine/segments
 import {TraitModel} from "../../../../flagsmith-engine";
 
 let traitExistenceTestCases: [string, string | null | undefined, string | null | undefined, TraitModel [],boolean][] = [
-    [CONDITION_OPERATORS.IS_SET,'foo',null,[{traitKey: null, traitValue: undefined}] , false],
-    [CONDITION_OPERATORS.IS_SET, 'foo',undefined , [{traitKey: 'foo', traitValue: 'bar'}], true],
-    [CONDITION_OPERATORS.IS_SET, 'foo', null, [{traitKey: 'foo', traitValue: 'bar'},{traitKey: 'fooBaz', traitValue: 'baz'}], true],
-    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', null, [{traitKey: 'foo', traitValue: 'bar'}], false],
-    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', undefined, [{traitKey: null, traitValue: undefined}], true],
-    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', null, [{traitKey: 'foo', traitValue: 'bar'},{traitKey: 'fooBaz', traitValue: 'baz'}], false]
+    [CONDITION_OPERATORS.IS_SET,'foo', null,[] , false],
+    [CONDITION_OPERATORS.IS_SET, 'foo',undefined , [new TraitModel('foo','bar')], true],
+    [CONDITION_OPERATORS.IS_SET, 'foo',undefined , [new TraitModel('foo','bar'), new TraitModel('fooBaz','baz')], true],
+    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', undefined, [], true],
+    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', null, [new TraitModel('foo','bar')], false],
+    [CONDITION_OPERATORS.IS_NOT_SET, 'foo', null, [new TraitModel('foo','bar'), new TraitModel('fooBaz','baz')], false]
 ];
 
 test('test_traits_match_segment_condition_for_trait_existence_operators', () => {

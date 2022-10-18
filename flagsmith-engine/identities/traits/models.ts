@@ -1,8 +1,8 @@
 export class TraitModel {
-    traitKey: string | null;
+    traitKey: string;
     traitValue: any;
 
-    constructor(key: string | null, value: any) {
+    constructor(key: string, value: any) {
         this.traitKey = key;
         this.traitValue = value;
     }

@@ -63,9 +63,7 @@ export class SegmentConditionModel {
                 return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
-                if (this.value != null){
-                    return !!traitValue.match(new RegExp(this.value))
-                }
+                return !!this.value && !!traitValue.match(new RegExp(this.value))
             }
         };
 
