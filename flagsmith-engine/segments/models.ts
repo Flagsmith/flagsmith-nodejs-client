@@ -50,7 +50,7 @@ export class SegmentConditionModel {
     };
 
     operator: string;
-    value: string;
+    value: string ;
     property_: string | undefined;
 
     constructor(operator: string, value: string, property?: string) {
@@ -65,7 +65,15 @@ export class SegmentConditionModel {
                 return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
-                return !!traitValue.match(new RegExp(this.value));
+                    return !!traitValue.match(new RegExp(this.value));
+            },
+            evaluateModulo: (traitValue: any) => {
+                if (isNaN(parseInt(traitValue))) {
+                    return false
+                }
+                const myArray = (this.value).split("|");
+                let [divisor, reminder] = [parseInt(myArray[0]), parseInt(myArray[1])];
+                return traitValue % divisor === reminder
             }
         };
 

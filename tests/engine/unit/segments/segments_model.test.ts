@@ -82,6 +82,11 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.0", "1.0.1:semver", true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.0", "1.0.0:semver", true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.1", "1.0.0:semver", false],
+    [CONDITION_OPERATORS.MODULO, 1, "2|0", false],
+    [CONDITION_OPERATORS.MODULO, 2, "2|0", true],
+    [CONDITION_OPERATORS.MODULO, 3, "2|0", false],
+    [CONDITION_OPERATORS.MODULO, 34.2, "4|3", false],
+    [CONDITION_OPERATORS.MODULO, 35.0, "4|3", true],
     ['BAD_OP', 'a', 'a', false]
 ];
 
@@ -118,5 +123,15 @@ test('test_segment_rule_matching_function', () => {
 
     for (const testCase of testCases) {
         expect(new SegmentRuleModel(testCase[0]).matchingFunction()).toBe(testCase[1]);
+    }
+});
+
+test('test_segment_condition_matches_trait_value_for_modulo', () => {
+    for (const testCase of conditionMatchCases) {
+        expect(
+            new SegmentConditionModel(testCase[0], testCase[2], 'foo').matchesTraitValue(
+                testCase[1]
+            )
+        ).toBe(testCase[3]);
     }
 });
