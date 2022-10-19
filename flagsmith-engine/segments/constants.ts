@@ -16,6 +16,7 @@ export const NOT_CONTAINS = 'NOT_CONTAINS';
 export const NOT_EQUAL = 'NOT_EQUAL';
 export const REGEX = 'REGEX';
 export const PERCENTAGE_SPLIT = 'PERCENTAGE_SPLIT';
+export const MODULO = 'MODULO';
 
 export const CONDITION_OPERATORS = {
     EQUAL,
@@ -27,5 +28,6 @@ export const CONDITION_OPERATORS = {
     NOT_CONTAINS,
     NOT_EQUAL,
     REGEX,
-    PERCENTAGE_SPLIT
+    PERCENTAGE_SPLIT,
+    MODULO
 };
