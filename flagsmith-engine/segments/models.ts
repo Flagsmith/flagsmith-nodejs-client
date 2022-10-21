@@ -72,7 +72,7 @@ export class SegmentConditionModel {
                     return false
                 }
                 const myArray = (this.value).split("|");
-                let [divisor, reminder] = [parseInt(myArray[0]), parseInt(myArray[1])];
+                let [divisor, reminder] = [parseFloat(myArray[0]), parseFloat(myArray[1])];
                 return traitValue % divisor === reminder
             }
         };
