@@ -68,11 +68,11 @@ export class SegmentConditionModel {
                 return !!this.value && !!traitValue.match(new RegExp(this.value));
             },
             evaluateModulo: (traitValue: any) => {
-                if (isNaN(parseFloat(traitValue))) {
+                if (isNaN(parseFloat(traitValue)) || !this.value) {
                     return false
                 }
-                const myArray = (this.value).split("|");
-                let [divisor, reminder] = [parseFloat(myArray[0]), parseFloat(myArray[1])];
+                const parts = (this.value).split("|");
+                const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
                 return traitValue % divisor === reminder
             }
         };
