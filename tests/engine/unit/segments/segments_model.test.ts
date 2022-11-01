@@ -82,6 +82,13 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.0", "1.0.1:semver", true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.0", "1.0.0:semver", true],
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE, "1.0.1", "1.0.0:semver", false],
+    [CONDITION_OPERATORS.MODULO, 1, "2|0", false],
+    [CONDITION_OPERATORS.MODULO, 2, "2|0", true],
+    [CONDITION_OPERATORS.MODULO, 3, "2|0", false],
+    [CONDITION_OPERATORS.MODULO, 34.2, "4|3", false],
+    [CONDITION_OPERATORS.MODULO, 35.0, "4|3", true],
+    [CONDITION_OPERATORS.MODULO, "foo", "4|3", false],
+    [CONDITION_OPERATORS.MODULO, 35.0, "foo|bar", false],
     ['BAD_OP', 'a', 'a', false]
 ];
 

@@ -2,7 +2,7 @@ import { EnvironmentModel } from '../environments/models';
 import { IdentityModel } from '../identities/models';
 import { TraitModel } from '../identities/traits/models';
 import { getHashedPercentateForObjIds } from '../utils/hashing';
-import { PERCENTAGE_SPLIT } from './constants';
+import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants';
 import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models';
 
 export function getIdentitySegments(
@@ -55,18 +55,22 @@ function traitsMatchSegmentRule(
     );
 }
 
-function traitsMatchSegmentCondition(
+export function traitsMatchSegmentCondition(
     identityTraits: TraitModel[],
     condition: SegmentConditionModel,
     segmentId: number | string,
     identityId: number | string
 ): boolean {
     if (condition.operator == PERCENTAGE_SPLIT) {
-        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(condition.value);
+        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(String(condition.value));
     }
-
     const traits = identityTraits.filter(t => t.traitKey === condition.property_);
     const trait = traits.length > 0 ? traits[0] : undefined;
-
+    if (condition.operator === IS_SET ) {
+        return !!trait;
+    } else if (condition.operator === IS_NOT_SET){
+        return trait == undefined;
+    }
     return trait ? condition.matchesTraitValue(trait.traitValue) : false;
+
 }

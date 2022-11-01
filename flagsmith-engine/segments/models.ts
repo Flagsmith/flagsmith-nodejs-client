@@ -8,6 +8,7 @@ import {
     NONE_RULE,
     NOT_CONTAINS,
     REGEX,
+    MODULO,
     CONDITION_OPERATORS
 } from './constants';
 import { isSemver } from './util';
@@ -44,14 +45,15 @@ export const getMatchingFunctions = (semver: boolean) => (semver ? semverMatchin
 export class SegmentConditionModel {
     EXCEPTION_OPERATOR_METHODS: { [key: string]: string } = {
         [NOT_CONTAINS]: 'evaluateNotContains',
-        [REGEX]: 'evaluateRegex'
+        [REGEX]: 'evaluateRegex',
+        [MODULO]: 'evaluateModulo',
     };
 
     operator: string;
-    value: string;
-    property_: string | undefined;
+    value: string | null | undefined;
+    property_: string | null | undefined;
 
-    constructor(operator: string, value: string, property?: string) {
+    constructor(operator: string, value?: string | null | undefined, property?: string | null | undefined) {
         this.operator = operator;
         this.value = value;
         this.property_ = property;
@@ -63,7 +65,15 @@ export class SegmentConditionModel {
                 return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
-                return !!traitValue.match(new RegExp(this.value));
+                return !!this.value && !!traitValue.match(new RegExp(this.value));
+            },
+            evaluateModulo: (traitValue: any) => {
+                if (isNaN(parseFloat(traitValue)) || !this.value) {
+                    return false
+                }
+                const parts = (this.value).split("|");
+                const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
+                return traitValue % divisor === reminder
             }
         };
 
