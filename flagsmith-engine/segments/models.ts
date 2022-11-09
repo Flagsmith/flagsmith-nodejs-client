@@ -9,6 +9,7 @@ import {
     NOT_CONTAINS,
     REGEX,
     MODULO,
+    IN,
     CONDITION_OPERATORS
 } from './constants';
 import { isSemver } from './util';
@@ -47,6 +48,7 @@ export class SegmentConditionModel {
         [NOT_CONTAINS]: 'evaluateNotContains',
         [REGEX]: 'evaluateRegex',
         [MODULO]: 'evaluateModulo',
+        [IN]: 'evaluateIn'
     };
 
     operator: string;

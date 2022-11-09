@@ -19,6 +19,7 @@ export const PERCENTAGE_SPLIT = 'PERCENTAGE_SPLIT';
 export const IS_SET = 'IS_SET';
 export const IS_NOT_SET = 'IS_NOT_SET';
 export const MODULO = 'MODULO';
+export const IN = 'IN';
 
 export const CONDITION_OPERATORS = {
     EQUAL,
@@ -33,5 +34,6 @@ export const CONDITION_OPERATORS = {
     PERCENTAGE_SPLIT,
     IS_SET,
     IS_NOT_SET,
-    MODULO
+    MODULO,
+    IN
 };
