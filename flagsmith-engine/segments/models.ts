@@ -76,7 +76,10 @@ export class SegmentConditionModel {
                 const parts = (this.value).split("|");
                 const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
                 return traitValue % divisor === reminder
-            }
+            },
+            evaluateIn: (traitValue: any) => {
+                return this.value?.split(',').includes(traitValue.toString())
+            },
         };
 
         // TODO: move this logic to the evaluator module
