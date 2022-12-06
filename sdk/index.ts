@@ -323,7 +323,8 @@ export class Flagsmith {
         const flags = Flags.fromFeatureStateModels({
             featureStates: featureStates,
             analyticsProcessor: this.analyticsProcessor,
-            defaultFlagHandler: this.defaultFlagHandler
+            defaultFlagHandler: this.defaultFlagHandler,
+            identityID: identityModel.djangoID || identityModel.identityUuid
         });
 
         if (!!this.cache) {

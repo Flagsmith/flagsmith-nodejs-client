@@ -27,7 +27,7 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', as
   expect(identityFlags[0].featureName).toBe('some_feature');
 });
 
-test('test_get_identity_flags_calls_api_when_local_environment_no_traits', async () => {
+test('test_get_identity_flags_uses_environment_when_local_environment_no_traits', async () => {
   // @ts-ignore
   fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
   const identifier = 'identifier';
@@ -138,3 +138,20 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
   expect(flag.enabled).toBe(false);
 });
 
+
+test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+  const identifier = 'identifier';
+
+  const flg = flagsmith({
+      environmentKey: 'ser.key',
+      enableLocalEvaluation: true,
+
+  });
+
+  const identityFlags = (await flg.getIdentityFlags(identifier))
+
+  expect(identityFlags.getFeatureValue('mv_feature')).toBe('bar');
+  expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(false);
+});
