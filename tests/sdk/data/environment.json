@@ -63,8 +63,30 @@
         "type": "STANDARD",
         "id": 1
       },
-      "segment_id": null,
+      "feature_segment": null,
       "enabled": true
+    },
+    {
+      "multivariate_feature_state_values": [
+        {
+          "percentage_allocation": 100,
+          "multivariate_feature_option": {
+            "value": "bar",
+            "id": 1
+          },
+          "mv_fs_value_uuid": "42d5cdf9-8ec9-4b8d-a3ca-fd43c64d5f05",
+          "id": 1
+        }
+      ],
+      "feature_state_value": "foo",
+      "feature": {
+        "name": "mv_feature",
+        "type": "MULTIVARIATE",
+        "id": 2
+      },
+      "feature_segment": null,
+      "featurestate_uuid": "96fc3503-09d7-48f1-a83b-2dc903d5c08a",
+      "enabled": false
     }
   ]
 }
