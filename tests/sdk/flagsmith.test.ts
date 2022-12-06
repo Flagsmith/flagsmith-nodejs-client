@@ -45,16 +45,11 @@ test('test_update_environment_sets_environment', async () => {
     await flg.updateEnvironment();
     expect(flg.environment).toBeDefined();
 
-    // @ts-ignore
-    flg.environment.featureStates[0].featurestateUUID = undefined;
-    // @ts-ignore
-    flg.environment.project.segments[0].featureStates[0].featurestateUUID = undefined;
-    // @ts-ignore
     const model = environmentModel(JSON.parse(environmentJSON()));
-    // @ts-ignore
-    model.featureStates[0].featurestateUUID = undefined;
-    // @ts-ignore
-    model.project.segments[0].featureStates[0].featurestateUUID = undefined;
+
+    wipeFeatureStateUUIDs(flg.environment)
+    wipeFeatureStateUUIDs(model)
+
     expect(flg.environment).toStrictEqual(model);
 });
 
@@ -231,3 +226,24 @@ test('test onEnvironmentChange is called after error', async () => {
 
     expect(callbackSpy).toBeCalled();
 });
+
+
+
+async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
+    // TODO: this has been pulled out of tests above as a helper function.
+    //  I'm not entirely sure why it's necessary, however, we should look to remove.
+    enviromentModel.featureStates.forEach(fs => {
+        // @ts-ignore
+        fs.featurestateUUID = undefined;
+        fs.multivariateFeatureStateValues.forEach(mvfsv => {
+            // @ts-ignore
+            mvfsv.mvFsValueUuid = undefined;
+        })
+    });
+    enviromentModel.project.segments.forEach(s => {
+        s.featureStates.forEach(fs => {
+            // @ts-ignore
+            fs.featurestateUUID = undefined;
+        })
+    })
+}
