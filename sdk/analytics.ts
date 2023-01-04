@@ -12,9 +12,9 @@ export class AnalyticsProcessor {
     analyticsData: { [key: string]: any };
     private requestTimeoutMs: number = 3000;
     /**
-     * AnalyticsProcessor is used to track how often individual Flags are evaluated within 
+     * AnalyticsProcessor is used to track how often individual Flags are evaluated within
      * the Flagsmith SDK. Docs: https://docs.flagsmith.com/advanced-use/flag-analytics.
-     * 
+     *
      * @param data.environmentKey environment key obtained from the Flagsmith UI
      * @param data.baseApiUrl base api url to override when using self hosted version
      * @param data.requestTimeoutMs used to tell requests to stop waiting for a response after a
@@ -35,7 +35,7 @@ export class AnalyticsProcessor {
             return;
         }
 
-        await fetch(this.analyticsEndpoint, {
+        fetch(this.analyticsEndpoint, {
             method: 'POST',
             body: JSON.stringify(this.analyticsData),
             timeout: this.requestTimeoutMs,
@@ -43,10 +43,15 @@ export class AnalyticsProcessor {
                 'Content-Type': 'application/json',
                 'X-Environment-Key': this.environmentKey
             }
-        });
-
-        this.analyticsData = {};
-        this.lastFlushed = Date.now();
+        }).then(() => {
+            this.analyticsData = {};
+            this.lastFlushed = Date.now();
+        }).catch(() => {
+            // We don't want failing to write analytics to cause any exceptions in the main
+            // thread so we just swallow them here.
+            // TODO: logging
+            return;
+        })
     }
 
     trackFeature(featureName: string) {
