@@ -89,16 +89,23 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.MODULO, 35.0, "4|3", true],
     [CONDITION_OPERATORS.MODULO, "foo", "4|3", false],
     [CONDITION_OPERATORS.MODULO, 35.0, "foo|bar", false],
+    [CONDITION_OPERATORS.IN, "foo", "", false],
+    [CONDITION_OPERATORS.IN, "foo", "foo, bar", true],
+    [CONDITION_OPERATORS.IN, "foo", "foo", true],
+    [CONDITION_OPERATORS.IN, 1, "1,2,3,4", true],
+    [CONDITION_OPERATORS.IN, 1, "", false],
+    [CONDITION_OPERATORS.IN, 1, "1", true],
     ['BAD_OP', 'a', 'a', false]
 ];
 
 test('test_segment_condition_matches_trait_value', () => {
     for (const testCase of conditionMatchCases) {
+        const [operator, traitValue, conditionValue, expectedResult] = testCase
         expect(
-            new SegmentConditionModel(testCase[0], testCase[2], 'foo').matchesTraitValue(
-                testCase[1]
+            new SegmentConditionModel(operator, conditionValue, 'foo').matchesTraitValue(
+                traitValue
             )
-        ).toBe(testCase[3]);
+        ).toBe(expectedResult);
     }
 });
 

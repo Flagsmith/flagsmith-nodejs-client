@@ -1,6 +1,7 @@
-jest.mock('node-fetch');
 import fetch from 'node-fetch';
 import { analyticsProcessor } from './utils';
+
+jest.mock('node-fetch', () => jest.fn());
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -52,3 +53,22 @@ test('test_analytics_processor_flush_early_exit_if_analytics_data_is_empty', asy
     await aP.flush();
     expect(fetch).not.toHaveBeenCalled();
 });
+
+
+test('errors in fetch sending analytics data are swallowed', async () => {
+    // Given
+    // we mock the fetch function to throw and error to mimick a network failure
+    (fetch as jest.MockedFunction<typeof fetch>).mockRejectedValue(new Error('some error'));
+
+    // and create the processor and track a feature so there is some analytics data
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+
+    // When
+    // we flush the data to trigger the call to fetch
+    await processor.flush();
+
+    // Then
+    // we expect that fetch was called but the exception was handled
+    expect(fetch).toHaveBeenCalled();
+})

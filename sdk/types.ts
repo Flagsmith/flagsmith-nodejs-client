@@ -1,6 +1,7 @@
 import { DefaultFlag, Flags } from "./models";
 import { EnvironmentModel } from "../flagsmith-engine";
 import { RequestInit } from "node-fetch";
+import { Logger } from "pino";
 
 export interface FlagsmithCache {
   get(key: string): Promise<Flags|undefined> | undefined;
@@ -22,4 +23,5 @@ export interface FlagsmithConfig {
   defaultFlagHandler?: (featureName: string) => DefaultFlag;
   cache?: FlagsmithCache,
   onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
+  logger?: Logger
 }
