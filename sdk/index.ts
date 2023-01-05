@@ -14,6 +14,7 @@ import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache, FlagsmithConfig } from './types';
+import pino, { Logger } from "pino";
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
@@ -49,6 +50,7 @@ export class Flagsmith {
     private cache?: FlagsmithCache;
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
+    private logger: Logger;
     /**
      * A Flagsmith client.
      *
@@ -78,6 +80,7 @@ export class Flagsmith {
         @param data.defaultFlagHandler: callable which will be used in the case where
             flags cannot be retrieved from the API or a non existent feature is
             requested
+        @param data.logger: an instance of the pino Logger class to use for logging
      */
     constructor(data: FlagsmithConfig) {
         this.agent = data.agent;
@@ -97,6 +100,7 @@ export class Flagsmith {
         this.identitiesUrl = `${this.apiUrl}identities/`;
         this.environmentUrl = `${this.apiUrl}environment-document/`;
         this.onEnvironmentChange = data.onEnvironmentChange;
+        this.logger = data.logger || pino();
 
         if (!!data.cache) {
             const missingMethods: string[] = ['has', 'get', 'set'].filter(method => data.cache && !data.cache[method]);
@@ -129,7 +133,8 @@ export class Flagsmith {
             ? new AnalyticsProcessor({
                 environmentKey: this.environmentKey,
                 baseApiUrl: this.apiUrl,
-                requestTimeoutMs: this.requestTimeoutMs
+                requestTimeoutMs: this.requestTimeoutMs,
+                logger: this.logger
             })
             : undefined;
     }
