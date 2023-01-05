@@ -35,23 +35,25 @@ export class AnalyticsProcessor {
             return;
         }
 
-        fetch(this.analyticsEndpoint, {
-            method: 'POST',
-            body: JSON.stringify(this.analyticsData),
-            timeout: this.requestTimeoutMs,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Environment-Key': this.environmentKey
-            }
-        }).then(() => {
-            this.analyticsData = {};
-            this.lastFlushed = Date.now();
-        }).catch(() => {
+        try {
+            await fetch(this.analyticsEndpoint, {
+                method: 'POST',
+                body: JSON.stringify(this.analyticsData),
+                timeout: this.requestTimeoutMs,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Environment-Key': this.environmentKey
+                }
+            })
+        } catch (error) {
             // We don't want failing to write analytics to cause any exceptions in the main
             // thread so we just swallow them here.
             // TODO: logging
             return;
-        })
+        }
+
+        this.analyticsData = {};
+        this.lastFlushed = Date.now();
     }
 
     trackFeature(featureName: string) {
