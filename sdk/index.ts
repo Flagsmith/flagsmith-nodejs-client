@@ -173,6 +173,10 @@ export class Flagsmith {
      * @returns Flags object holding all the flags for the given identity.
      */
     async getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
+        if (!identifier) {
+            throw new Error("`identifier` argument is missing or invalid.")
+        }
+
         const cachedItem = !!this.cache && await this.cache.get(`flags-${identifier}`);
         if (!!cachedItem) {
             return cachedItem;
@@ -203,6 +207,10 @@ export class Flagsmith {
         identifier: string,
         traits?: { [key: string]: any }
     ): Promise<SegmentModel[]> {
+        if (!identifier) {
+            throw new Error("`identifier` argument is missing or invalid.")
+        }
+
         traits = traits || {};
         if (this.enableLocalEvaluation) {
             return new Promise((resolve, reject) => {
