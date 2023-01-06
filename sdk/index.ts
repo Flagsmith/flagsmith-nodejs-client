@@ -329,7 +329,7 @@ export class Flagsmith {
             featureStates: featureStates,
             analyticsProcessor: this.analyticsProcessor,
             defaultFlagHandler: this.defaultFlagHandler,
-            identityID: identityModel.djangoID || identityModel.identityUuid
+            identityID: identityModel.djangoID || identityModel.compositeKey
         });
 
         if (!!this.cache) {
