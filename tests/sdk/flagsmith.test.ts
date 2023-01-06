@@ -227,6 +227,23 @@ test('test onEnvironmentChange is called after error', async () => {
     expect(callbackSpy).toBeCalled();
 });
 
+test('getIdentityFlags throws error if identifier is empty string', async () => {
+    const flagsmith = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    await expect(flagsmith.getIdentityFlags('')).rejects.toThrow('`identifier` argument is missing or invalid.');
+})
+
+
+test('getIdentitySegments throws error if identifier is empty string', () => {
+    const flagsmith = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    expect(() => { flagsmith.getIdentitySegments(''); }).toThrow('`identifier` argument is missing or invalid.');
+})
+
 
 
 async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
