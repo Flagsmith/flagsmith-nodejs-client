@@ -172,6 +172,27 @@ test('test_default_flag_used_after_multiple_API_errors', async () => {
     expect(flag.value).toBe(defaultFlag.value);
 });
 
+test('default flag handler used when timeout occurs', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(sleep(10000)));
+
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        requestTimeoutSeconds: 0.1,
+    });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature');
+    expect(flag.isDefault).toBe(true);
+    expect(flag.enabled).toBe(defaultFlag.enabled);
+    expect(flag.value).toBe(defaultFlag.value);
+})
+
 test('test_throws_when_no_identity_flags_returned_due_to_error', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
@@ -245,7 +266,6 @@ test('getIdentitySegments throws error if identifier is empty string', () => {
 })
 
 
-
 async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
     // TODO: this has been pulled out of tests above as a helper function.
     //  I'm not entirely sure why it's necessary, however, we should look to remove.
@@ -263,4 +283,10 @@ async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
             fs.featurestateUUID = undefined;
         })
     })
+}
+
+function sleep(ms: number) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }

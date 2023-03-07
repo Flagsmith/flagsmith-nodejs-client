@@ -283,11 +283,11 @@ export class Flagsmith {
             {
                 agent: this.agent,
                 method: method,
-                timeout: this.requestTimeoutMs || undefined,
                 body: JSON.stringify(body),
                 headers: headers
             },
-            this.retries
+            this.retries,
+            this.requestTimeoutMs || undefined,
         );
 
         if (data.status !== 200) {
