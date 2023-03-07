@@ -42,7 +42,6 @@ describe('getHashedPercentageForObjIds', () => {
         let objectIdPairs = Array.from(Array(testSample).keys()).flatMap(d => Array.from(Array(testSample).keys()).map(e => [d, e].flat()))
 
         // When
-        console.log(objectIdPairs);
         let values = objectIdPairs.map((objIds) => getHashedPercentateForObjIds(objIds));
 
         // Then
