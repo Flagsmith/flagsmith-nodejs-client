@@ -23,21 +23,27 @@ export const retryFetch = (
     timeout?: number // set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
-        // check for timeout
-        if (timeout) setTimeout(() => reject('error: timeout'), timeout);
-
         const wrapper = (n: number) => {
-            fetch(url, fetchOptions)
+            requestWrapper()
                 .then(res => resolve(res))
                 .catch(async err => {
                     if (n > 0) {
-                        await delay(1000);
+                        await delay(250);
                         wrapper(--n);
                     } else {
                         reject(err);
                     }
                 });
         };
+
+        const requestWrapper = (): Promise<Response> => {
+            return new Promise((resolve, reject) => {
+                if (timeout) setTimeout(() => reject('error: timeout'), timeout);
+                fetch(url, fetchOptions)
+                    .then(res => resolve(res))
+                    .catch(err => reject(err))
+            })
+        }
 
         wrapper(retries);
     });
