@@ -23,13 +23,13 @@ export const retryFetch = (
     timeout?: number // set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
-        const wrapper = (n: number) => {
+        const retryWrapper = (n: number) => {
             requestWrapper()
                 .then(res => resolve(res))
                 .catch(async err => {
                     if (n > 0) {
                         await delay(1000);
-                        wrapper(--n);
+                        retryWrapper(--n);
                     } else {
                         reject(err);
                     }
@@ -45,6 +45,6 @@ export const retryFetch = (
             })
         }
 
-        wrapper(retries);
+        retryWrapper(retries);
     });
 };
