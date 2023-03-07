@@ -28,7 +28,7 @@ export const retryFetch = (
                 .then(res => resolve(res))
                 .catch(async err => {
                     if (n > 0) {
-                        await delay(250);
+                        await delay(1000);
                         wrapper(--n);
                     } else {
                         reject(err);
