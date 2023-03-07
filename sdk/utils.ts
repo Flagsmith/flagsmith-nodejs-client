@@ -28,7 +28,7 @@ export const retryFetch = (
                 .then(res => resolve(res))
                 .catch(async err => {
                     if (n > 0) {
-                        await delay(1000);
+                        await delay(250);
                         wrapper(--n);
                     } else {
                         reject(err);
@@ -37,8 +37,12 @@ export const retryFetch = (
         };
 
         const requestWrapper = (): Promise<Response> => {
-            if (timeout) setTimeout(() => reject('error: timeout'), timeout);
-            return fetch(url, fetchOptions);
+            return new Promise((resolve, reject) => {
+                if (timeout) setTimeout(() => reject('error: timeout'), timeout);
+                return fetch(url, fetchOptions)
+                    .then(res => resolve(res))
+                    .catch(err => reject(err))
+            })
         }
 
         wrapper(retries);
