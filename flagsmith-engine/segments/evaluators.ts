@@ -27,7 +27,7 @@ export function evaluateIdentityInSegment(
                 overrideTraits || identity.identityTraits,
                 rule,
                 segment.id,
-                identity.compositeKey
+                identity.djangoID || identity.compositeKey
             )
         ).length === segment.rules.length
     );
@@ -62,7 +62,8 @@ export function traitsMatchSegmentCondition(
     identityId: number | string
 ): boolean {
     if (condition.operator == PERCENTAGE_SPLIT) {
-        return getHashedPercentateForObjIds([segmentId, identityId]) <= parseFloat(String(condition.value));
+        var hashedPercentage = getHashedPercentateForObjIds([segmentId, identityId]);
+        return hashedPercentage <= parseFloat(String(condition.value));
     }
     const traits = identityTraits.filter(t => t.traitKey === condition.property_);
     const trait = traits.length > 0 ? traits[0] : undefined;

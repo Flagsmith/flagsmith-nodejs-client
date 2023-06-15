@@ -19,7 +19,8 @@ export class IdentityModel {
         identityFeatures: IdentityFeaturesList,
         environmentApiKey: string,
         identifier: string,
-        identityUuid?: string
+        identityUuid?: string,
+        djangoID?: number
     ) {
         this.identityUuid = identityUuid || uuidv4();
         this.createdDate = Date.parse(created_date) || Date.now();
@@ -27,6 +28,7 @@ export class IdentityModel {
         this.identityFeatures = new IdentityFeaturesList(...identityFeatures);
         this.environmentApiKey = environmentApiKey;
         this.identifier = identifier;
+        this.djangoID = djangoID;
     }
 
     get compositeKey() {
