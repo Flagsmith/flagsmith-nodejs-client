@@ -20,7 +20,7 @@ export const retryFetch = (
     url: string,
     fetchOptions: RequestInit,
     retries: number = 3,
-    timeout?: number = 10// set an overall timeout for this function
+    timeout: number = 10// set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
         const retryWrapper = (n: number) => {
