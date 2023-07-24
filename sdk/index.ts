@@ -30,7 +30,7 @@ export class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
-    requestTimeoutSeconds?: number;
+    requestTimeoutSeconds?: number = 10;
     agent: RequestInit['agent'];
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
