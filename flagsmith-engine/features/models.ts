@@ -96,18 +96,26 @@ export class FeatureStateModel {
         }
         return this.featureSegment.priority < other.featureSegment.priority;
     }
-    
-    getMultivariateValue(identityID: number | string) {
-        const percentageValue = getHashedPercentateForObjIds([
-            this.djangoID || this.featurestateUUID,
-            identityID
-        ]);
 
+    getMultivariateValue(identityID: number | string) {
+        let percentageValue: number | undefined;
         let startPercentage = 0;
-        const sortedF = this.multivariateFeatureStateValues.sort((a, b) =>{
+        const sortedF = this.multivariateFeatureStateValues.sort((a, b) => {
             return a.id - b.id;
         });
         for (const myValue of sortedF) {
+            if (myValue.percentageAllocation === 0) {
+                continue;
+            }
+            if (myValue.percentageAllocation === 100) {
+                return myValue.multivariateFeatureOption.value;
+            }
+            if (percentageValue === undefined) {
+                percentageValue = getHashedPercentateForObjIds([
+                    this.djangoID || this.featurestateUUID,
+                    identityID
+                ]);
+            }
             const limit = myValue.percentageAllocation + startPercentage;
             if (startPercentage <= percentageValue && percentageValue < limit) {
                 return myValue.multivariateFeatureOption.value;
