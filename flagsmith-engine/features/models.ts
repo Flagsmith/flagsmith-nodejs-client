@@ -104,17 +104,18 @@ export class FeatureStateModel {
             return a.id - b.id;
         });
         for (const myValue of sortedF) {
-            if (myValue.percentageAllocation === 0) {
-                continue;
-            }
-            if (myValue.percentageAllocation === 100) {
-                return myValue.multivariateFeatureOption.value;
-            }
-            if (percentageValue === undefined) {
-                percentageValue = getHashedPercentateForObjIds([
-                    this.djangoID || this.featurestateUUID,
-                    identityID
-                ]);
+            switch (myValue.percentageAllocation) {
+                case 0:
+                    continue;
+                case 100:
+                    return myValue.multivariateFeatureOption.value;
+                default:
+                    if (percentageValue === undefined) {
+                        percentageValue = getHashedPercentateForObjIds([
+                            this.djangoID || this.featurestateUUID,
+                            identityID
+                        ]);
+                    }
             }
             const limit = myValue.percentageAllocation + startPercentage;
             if (startPercentage <= percentageValue && percentageValue < limit) {
