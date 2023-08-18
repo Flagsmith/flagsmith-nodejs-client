@@ -24,13 +24,13 @@ export { EnvironmentDataPollingManager } from './polling_manager';
 export { FlagsmithCache, FlagsmithConfig } from './types';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
+const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 
 
 export class Flagsmith {
     environmentKey?: string;
     apiUrl: string = DEFAULT_API_URL;
     customHeaders?: { [key: string]: any };
-    requestTimeoutSeconds?: number = 10;
     agent: RequestInit['agent'];
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
@@ -87,8 +87,7 @@ export class Flagsmith {
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
-        this.requestTimeoutSeconds = data.requestTimeoutSeconds;
-        this.requestTimeoutMs = data.requestTimeoutSeconds ? data.requestTimeoutSeconds * 1000 : undefined;
+        this.requestTimeoutMs = 1000 * (data.requestTimeoutSeconds ? data.requestTimeoutSeconds : DEFAULT_REQUEST_TIMEOUT_SECONDS);
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
