@@ -183,7 +183,7 @@ test('default flag handler used when timeout occurs', async () => {
     const flg = new Flagsmith({
         environmentKey: 'key',
         defaultFlagHandler: defaultFlagHandler,
-        requestTimeoutSeconds: 0.1,
+        requestTimeoutSeconds: 0.001,
     });
 
     const flags = await flg.getEnvironmentFlags();
@@ -191,6 +191,15 @@ test('default flag handler used when timeout occurs', async () => {
     expect(flag.isDefault).toBe(true);
     expect(flag.enabled).toBe(defaultFlag.enabled);
     expect(flag.value).toBe(defaultFlag.value);
+})
+
+test('request timeout uses default if not provided', async () => {
+
+    const flg = new Flagsmith({
+        environmentKey: 'key',
+    });
+
+    expect(flg.requestTimeoutMs).toBe(10000);
 })
 
 test('test_throws_when_no_identity_flags_returned_due_to_error', async () => {
