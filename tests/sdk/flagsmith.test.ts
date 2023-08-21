@@ -193,7 +193,7 @@ test('default flag handler used when timeout occurs', async () => {
     expect(flag.value).toBe(defaultFlag.value);
 })
 
-test('default request timeout in seconds', async () => {
+test('request timeout uses default if not provided', async () => {
 
     const flg = new Flagsmith({
         environmentKey: 'key',

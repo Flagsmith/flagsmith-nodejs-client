@@ -87,7 +87,7 @@ export class Flagsmith {
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
-        this.requestTimeoutMs = 1000 * (data.requestTimeoutSeconds ? data.requestTimeoutSeconds : DEFAULT_REQUEST_TIMEOUT_SECONDS);
+        this.requestTimeoutMs = 1000 * (data.requestTimeoutSeconds ?? DEFAULT_REQUEST_TIMEOUT_SECONDS);
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
