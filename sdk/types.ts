@@ -2,6 +2,7 @@ import { DefaultFlag, Flags } from "./models";
 import { EnvironmentModel } from "../flagsmith-engine";
 import { RequestInit } from "node-fetch";
 import { Logger } from "pino";
+import { BaseOfflineHandler } from "./offline_handlers";
 
 export interface FlagsmithCache {
   get(key: string): Promise<Flags|undefined> | undefined;
@@ -24,4 +25,6 @@ export interface FlagsmithConfig {
   cache?: FlagsmithCache,
   onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void,
   logger?: Logger
+  offlineMode?: boolean;
+  offlineHandler?: BaseOfflineHandler;
 }

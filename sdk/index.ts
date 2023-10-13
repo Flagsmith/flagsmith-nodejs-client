@@ -1,4 +1,4 @@
-import { RequestInit } from "node-fetch";
+import { RequestInit } from 'node-fetch';
 import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
 import { EnvironmentModel } from '../flagsmith-engine/environments/models';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
@@ -6,6 +6,7 @@ import { IdentityModel } from '../flagsmith-engine/identities/models';
 import { TraitModel } from '../flagsmith-engine/identities/traits/models';
 
 import { AnalyticsProcessor } from './analytics';
+import { BaseOfflineHandler } from './offline_handlers';
 import { FlagsmithAPIError, FlagsmithClientError } from './errors';
 
 import { DefaultFlag, Flags } from './models';
@@ -14,7 +15,7 @@ import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
 import { FlagsmithCache, FlagsmithConfig } from './types';
-import pino, { Logger } from "pino";
+import pino, { Logger } from 'pino';
 
 export { AnalyticsProcessor } from './analytics';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors';
@@ -26,10 +27,9 @@ export { FlagsmithCache, FlagsmithConfig } from './types';
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 
-
 export class Flagsmith {
-    environmentKey?: string;
-    apiUrl: string = DEFAULT_API_URL;
+    environmentKey?: string = undefined;
+    apiUrl?: string = undefined;
     customHeaders?: { [key: string]: any };
     agent: RequestInit['agent'];
     requestTimeoutMs?: number;
@@ -46,6 +46,8 @@ export class Flagsmith {
 
     environmentDataPollingManager?: EnvironmentDataPollingManager;
     environment!: EnvironmentModel;
+    offlineMode: boolean = false;
+    offlineHandler?: BaseOfflineHandler = undefined;
 
     private cache?: FlagsmithCache;
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
@@ -65,6 +67,7 @@ export class Flagsmith {
      * const featureEnabledForIdentity = identityFlags.isFeatureEnabled("foo")
      *
      *  @param {string} data.environmentKey: The environment key obtained from Flagsmith interface
+     *      Required unless offlineMode is True.
         @param {string} data.apiUrl: Override the URL of the Flagsmith API to communicate with
         @param  data.customHeaders: Additional headers to add to requests made to the
             Flagsmith API
@@ -78,16 +81,22 @@ export class Flagsmith {
         @param {boolean} data.enableAnalytics: if enabled, sends additional requests to the Flagsmith
             API to power flag analytics charts
         @param data.defaultFlagHandler: callable which will be used in the case where
-            flags cannot be retrieved from the API or a non existent feature is
+            flags cannot be retrieved from the API or a non-existent feature is
             requested
         @param data.logger: an instance of the pino Logger class to use for logging
-     */
+        @param {boolean} data.offlineMode: sets the client into offline mode. Relies on offlineHandler for
+            evaluating flags.
+        @param {BaseOfflineHandler} data.offlineHandler: provide a handler for offline logic. Used to get environment
+            document from another source when in offlineMode. Works in place of
+            defaultFlagHandler if offlineMode is not set and using remote evaluation.
+    */
     constructor(data: FlagsmithConfig) {
         this.agent = data.agent;
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
-        this.requestTimeoutMs = 1000 * (data.requestTimeoutSeconds ?? DEFAULT_REQUEST_TIMEOUT_SECONDS);
+        this.requestTimeoutMs =
+            1000 * (data.requestTimeoutSeconds ?? DEFAULT_REQUEST_TIMEOUT_SECONDS);
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
@@ -100,9 +109,24 @@ export class Flagsmith {
         this.environmentUrl = `${this.apiUrl}environment-document/`;
         this.onEnvironmentChange = data.onEnvironmentChange;
         this.logger = data.logger || pino();
+        this.offlineMode = data.offlineMode || false;
+        this.offlineHandler = data.offlineHandler;
+
+        // argument validation
+        if (this.offlineMode && !this.offlineHandler) {
+            throw new Error('offline_handler must be provided to use offline mode.');
+        } else if (this.defaultFlagHandler && this.offlineHandler) {
+            throw new Error('Cannot use both default_flag_handler and offline_handler.');
+        }
+
+        if (this.offlineHandler) {
+            this.environment = this.offlineHandler.getEnvironment();
+        }
 
         if (!!data.cache) {
-            const missingMethods: string[] = ['has', 'get', 'set'].filter(method => data.cache && !data.cache[method]);
+            const missingMethods: string[] = ['has', 'get', 'set'].filter(
+                method => data.cache && !data.cache[method]
+            );
 
             if (missingMethods.length > 0) {
                 throw new Error(
@@ -114,28 +138,36 @@ export class Flagsmith {
             this.cache = data.cache;
         }
 
-        if (this.enableLocalEvaluation) {
-            if (!this.environmentKey.startsWith('ser.')) {
-                console.error(
-                    'In order to use local evaluation, please generate a server key in the environment settings page.'
-                );
+        if (!this.offlineMode) {
+            if (!this.environmentKey) {
+                throw new Error('environmentKey is required');
             }
-            this.environmentDataPollingManager = new EnvironmentDataPollingManager(
-                this,
-                this.environmentRefreshIntervalSeconds
-            );
-            this.environmentDataPollingManager.start();
-            this.updateEnvironment();
-        }
+            const apiUrl = data.apiUrl || DEFAULT_API_URL;
+            this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
 
-        this.analyticsProcessor = data.enableAnalytics
-            ? new AnalyticsProcessor({
-                environmentKey: this.environmentKey,
-                baseApiUrl: this.apiUrl,
-                requestTimeoutMs: this.requestTimeoutMs,
-                logger: this.logger
-            })
-            : undefined;
+            if (this.enableLocalEvaluation) {
+                if (!this.environmentKey.startsWith('ser.')) {
+                    console.error(
+                        'In order to use local evaluation, please generate a server key in the environment settings page.'
+                    );
+                }
+                this.environmentDataPollingManager = new EnvironmentDataPollingManager(
+                    this,
+                    this.environmentRefreshIntervalSeconds
+                );
+                this.environmentDataPollingManager.start();
+                this.updateEnvironment();
+            }
+
+            this.analyticsProcessor = data.enableAnalytics
+                ? new AnalyticsProcessor({
+                      environmentKey: this.environmentKey,
+                      baseApiUrl: this.apiUrl,
+                      requestTimeoutMs: this.requestTimeoutMs,
+                      logger: this.logger
+                  })
+                : undefined;
+        }
     }
     /**
      * Get all the default for flags for the current environment.
@@ -143,15 +175,15 @@ export class Flagsmith {
      * @returns Flags object holding all the flags for the current environment.
      */
     async getEnvironmentFlags(): Promise<Flags> {
-        const cachedItem = !!this.cache && await this.cache.get(`flags`);
+        const cachedItem = !!this.cache && (await this.cache.get(`flags`));
         if (!!cachedItem) {
             return cachedItem;
         }
-        if (this.enableLocalEvaluation) {
+        if ((this.enableLocalEvaluation || this.offlineMode) && this.environment) {
             return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getEnvironmentFlagsFromDocument());
-                }).catch((e) => reject(e))
+                }).catch(e => reject(e))
             );
         }
         if (this.environment) {
@@ -160,6 +192,7 @@ export class Flagsmith {
 
         return this.getEnvironmentFlagsFromApi();
     }
+
     /**
      * Get all the flags for the current environment for a given identity. Will also
         upsert all traits to the Flagsmith API for future evaluations. Providing a
@@ -173,15 +206,15 @@ export class Flagsmith {
      */
     async getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
         if (!identifier) {
-            throw new Error("`identifier` argument is missing or invalid.")
+            throw new Error('`identifier` argument is missing or invalid.');
         }
 
-        const cachedItem = !!this.cache && await this.cache.get(`flags-${identifier}`);
+        const cachedItem = !!this.cache && (await this.cache.get(`flags-${identifier}`));
         if (!!cachedItem) {
             return cachedItem;
         }
         traits = traits || {};
-        if (this.enableLocalEvaluation) {
+        if ((this.enableLocalEvaluation || this.offlineMode) && this.environment) {
             return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
@@ -207,7 +240,7 @@ export class Flagsmith {
         traits?: { [key: string]: any }
     ): Promise<SegmentModel[]> {
         if (!identifier) {
-            throw new Error("`identifier` argument is missing or invalid.")
+            throw new Error('`identifier` argument is missing or invalid.');
         }
 
         traits = traits || {};
@@ -224,7 +257,7 @@ export class Flagsmith {
 
                     const segments = getIdentitySegments(this.environment, identityModel);
                     return resolve(segments);
-                }).catch((e) => reject(e));
+                }).catch(e => reject(e));
             });
         }
         console.error('This function is only permitted with local evaluation.');
@@ -286,7 +319,7 @@ export class Flagsmith {
                 headers: headers
             },
             this.retries,
-            this.requestTimeoutMs || undefined,
+            this.requestTimeoutMs || undefined
         );
 
         if (data.status !== 200) {
@@ -321,7 +354,10 @@ export class Flagsmith {
         return flags;
     }
 
-    private async getIdentityFlagsFromDocument(identifier: string, traits: { [key: string]: any }): Promise<Flags> {
+    private async getIdentityFlagsFromDocument(
+        identifier: string,
+        traits: { [key: string]: any }
+    ): Promise<Flags> {
         const identityModel = this.buildIdentityModel(
             identifier,
             Object.keys(traits).map(key => ({
@@ -361,6 +397,9 @@ export class Flagsmith {
             }
             return flags;
         } catch (e) {
+            if (this.offlineHandler) {
+                return this.getEnvironmentFlagsFromDocument();
+            }
             if (this.defaultFlagHandler) {
                 return new Flags({
                     flags: {},
@@ -387,6 +426,9 @@ export class Flagsmith {
             }
             return flags;
         } catch (e) {
+            if (this.offlineHandler) {
+                return this.getIdentityFlagsFromDocument(identifier, traits);
+            }
             if (this.defaultFlagHandler) {
                 return new Flags({
                     flags: {},
@@ -405,4 +447,3 @@ export class Flagsmith {
 }
 
 export default Flagsmith;
-
