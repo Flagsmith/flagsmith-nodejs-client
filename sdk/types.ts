@@ -12,7 +12,7 @@ export interface FlagsmithCache {
 }
 
 export interface FlagsmithConfig {
-  environmentKey: string;
+  environmentKey?: string;
   apiUrl?: string;
   agent?:RequestInit['agent'];
   customHeaders?: { [key: string]: any };

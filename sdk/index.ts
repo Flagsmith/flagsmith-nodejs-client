@@ -40,9 +40,9 @@ export class Flagsmith {
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
 
 
-    environmentFlagsUrl: string;
-    identitiesUrl: string;
-    environmentUrl: string;
+    environmentFlagsUrl?: string;
+    identitiesUrl?: string;
+    environmentUrl?: string;
 
     environmentDataPollingManager?: EnvironmentDataPollingManager;
     environment!: EnvironmentModel;
@@ -90,7 +90,11 @@ export class Flagsmith {
             document from another source when in offlineMode. Works in place of
             defaultFlagHandler if offlineMode is not set and using remote evaluation.
     */
-    constructor(data: FlagsmithConfig) {
+    constructor(data: FlagsmithConfig = {}) {
+        // if (!data.offlineMode && !data.environmentKey) {
+        //     throw new Error('ValueError: environmentKey is required.');
+        // }
+
         this.agent = data.agent;
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
@@ -104,9 +108,6 @@ export class Flagsmith {
         this.enableAnalytics = data.enableAnalytics || false;
         this.defaultFlagHandler = data.defaultFlagHandler;
 
-        this.environmentFlagsUrl = `${this.apiUrl}flags/`;
-        this.identitiesUrl = `${this.apiUrl}identities/`;
-        this.environmentUrl = `${this.apiUrl}environment-document/`;
         this.onEnvironmentChange = data.onEnvironmentChange;
         this.logger = data.logger || pino();
         this.offlineMode = data.offlineMode || false;
@@ -114,9 +115,9 @@ export class Flagsmith {
 
         // argument validation
         if (this.offlineMode && !this.offlineHandler) {
-            throw new Error('offline_handler must be provided to use offline mode.');
+            throw new Error('ValueError: offlineHandler must be provided to use offline mode.');
         } else if (this.defaultFlagHandler && this.offlineHandler) {
-            throw new Error('Cannot use both default_flag_handler and offline_handler.');
+            throw new Error('ValueError: Cannot use both defaultFlagHandler and offlineHandler.');
         }
 
         if (this.offlineHandler) {
@@ -140,11 +141,15 @@ export class Flagsmith {
 
         if (!this.offlineMode) {
             if (!this.environmentKey) {
-                throw new Error('environmentKey is required');
+                throw new Error('ValueError: environmentKey is required.');
             }
+    
             const apiUrl = data.apiUrl || DEFAULT_API_URL;
             this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
-
+            this.environmentFlagsUrl = `${this.apiUrl}flags/`;
+            this.identitiesUrl = `${this.apiUrl}identities/`;
+            this.environmentUrl = `${this.apiUrl}environment-document/`;
+    
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
                     console.error(
@@ -179,7 +184,7 @@ export class Flagsmith {
         if (!!cachedItem) {
             return cachedItem;
         }
-        if ((this.enableLocalEvaluation || this.offlineMode) && this.environment) {
+        if (this.enableLocalEvaluation && !this.offlineMode) {
             return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getEnvironmentFlagsFromDocument());
@@ -214,13 +219,17 @@ export class Flagsmith {
             return cachedItem;
         }
         traits = traits || {};
-        if ((this.enableLocalEvaluation || this.offlineMode) && this.environment) {
+        if (this.enableLocalEvaluation) {
             return new Promise((resolve, reject) =>
                 this.environmentPromise!.then(() => {
                     resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
                 }).catch(e => reject(e))
             );
         }
+        if (this.offlineMode) {
+            return this.getIdentityFlagsFromDocument(identifier, traits || {});
+        }
+
         return this.getIdentityFlagsFromApi(identifier, traits);
     }
 
@@ -337,6 +346,9 @@ export class Flagsmith {
     private environmentPromise: Promise<any> | undefined;
 
     private async getEnvironmentFromApi() {
+        if (!this.environmentUrl) {
+            throw new Error('`apiUrl` argument is missing or invalid.');
+        }
         const environment_data = await this.getJSONResponse(this.environmentUrl, 'GET');
         return buildEnvironmentModel(environment_data);
     }
@@ -384,6 +396,9 @@ export class Flagsmith {
     }
 
     private async getEnvironmentFlagsFromApi() {
+        if (!this.environmentFlagsUrl) {
+            throw new Error('`apiUrl` argument is missing or invalid.');
+        }
         try {
             const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
             const flags = Flags.fromAPIFlags({
@@ -412,6 +427,9 @@ export class Flagsmith {
     }
 
     private async getIdentityFlagsFromApi(identifier: string, traits: { [key: string]: any }) {
+        if (!this.identitiesUrl) {
+            throw new Error('`apiUrl` argument is missing or invalid.');
+        }
         try {
             const data = generateIdentitiesData(identifier, traits);
             const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);

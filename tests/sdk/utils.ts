@@ -42,8 +42,8 @@ export function flagsmith(params = {}) {
     });
 }
 
-export function environmentJSON() {
-    return readFileSync(DATA_DIR + 'environment.json', 'utf-8');
+export function environmentJSON(environmentFilename: string = 'environment.json') {
+    return readFileSync(DATA_DIR + environmentFilename, 'utf-8');
 }
 
 export function environmentModel(environmentJSON: any) {
