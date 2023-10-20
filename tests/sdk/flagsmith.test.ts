@@ -337,17 +337,14 @@ test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () 
     fetch.mockReturnValue(Promise.resolve(errorResponse));
 
     // When
-    await flagsmith.getEnvironmentFlags();
-    await flagsmith.getIdentityFlags('identity', {});
+    const environmentFlags:Flags = await flagsmith.getEnvironmentFlags();
+    const identityFlags:Flags = await flagsmith.getIdentityFlags('identity', {});
 
     // Then
     expect(mock_offline_handler.getEnvironment).toHaveBeenCalledTimes(1);
     expect(flagsmith.getEnvironmentFlags).toHaveBeenCalled();
     expect(flagsmith.getIdentityFlags).toHaveBeenCalled();
-  
-    const environmentFlags:Flags = await flagsmith.getEnvironmentFlags();
-    const identityFlags:Flags = await flagsmith.getIdentityFlags('identity', {});
-  
+    
     expect(environmentFlags.isFeatureEnabled('some_feature')).toBe(true);
     expect(environmentFlags.getFeatureValue('some_feature')).toBe('offline-value');
   
