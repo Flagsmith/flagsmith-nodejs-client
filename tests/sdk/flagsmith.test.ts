@@ -2,11 +2,12 @@ import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
 import fetch, {RequestInit} from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
-import { DefaultFlag } from '../../sdk/models';
+import { DefaultFlag, Flags } from '../../sdk/models';
 import {delay, retryFetch} from '../../sdk/utils';
 import * as utils from '../../sdk/utils';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
 import https from 'https'
+import { BaseOfflineHandler } from '../../sdk/offline_handlers';
 
 jest.mock('node-fetch');
 jest.mock('../../sdk/polling_manager');
@@ -202,7 +203,7 @@ test('request timeout uses default if not provided', async () => {
     expect(flg.requestTimeoutMs).toBe(10000);
 })
 
-test('test_throws_when_no_identity_flags_returned_due_to_error', async () => {
+test('test_throws_when_no_identityFlags_returned_due_to_error', async () => {
     // @ts-ignore
     fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
 
@@ -275,10 +276,108 @@ test('getIdentitySegments throws error if identifier is empty string', () => {
 })
 
 
-async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
+test('offline_mode', async() => {
+    // Given
+    const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
+
+    class DummyOfflineHandler extends BaseOfflineHandler {
+        getEnvironment(): EnvironmentModel {
+            return environment;
+        }
+    }
+
+    // When
+    const flagsmith = new Flagsmith({ offlineMode: true, offlineHandler: new DummyOfflineHandler() });
+
+    // Then
+    // we can request the flags from the client successfully
+    const environmentFlags: Flags = await flagsmith.getEnvironmentFlags();
+    let flag = environmentFlags.getFlag('some_feature');
+    expect(flag.isDefault).toBe(false);
+    expect(flag.enabled).toBe(true);
+    expect(flag.value).toBe('offline-value');
+
+
+    const identityFlags: Flags = await flagsmith.getIdentityFlags("identity");
+    flag = identityFlags.getFlag('some_feature');
+    expect(flag.isDefault).toBe(false);
+    expect(flag.enabled).toBe(true);
+    expect(flag.value).toBe('offline-value');
+});
+
+
+test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () => {
+    // Given
+    const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
+    const api_url = 'http://some.flagsmith.com/api/v1/';
+    const mock_offline_handler = new BaseOfflineHandler() as jest.Mocked<BaseOfflineHandler>;
+  
+    jest.spyOn(mock_offline_handler, 'getEnvironment').mockReturnValue(environment);
+
+    const flagsmith = new Flagsmith({
+      environmentKey: 'some-key',
+      apiUrl: api_url,
+      offlineHandler: mock_offline_handler,
+    });
+
+    jest.spyOn(flagsmith, 'getEnvironmentFlags');
+    jest.spyOn(flagsmith, 'getIdentityFlags');
+
+  
+    flagsmith.environmentFlagsUrl = 'http://some.flagsmith.com/api/v1/environment-flags';
+    flagsmith.identitiesUrl = 'http://some.flagsmith.com/api/v1/identities';
+
+    // Mock a 500 Internal Server Error response
+    const errorResponse = new Response(null, {
+        status: 500,
+        statusText: 'Internal Server Error',
+    });
+
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(errorResponse));
+
+    // When
+    const environmentFlags:Flags = await flagsmith.getEnvironmentFlags();
+    const identityFlags:Flags = await flagsmith.getIdentityFlags('identity', {});
+
+    // Then
+    expect(mock_offline_handler.getEnvironment).toHaveBeenCalledTimes(1);
+    expect(flagsmith.getEnvironmentFlags).toHaveBeenCalled();
+    expect(flagsmith.getIdentityFlags).toHaveBeenCalled();
+    
+    expect(environmentFlags.isFeatureEnabled('some_feature')).toBe(true);
+    expect(environmentFlags.getFeatureValue('some_feature')).toBe('offline-value');
+  
+    expect(identityFlags.isFeatureEnabled('some_feature')).toBe(true);
+    expect(identityFlags.getFeatureValue('some_feature')).toBe('offline-value');
+});
+
+test('cannot use offline mode without offline handler', () => {
+    // When and Then
+    expect(() => new Flagsmith({ offlineMode: true, offlineHandler: undefined })).toThrowError(
+      'ValueError: offlineHandler must be provided to use offline mode.'
+    );
+});
+  
+test('cannot use both default handler and offline handler', () => {
+    // When and Then
+    expect(() => new Flagsmith({
+      offlineHandler: new BaseOfflineHandler(),
+      defaultFlagHandler: (flagName) => new DefaultFlag('foo', true)
+    })).toThrowError('ValueError: Cannot use both defaultFlagHandler and offlineHandler.');
+});
+  
+test('cannot create Flagsmith client in remote evaluation without API key', () => {
+    // When and Then
+    // @ts-ignore
+    expect(() => new Flagsmith()).toThrowError('ValueError: environmentKey is required.');
+});
+
+
+async function wipeFeatureStateUUIDs (environmentModel: EnvironmentModel) {
     // TODO: this has been pulled out of tests above as a helper function.
     //  I'm not entirely sure why it's necessary, however, we should look to remove.
-    enviromentModel.featureStates.forEach(fs => {
+    environmentModel.featureStates.forEach(fs => {
         // @ts-ignore
         fs.featurestateUUID = undefined;
         fs.multivariateFeatureStateValues.forEach(mvfsv => {
@@ -286,7 +385,7 @@ async function wipeFeatureStateUUIDs (enviromentModel: EnvironmentModel) {
             mvfsv.mvFsValueUuid = undefined;
         })
     });
-    enviromentModel.project.segments.forEach(s => {
+    environmentModel.project.segments.forEach(s => {
         s.featureStates.forEach(fs => {
             // @ts-ignore
             fs.featurestateUUID = undefined;
