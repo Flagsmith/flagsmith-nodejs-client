@@ -12,6 +12,10 @@ export {
 } from './sdk';
 
 export {
+  FlagsmithConfig
+} from './sdk/types'
+
+export {
   EnvironmentModel,
   IntegrationModel,
   FeatureStateModel,
