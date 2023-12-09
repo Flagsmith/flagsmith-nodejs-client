@@ -143,13 +143,13 @@ export class Flagsmith {
             if (!this.environmentKey) {
                 throw new Error('ValueError: environmentKey is required.');
             }
-    
+
             const apiUrl = data.apiUrl || DEFAULT_API_URL;
             this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
             this.environmentFlagsUrl = `${this.apiUrl}flags/`;
             this.identitiesUrl = `${this.apiUrl}identities/`;
             this.environmentUrl = `${this.apiUrl}environment-document/`;
-    
+
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
                     console.error(
