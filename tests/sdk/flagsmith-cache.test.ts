@@ -1,5 +1,13 @@
 import fetch, { Headers } from 'node-fetch';
-import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON, TestCache } from './utils';
+import {
+  TestCache,
+  TestCacheSync,
+  environmentJSON,
+  environmentModel,
+  flagsJSON,
+  flagsmith,
+  identitiesJSON,
+} from './utils';
 
 jest.mock('node-fetch');
 jest.mock('../../sdk/polling_manager');
@@ -148,3 +156,53 @@ test('test_cache_used_for_identity_flags_local_evaluation', async () => {
 });
 
 test('test_cache_used_for_all_flags', async () => { });
+
+test('test_cache_used_for_identity_flags_sync', async () => {
+  // @ts-expect-error jest mocks not added to typedef
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+  const cache = new TestCacheSync();
+  const set = jest.spyOn(cache, 'set');
+
+  const identifier = 'identifier';
+  const traits = { some_trait: 'some_value' };
+  const flg = flagsmith({
+    cache,
+    environmentKey: 'ser.key',
+    enableLocalEvaluation: true,
+  });
+
+  await flg.readyCheck();
+
+  flg.getIdentityFlagsSync(identifier, traits).allFlags();
+  const identityFlags = flg.getIdentityFlagsSync(identifier, traits).allFlags();
+
+  expect(set).toBeCalled();
+  expect(cache.has('flags-identifier')).toBe(true);
+
+  expect(fetch).toBeCalledTimes(1);
+
+  expect(identityFlags[0].enabled).toBe(true);
+  expect(identityFlags[0].value).toBe('some-value');
+  expect(identityFlags[0].featureName).toBe('some_feature');
+});
+
+test('test_cache_used_for_identity_flags_sync_error', async () => {
+  // @ts-expect-error jest mocks not added to typedef
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+  const cache = new TestCache();
+  const identifier = 'identifier';
+
+  const flg = flagsmith({
+    cache,
+    environmentKey: 'ser.key',
+    enableLocalEvaluation: true,
+  });
+
+  await flg.readyCheck();
+
+  expect(() => {
+    flg.getIdentityFlagsSync(identifier);
+  }).toThrow('returned a Promise');
+});
