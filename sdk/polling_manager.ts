@@ -27,4 +27,6 @@ export class EnvironmentDataPollingManager {
         }
         clearInterval(this.interval);
     }
+
+    get isStopped() { return !!this.interval }
 }

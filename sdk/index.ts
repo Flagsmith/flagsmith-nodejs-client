@@ -55,6 +55,8 @@ export class Flagsmith {
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
     private logger: Logger;
+    /** True if the environment has loaded at least once */
+    private ready: boolean;
     /**
      * A Flagsmith client.
      *
@@ -114,6 +116,7 @@ export class Flagsmith {
         this.logger = data.logger || pino();
         this.offlineMode = data.offlineMode || false;
         this.offlineHandler = data.offlineHandler;
+        this.ready = this.offlineMode
 
         // argument validation
         if (this.offlineMode && !this.offlineHandler) {
@@ -236,6 +239,52 @@ export class Flagsmith {
     }
 
     /**
+     * Get all the flags for the current environment for a given identity.
+     * Local evaluation mode only. If using a custom cache, then it should
+     * return synchronously as well.
+     *
+     * @param  {string} identifier a unique identifier for the identity in the
+     * current environment, e.g. email address, username, uuid
+     * @param  {{[key:string]:any}} traits? a dictionary of traits to add /
+     * update on the identity in Flagsmith, e.g. {"num_orders": 10}
+     * @returns Flags object holding all the flags for the given identity.
+     */
+    getIdentityFlagsSync(identifier: string, traits?: { [key: string]: any }): Flags {
+        if (!identifier) {
+            throw new Error('`identifier` argument is missing or invalid.');
+        }
+        if (!this.enableLocalEvaluation && !this.offlineMode) {
+          throw new Error('local evaluation and/or offline mode is not enabled');
+        }
+        if (!this.ready) {
+          throw new Error('environment not loaded yet; try again later')
+        }
+        const cachedItem = !!this.cache && (this.cache.get(`flags-${identifier}`));
+        if (!!cachedItem) {
+            if (cachedItem instanceof Flags) {
+              return cachedItem;
+            }
+            throw new Error('cache returned a Promise in sync mode');
+        }
+        const identityModel = this.buildIdentityModel(
+            identifier,
+            Object.entries(traits || {}).map(([key, value]) => ({ key, value }))
+        );
+        const featureStates = getIdentityFeatureStates(this.environment, identityModel);
+        const flags = Flags.fromFeatureStateModels({
+            featureStates: featureStates,
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler,
+            identityID: identityModel.djangoID || identityModel.compositeKey
+        });
+        if (!!this.cache) {
+            // @ts-ignore node-cache types are incorrect, ttl should be optional
+            this.cache.set(`flags-${identifier}`, flags);
+        }
+        return flags;
+    }
+
+    /**
      * Get the segments for the current environment for a given identity. Will also
         upsert all traits to the Flagsmith API for future evaluations. Providing a
         trait with a value of None will remove the trait from the identity if it exists.
@@ -296,6 +345,7 @@ export class Flagsmith {
                     this.environment.identityOverrides.map(identity => [identity.identifier, identity]
                     ));
             }
+            this.ready = true;
             if (this.onEnvironmentChange) {
                 this.onEnvironmentChange(null, this.environment);
             }
@@ -304,6 +354,23 @@ export class Flagsmith {
                 this.onEnvironmentChange(e as Error, this.environment);
             }
         }
+    }
+
+    /**
+     * Wait for the environment document to load. If the request fails then
+     * this promise is rejected. Useful for local evaluation mode.
+     */
+    async readyCheck(): Promise<void> {
+      if (this.ready) { return }
+      if (!this.environmentDataPollingManager || this.environmentDataPollingManager.isStopped) {
+        throw new Error('polling manager is stopped')
+      }
+      if (!this.environmentPromise) {
+        // This should never throw, but await anyway to avoid a dangling
+        // promise
+        await this.updateEnvironment()
+      }
+      await this.environmentPromise
     }
 
     async close() {

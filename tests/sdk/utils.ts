@@ -24,6 +24,23 @@ export class TestCache implements FlagsmithCache {
     }
 }
 
+export class TestCacheSync implements FlagsmithCache {
+    cache: Record<string, Flags> = {};
+
+    get(name: string): Flags|undefined {
+        return this.cache[name];
+    }
+
+    has(name: string): boolean {
+        return !!this.cache[name];
+    }
+
+    set(name: string, value: Flags, ttl: number|string): boolean {
+        this.cache[name] = value;
+        return true
+    }
+}
+
 export function analyticsProcessor() {
     return new AnalyticsProcessor({
         environmentKey: 'test-key',

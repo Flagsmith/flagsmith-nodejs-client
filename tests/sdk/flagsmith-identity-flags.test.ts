@@ -155,3 +155,46 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
   expect(identityFlags.getFeatureValue('mv_feature')).toBe('bar');
   expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(false);
 });
+
+test('test_get_identity_flags_sync_basic', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+  const identifier = 'identifier';
+
+  const flg = flagsmith({
+      environmentKey: 'ser.key',
+      enableLocalEvaluation: true,
+  });
+
+  await flg.readyCheck();
+
+  const identityFlags = flg.getIdentityFlagsSync(identifier);
+
+  expect(identityFlags.getFeatureValue('mv_feature')).toBe('bar');
+  expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(false);
+});
+
+test('test_get_identity_flags_sync_errors', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+  const flg = flagsmith({
+      environmentKey: 'ser.key',
+      enableLocalEvaluation: true,
+  });
+  expect(() => {
+    flg.getIdentityFlagsSync('example');
+  }).toThrow('not loaded yet');
+  await flg.readyCheck();
+  expect(() => {
+    flg.getIdentityFlagsSync('');
+  }).toThrow('missing or invalid');
+
+  const f2 = flagsmith({
+      environmentKey: 'ser.key',
+      enableLocalEvaluation: false,
+  });
+  expect(() => {
+    f2.getIdentityFlagsSync('example');
+  }).toThrow('not enabled');
+});

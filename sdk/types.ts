@@ -5,7 +5,7 @@ import { Logger } from "pino";
 import { BaseOfflineHandler } from "./offline_handlers";
 
 export interface FlagsmithCache {
-  get(key: string): Promise<Flags|undefined> | undefined;
+  get(key: string): Promise<Flags|undefined> | Flags | undefined;
   set(key: string, value: Flags, ttl: string | number): boolean | Promise<boolean>;
   has(key: string): boolean | Promise<boolean>;
   [key: string]: any;
