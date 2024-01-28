@@ -1,4 +1,5 @@
 import { buildFeatureStateModel } from '../features/util';
+import { buildIdentityModel } from '../identities/util';
 import { buildProjectModel } from '../projects/util';
 import { EnvironmentAPIKeyModel, EnvironmentModel } from './models';
 
@@ -13,6 +14,11 @@ export function buildEnvironmentModel(environmentJSON: any) {
         project
     );
     environmentModel.featureStates = featureStates;
+    if (!!environmentJSON.identity_overrides) {
+        environmentModel.identityOverrides = environmentJSON.identity_overrides.map((identityData: any) =>
+            buildIdentityModel(identityData)
+        );
+    }
     return environmentModel;
 }
 
