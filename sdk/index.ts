@@ -49,7 +49,7 @@ export class Flagsmith {
     offlineMode: boolean = false;
     offlineHandler?: BaseOfflineHandler = undefined;
 
-    identityOverridesByIdentifier?: Map<string, IdentityModel>;
+    identitiesWithOverridesByIdentifier?: Map<string, IdentityModel>;
 
     private cache?: FlagsmithCache;
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
@@ -292,7 +292,7 @@ export class Flagsmith {
                 this.environment = await request;
             }
             if (this.environment.identityOverrides?.length) {
-                this.identityOverridesByIdentifier = new Map<string, IdentityModel>(
+                this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>(
                     this.environment.identityOverrides.map(identity => [identity.identifier, identity]
                     ));
             }
@@ -467,10 +467,10 @@ export class Flagsmith {
 
     private getIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
-        let identityOverride = this.identityOverridesByIdentifier?.get(identifier);
-        if (identityOverride) {
-            identityOverride.updateTraits(traitModels);
-            return identityOverride;
+        let identityWithOverrides = this.identitiesWithOverridesByIdentifier?.get(identifier);
+        if (identityWithOverrides) {
+            identityWithOverrides.updateTraits(traitModels);
+            return identityWithOverrides;
         }
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }
