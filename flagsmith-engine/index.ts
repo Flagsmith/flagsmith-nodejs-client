@@ -7,7 +7,6 @@ import { SegmentModel } from './segments/models';
 import { FeatureStateNotFound } from './utils/errors';
 
 export { EnvironmentModel } from './environments/models';
-export { IntegrationModel } from './environments/integrations/models';
 export { FeatureStateModel } from './features/models';
 export { IdentityModel } from './identities/models';
 export { TraitModel } from './identities/traits/models';

@@ -1,10 +1,9 @@
 import Flagsmith from '../../sdk';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-import fetch, {RequestInit} from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
 import { DefaultFlag, Flags } from '../../sdk/models';
-import {delay, retryFetch} from '../../sdk/utils';
-import * as utils from '../../sdk/utils';
+import { delay } from '../../sdk/utils';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
 import https from 'https'
 import { BaseOfflineHandler } from '../../sdk/offline_handlers';
@@ -48,9 +47,6 @@ test('test_update_environment_sets_environment', async () => {
 
     const model = environmentModel(JSON.parse(environmentJSON()));
 
-    wipeFeatureStateUUIDs(flg.environment)
-    wipeFeatureStateUUIDs(model)
-
     expect(flg.environment).toStrictEqual(model);
 });
 
@@ -58,8 +54,8 @@ test('test_set_agent_options', async () => {
     const agent = new https.Agent({})
 
     // @ts-ignore
-    fetch.mockImplementation((url:string, options:RequestInit)=>{
-        if(options.agent!==agent) {
+    fetch.mockImplementation((url: string, options: RequestInit) => {
+        if (options.agent !== agent) {
             throw new Error("Agent has not been set on retry fetch")
         }
         return Promise.resolve(new Response(environmentJSON()))
@@ -276,7 +272,7 @@ test('getIdentitySegments throws error if identifier is empty string', () => {
 })
 
 
-test('offline_mode', async() => {
+test('offline_mode', async () => {
     // Given
     const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
 
@@ -311,19 +307,19 @@ test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () 
     const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
     const api_url = 'http://some.flagsmith.com/api/v1/';
     const mock_offline_handler = new BaseOfflineHandler() as jest.Mocked<BaseOfflineHandler>;
-  
+
     jest.spyOn(mock_offline_handler, 'getEnvironment').mockReturnValue(environment);
 
     const flagsmith = new Flagsmith({
-      environmentKey: 'some-key',
-      apiUrl: api_url,
-      offlineHandler: mock_offline_handler,
+        environmentKey: 'some-key',
+        apiUrl: api_url,
+        offlineHandler: mock_offline_handler,
     });
 
     jest.spyOn(flagsmith, 'getEnvironmentFlags');
     jest.spyOn(flagsmith, 'getIdentityFlags');
 
-  
+
     flagsmith.environmentFlagsUrl = 'http://some.flagsmith.com/api/v1/environment-flags';
     flagsmith.identitiesUrl = 'http://some.flagsmith.com/api/v1/identities';
 
@@ -337,17 +333,17 @@ test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () 
     fetch.mockReturnValue(Promise.resolve(errorResponse));
 
     // When
-    const environmentFlags:Flags = await flagsmith.getEnvironmentFlags();
-    const identityFlags:Flags = await flagsmith.getIdentityFlags('identity', {});
+    const environmentFlags: Flags = await flagsmith.getEnvironmentFlags();
+    const identityFlags: Flags = await flagsmith.getIdentityFlags('identity', {});
 
     // Then
     expect(mock_offline_handler.getEnvironment).toHaveBeenCalledTimes(1);
     expect(flagsmith.getEnvironmentFlags).toHaveBeenCalled();
     expect(flagsmith.getIdentityFlags).toHaveBeenCalled();
-    
+
     expect(environmentFlags.isFeatureEnabled('some_feature')).toBe(true);
     expect(environmentFlags.getFeatureValue('some_feature')).toBe('offline-value');
-  
+
     expect(identityFlags.isFeatureEnabled('some_feature')).toBe(true);
     expect(identityFlags.getFeatureValue('some_feature')).toBe('offline-value');
 });
@@ -355,18 +351,18 @@ test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () 
 test('cannot use offline mode without offline handler', () => {
     // When and Then
     expect(() => new Flagsmith({ offlineMode: true, offlineHandler: undefined })).toThrowError(
-      'ValueError: offlineHandler must be provided to use offline mode.'
+        'ValueError: offlineHandler must be provided to use offline mode.'
     );
 });
-  
+
 test('cannot use both default handler and offline handler', () => {
     // When and Then
     expect(() => new Flagsmith({
-      offlineHandler: new BaseOfflineHandler(),
-      defaultFlagHandler: (flagName) => new DefaultFlag('foo', true)
+        offlineHandler: new BaseOfflineHandler(),
+        defaultFlagHandler: (flagName) => new DefaultFlag('foo', true)
     })).toThrowError('ValueError: Cannot use both defaultFlagHandler and offlineHandler.');
 });
-  
+
 test('cannot create Flagsmith client in remote evaluation without API key', () => {
     // When and Then
     // @ts-ignore
@@ -374,27 +370,20 @@ test('cannot create Flagsmith client in remote evaluation without API key', () =
 });
 
 
-async function wipeFeatureStateUUIDs (environmentModel: EnvironmentModel) {
-    // TODO: this has been pulled out of tests above as a helper function.
-    //  I'm not entirely sure why it's necessary, however, we should look to remove.
-    environmentModel.featureStates.forEach(fs => {
-        // @ts-ignore
-        fs.featurestateUUID = undefined;
-        fs.multivariateFeatureStateValues.forEach(mvfsv => {
-            // @ts-ignore
-            mvfsv.mvFsValueUuid = undefined;
-        })
-    });
-    environmentModel.project.segments.forEach(s => {
-        s.featureStates.forEach(fs => {
-            // @ts-ignore
-            fs.featurestateUUID = undefined;
-        })
-    })
-}
-
 function sleep(ms: number) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
+test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
+    // @ts-ignore
+    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+    });
+
+    const flags = await flg.getIdentityFlags("overridden-id");
+    expect(flags.getFeatureValue("some_feature")).toEqual("some-overridden-value");
+});

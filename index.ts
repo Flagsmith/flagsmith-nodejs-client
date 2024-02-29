@@ -17,7 +17,6 @@ export {
 
 export {
   EnvironmentModel,
-  IntegrationModel,
   FeatureStateModel,
   IdentityModel,
   TraitModel,

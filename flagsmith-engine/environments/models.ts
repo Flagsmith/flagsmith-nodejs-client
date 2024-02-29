@@ -1,6 +1,6 @@
 import { FeatureStateModel } from '../features/models';
+import { IdentityModel } from '../identities/models';
 import { ProjectModel } from '../projects/models';
-import { IntegrationModel } from './integrations/models';
 
 export class EnvironmentAPIKeyModel {
     id: number;
@@ -37,10 +37,7 @@ export class EnvironmentModel {
     apiKey: string;
     project: ProjectModel;
     featureStates: FeatureStateModel[] = [];
-    amplitude_config?: IntegrationModel;
-    segment_config?: IntegrationModel;
-    mixpanel_config?: IntegrationModel;
-    heap_config?: IntegrationModel;
+    identityOverrides: IdentityModel[] = [];
 
     constructor(id: number, apiKey: string, project: ProjectModel) {
         this.id = id;

@@ -49,6 +49,8 @@ export class Flagsmith {
     offlineMode: boolean = false;
     offlineHandler?: BaseOfflineHandler = undefined;
 
+    identitiesWithOverridesByIdentifier?: Map<string, IdentityModel>;
+
     private cache?: FlagsmithCache;
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
@@ -143,13 +145,13 @@ export class Flagsmith {
             if (!this.environmentKey) {
                 throw new Error('ValueError: environmentKey is required.');
             }
-    
+
             const apiUrl = data.apiUrl || DEFAULT_API_URL;
             this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
             this.environmentFlagsUrl = `${this.apiUrl}flags/`;
             this.identitiesUrl = `${this.apiUrl}identities/`;
             this.environmentUrl = `${this.apiUrl}environment-document/`;
-    
+
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
                     console.error(
@@ -166,11 +168,11 @@ export class Flagsmith {
 
             this.analyticsProcessor = data.enableAnalytics
                 ? new AnalyticsProcessor({
-                      environmentKey: this.environmentKey,
-                      baseApiUrl: this.apiUrl,
-                      requestTimeoutMs: this.requestTimeoutMs,
-                      logger: this.logger
-                  })
+                    environmentKey: this.environmentKey,
+                    baseApiUrl: this.apiUrl,
+                    requestTimeoutMs: this.requestTimeoutMs,
+                    logger: this.logger
+                })
                 : undefined;
         }
     }
@@ -256,7 +258,7 @@ export class Flagsmith {
         if (this.enableLocalEvaluation) {
             return new Promise((resolve, reject) => {
                 return this.environmentPromise!.then(() => {
-                    const identityModel = this.buildIdentityModel(
+                    const identityModel = this.getIdentityModel(
                         identifier,
                         Object.keys(traits || {}).map(key => ({
                             key,
@@ -288,6 +290,11 @@ export class Flagsmith {
                 await this.environmentPromise;
             } else {
                 this.environment = await request;
+            }
+            if (this.environment.identityOverrides?.length) {
+                this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>(
+                    this.environment.identityOverrides.map(identity => [identity.identifier, identity]
+                    ));
             }
             if (this.onEnvironmentChange) {
                 this.onEnvironmentChange(null, this.environment);
@@ -370,7 +377,7 @@ export class Flagsmith {
         identifier: string,
         traits: { [key: string]: any }
     ): Promise<Flags> {
-        const identityModel = this.buildIdentityModel(
+        const identityModel = this.getIdentityModel(
             identifier,
             Object.keys(traits).map(key => ({
                 key,
@@ -458,8 +465,13 @@ export class Flagsmith {
         }
     }
 
-    private buildIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
+    private getIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
+        let identityWithOverrides = this.identitiesWithOverridesByIdentifier?.get(identifier);
+        if (identityWithOverrides) {
+            identityWithOverrides.updateTraits(traitModels);
+            return identityWithOverrides;
+        }
         return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
     }
 }
