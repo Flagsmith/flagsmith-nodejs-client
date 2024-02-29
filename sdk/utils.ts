@@ -38,10 +38,18 @@ export const retryFetch = (
 
         const requestWrapper = (): Promise<Response> => {
             return new Promise((resolve, reject) => {
-                if (timeout) setTimeout(() => reject('error: timeout'), timeout);
+                let timeoutId: NodeJS.Timeout;
+                if (timeout) {
+                    timeoutId = setTimeout(() => reject('error: timeout'), timeout);
+                }
                 return fetch(url, fetchOptions)
                     .then(res => resolve(res))
                     .catch(err => reject(err))
+                    .finally(() => {
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                        }
+                    })
             })
         }
 
