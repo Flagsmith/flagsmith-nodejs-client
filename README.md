@@ -22,7 +22,8 @@ If you encounter a bug or feature request we would like to hear about it. Before
 ## Testing
 
 To run the local tests you need to run following command beforehand:
-```
+
+```bash
 git submodule add git@github.com:Flagsmith/engine-test-data.git tests/engine/engine-tests/engine-test-data/
 ```
 
