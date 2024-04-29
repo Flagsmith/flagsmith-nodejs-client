@@ -72,3 +72,21 @@ test('errors in fetch sending analytics data are swallowed', async () => {
     // we expect that fetch was called but the exception was handled
     expect(fetch).toHaveBeenCalled();
 })
+
+test('analytics is only flushed once even if requested concurrently', async () => {
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    // @ts-ignore
+    fetch.mockImplementation(() => {
+        return new Promise((resolve, _) => {
+            setTimeout(resolve, 1000)
+        })
+    });
+    const flushes = Promise.all([
+        processor.flush(),
+        processor.flush(),
+    ])
+    jest.runOnlyPendingTimers();
+    await flushes;
+    expect(fetch).toHaveBeenCalledTimes(1)
+})
