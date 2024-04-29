@@ -13,6 +13,7 @@ export class AnalyticsProcessor {
     analyticsData: { [key: string]: any };
     private requestTimeoutMs: number = 3000;
     private logger: Logger;
+    private currentFlush: ReturnType<typeof fetch> | undefined;
 
     /**
      * AnalyticsProcessor is used to track how often individual Flags are evaluated within
@@ -35,12 +36,12 @@ export class AnalyticsProcessor {
      * Sends all the collected data to the api asynchronously and resets the timer
      */
     async flush() {
-        if (!Object.keys(this.analyticsData).length) {
+        if (this.currentFlush || !Object.keys(this.analyticsData).length) {
             return;
         }
 
         try {
-            await fetch(this.analyticsEndpoint, {
+            this.currentFlush = fetch(this.analyticsEndpoint, {
                 method: 'POST',
                 body: JSON.stringify(this.analyticsData),
                 timeout: this.requestTimeoutMs,
@@ -48,12 +49,15 @@ export class AnalyticsProcessor {
                     'Content-Type': 'application/json',
                     'X-Environment-Key': this.environmentKey
                 }
-            })
+            });
+            await this.currentFlush;
         } catch (error) {
             // We don't want failing to write analytics to cause any exceptions in the main
             // thread so we just swallow them here.
             this.logger.warn('Failed to post analytics to Flagsmith API. Not clearing data, will retry.')
             return;
+        } finally {
+            this.currentFlush = undefined;
         }
 
         this.analyticsData = {};
