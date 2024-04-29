@@ -163,7 +163,6 @@ export class Flagsmith {
                     this.environmentRefreshIntervalSeconds
                 );
                 this.environmentDataPollingManager.start();
-                this.updateEnvironment();
             }
 
             this.analyticsProcessor = data.enableAnalytics
