@@ -64,11 +64,9 @@ export class SegmentConditionModel {
     matchesTraitValue(traitValue: any) {
         const evaluators: { [key: string]: CallableFunction } = {
             evaluateNotContains: (traitValue: any) => {
-                if (!traitValue) {
-                    // empty / undefined values will never contain the given key.
-                    return true
-                }
-                return !traitValue.includes(this.value);
+                return typeof traitValue == "string" &&
+                    !!this.value &&
+                    !traitValue.includes(this.value?.toString());
             },
             evaluateRegex: (traitValue: any) => {
                 return !!this.value && !!traitValue.match(new RegExp(this.value));

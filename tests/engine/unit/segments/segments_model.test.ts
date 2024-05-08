@@ -61,7 +61,7 @@ const conditionMatchCases: [string, string | number | boolean | null, string, bo
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'b', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'bar', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'baz', true],
-    [CONDITION_OPERATORS.NOT_CONTAINS, null, 'foo', true],
+    [CONDITION_OPERATORS.NOT_CONTAINS, null, 'foo', false],
     [CONDITION_OPERATORS.REGEX, 'foo', '[a-z]+', true],
     [CONDITION_OPERATORS.REGEX, 'FOO', '[a-z]+', false],
     [CONDITION_OPERATORS.EQUAL, "1.0.0", "1.0.0:semver", true],
