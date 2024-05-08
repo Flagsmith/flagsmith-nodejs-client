@@ -11,7 +11,7 @@ import {
     SegmentRuleModel
 } from '../../../../flagsmith-engine/segments/models';
 
-const conditionMatchCases: [string, string | number | boolean, string, boolean][] = [
+const conditionMatchCases: [string, string | number | boolean | null, string, boolean][] = [
     [CONDITION_OPERATORS.EQUAL, 'bar', 'bar', true],
     [CONDITION_OPERATORS.EQUAL, 'bar', 'baz', false],
     [CONDITION_OPERATORS.EQUAL, 1, '1', true],
@@ -57,9 +57,11 @@ const conditionMatchCases: [string, string | number | boolean, string, boolean][
     [CONDITION_OPERATORS.CONTAINS, 'bar', 'b', true],
     [CONDITION_OPERATORS.CONTAINS, 'bar', 'bar', true],
     [CONDITION_OPERATORS.CONTAINS, 'bar', 'baz', false],
+    [CONDITION_OPERATORS.CONTAINS, null, 'foo', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'b', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'bar', false],
     [CONDITION_OPERATORS.NOT_CONTAINS, 'bar', 'baz', true],
+    [CONDITION_OPERATORS.NOT_CONTAINS, null, 'foo', false],
     [CONDITION_OPERATORS.REGEX, 'foo', '[a-z]+', true],
     [CONDITION_OPERATORS.REGEX, 'FOO', '[a-z]+', false],
     [CONDITION_OPERATORS.EQUAL, "1.0.0", "1.0.0:semver", true],
