@@ -27,7 +27,7 @@ export const matchingFunctions = {
         thisValue >= otherValue,
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
-        otherValue.includes(thisValue),
+        !!otherValue && otherValue.includes(thisValue),
 };
 
 export const semverMatchingFunction = {
@@ -64,6 +64,10 @@ export class SegmentConditionModel {
     matchesTraitValue(traitValue: any) {
         const evaluators: { [key: string]: CallableFunction } = {
             evaluateNotContains: (traitValue: any) => {
+                if (!traitValue) {
+                    // empty / undefined values will never contain the given key.
+                    return true
+                }
                 return !traitValue.includes(this.value);
             },
             evaluateRegex: (traitValue: any) => {
