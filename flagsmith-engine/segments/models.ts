@@ -69,7 +69,7 @@ export class SegmentConditionModel {
                     !traitValue.includes(this.value?.toString());
             },
             evaluateRegex: (traitValue: any) => {
-                return !!this.value && !!traitValue.match(new RegExp(this.value));
+                return !!this.value && !!traitValue?.toString().match(new RegExp(this.value));
             },
             evaluateModulo: (traitValue: any) => {
                 if (isNaN(parseFloat(traitValue)) || !this.value) {
