@@ -14,7 +14,7 @@ import { EnvironmentDataPollingManager } from './polling_manager';
 import { generateIdentitiesData, retryFetch } from './utils';
 import { SegmentModel } from '../flagsmith-engine/segments/models';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
-import { FlagsmithCache, FlagsmithConfig } from './types';
+import { FlagsmithCache, FlagsmithConfig, ITraitConfig } from './types';
 import pino, { Logger } from 'pino';
 
 export { AnalyticsProcessor } from './analytics';
@@ -207,11 +207,11 @@ export class Flagsmith {
      *
      * @param  {string} identifier a unique identifier for the identity in the current
             environment, e.g. email address, username, uuid
-     * @param  {{[key:string]:any}} traits? a dictionary of traits to add / update on the identity in
-            Flagsmith, e.g. {"num_orders": 10}
+     * @param  {{[key:string]:any | ITraitConfig}} traits? a dictionary of traits to add / update on the identity in
+            Flagsmith, e.g. {"num_orders": 10} or {"age": {value: 30, transient: true}}
      * @returns Flags object holding all the flags for the given identity.
      */
-    async getIdentityFlags(identifier: string, traits?: { [key: string]: any }): Promise<Flags> {
+    async getIdentityFlags(identifier: string, traits?: { [key: string]: any | ITraitConfig }, transient: boolean = false): Promise<Flags> {
         if (!identifier) {
             throw new Error('`identifier` argument is missing or invalid.');
         }
@@ -232,7 +232,7 @@ export class Flagsmith {
             return this.getIdentityFlagsFromDocument(identifier, traits || {});
         }
 
-        return this.getIdentityFlagsFromApi(identifier, traits);
+        return this.getIdentityFlagsFromApi(identifier, traits, transient);
     }
 
     /**
@@ -433,12 +433,12 @@ export class Flagsmith {
         }
     }
 
-    private async getIdentityFlagsFromApi(identifier: string, traits: { [key: string]: any }) {
+    private async getIdentityFlagsFromApi(identifier: string, traits: { [key: string]: any | ITraitConfig}, transient: boolean = false) {
         if (!this.identitiesUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
         try {
-            const data = generateIdentitiesData(identifier, traits);
+            const data = generateIdentitiesData(identifier, traits, transient);
             const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
             const flags = Flags.fromAPIFlags({
                 apiFlags: jsonResponse['flags'],

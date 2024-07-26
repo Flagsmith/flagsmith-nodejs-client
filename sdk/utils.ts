@@ -1,12 +1,38 @@
 import fetch, { RequestInit, Response } from 'node-fetch';
+import { ITraitConfig } from './types';
 // @ts-ignore
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
-export function generateIdentitiesData(identifier: string, traits: { [key: string]: any }) {
-    const traitsGenerated = Object.entries(traits).map(trait => ({
-        trait_key: trait[0],
-        trait_value: trait[1]
-    }));
+type Trait = {
+    [key: string]: ITraitConfig | any
+}
+
+export function isTraitConfig(trait: Trait): trait is Trait {
+    return !!trait && typeof trait == 'object' && trait.value !== undefined;
+}
+
+export function generateIdentitiesData(identifier: string, traits: Trait, transient: boolean) {
+    const traitsGenerated = Object.entries(traits).map((trait) => {
+        if(isTraitConfig(trait)) {
+            return {
+                trait_key: trait[0],
+                trait_value: trait[1].value,
+                transient: true,
+            };
+        } else {
+            return {
+                trait_key: trait[0],
+                trait_value: trait[1],
+            };
+        }
+    });
+    if (transient) {
+        return {
+            identifier: identifier,
+            traits: traitsGenerated,
+            transient: true
+        }
+    }
     return {
         identifier: identifier,
         traits: traitsGenerated

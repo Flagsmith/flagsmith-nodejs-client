@@ -4,6 +4,7 @@ import { RequestInit } from "node-fetch";
 import { Logger } from "pino";
 import { BaseOfflineHandler } from "./offline_handlers";
 
+export type IFlagsmithValue<T = string | number | boolean | null> = T;
 export interface FlagsmithCache {
   get(key: string): Promise<Flags|undefined> | undefined;
   set(key: string, value: Flags, ttl: string | number): boolean | Promise<boolean>;
@@ -28,3 +29,10 @@ export interface FlagsmithConfig {
   offlineMode?: boolean;
   offlineHandler?: BaseOfflineHandler;
 }
+
+export interface ITraitConfig {
+  value: IFlagsmithTrait;
+  transient?: boolean;
+}
+
+export declare type IFlagsmithTrait = IFlagsmithValue;

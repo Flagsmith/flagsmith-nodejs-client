@@ -57,3 +57,11 @@ export function flagsJSON() {
 export function identitiesJSON() {
     return readFileSync(DATA_DIR + 'identities.json', 'utf-8');
 }
+
+export function traitIdentityJSON() {
+    return readFileSync(DATA_DIR + 'transient-identity.json', 'utf-8');
+}
+
+export function identityWithTransientTraitsJSON() {
+    return readFileSync(DATA_DIR + 'identity-with-transient-traits.json', 'utf-8');
+}
