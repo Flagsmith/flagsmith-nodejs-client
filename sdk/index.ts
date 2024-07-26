@@ -208,7 +208,7 @@ export class Flagsmith {
      * @param  {string} identifier a unique identifier for the identity in the current
             environment, e.g. email address, username, uuid
      * @param  {{[key:string]:any | ITraitConfig}} traits? a dictionary of traits to add / update on the identity in
-            Flagsmith, e.g. {"num_orders": 10} or {"age": {value: 30, transient: true}}
+            Flagsmith, e.g. {"num_orders": 10} or {age: {value: 30, transient: true}}
      * @returns Flags object holding all the flags for the given identity.
      */
     async getIdentityFlags(identifier: string, traits?: { [key: string]: any | ITraitConfig }, transient: boolean = false): Promise<Flags> {

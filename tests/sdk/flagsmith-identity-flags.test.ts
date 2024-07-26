@@ -163,7 +163,6 @@ test('test_transient_identity', async () => {
   const identifier = 'transient_identifier';
   const traits = { some_trait: 'some_value' };
   const transient = true;
-
   const flg = flagsmith();
   const identityFlags = (await flg.getIdentityFlags(identifier, traits, transient)).allFlags();
   expect(identityFlags[0].enabled).toBe(false);
@@ -175,13 +174,12 @@ test('test_transient_identity', async () => {
 test('test_identity_with_transient_traits', async () => {
   // @ts-ignore
   fetch.mockReturnValue(Promise.resolve(new Response(identityWithTransientTraitsJSON())));
-  const identifier = 'identifier';
+  const identifier = 'transient_trait_identifier';
   const traits = { some_trait: 'some_value', another_trait: {value: 'another_value', transient: true} };
-
   const flg = flagsmith();
 
-const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
-expect(identityFlags[0].enabled).toBe(true);
-expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');
-expect(identityFlags[0].featureName).toBe('some_feature');
+  const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
+  expect(identityFlags[0].enabled).toBe(true);
+  expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');
+  expect(identityFlags[0].featureName).toBe('some_feature');
 });

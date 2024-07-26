@@ -4,6 +4,12 @@
             "id": 1,
             "trait_key": "some_trait",
             "trait_value": "some_value"
+        },
+        {
+            "id": 2,
+            "trait_key": "transient_key",
+            "trait_value": "transient_value",
+            "transient": true
         }
     ],
     "flags": [
