@@ -12,7 +12,6 @@ export class IdentityModel {
     identityTraits: TraitModel[];
     identityUuid: string;
     djangoID: number | undefined;
-    transient?: boolean;
 
     constructor(
         created_date: string,
@@ -22,7 +21,6 @@ export class IdentityModel {
         identifier: string,
         identityUuid?: string,
         djangoID?: number,
-        transient?: boolean,
     ) {
         this.identityUuid = identityUuid || uuidv4();
         this.createdDate = Date.parse(created_date) || Date.now();
@@ -31,7 +29,6 @@ export class IdentityModel {
         this.environmentApiKey = environmentApiKey;
         this.identifier = identifier;
         this.djangoID = djangoID;
-        this.transient = transient;
     }
 
     get compositeKey() {

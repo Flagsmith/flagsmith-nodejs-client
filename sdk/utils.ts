@@ -1,28 +1,28 @@
 import fetch, { RequestInit, Response } from 'node-fetch';
-import { ITraitConfig } from './types';
+import { FlagsmithTraitValue, ITraitConfig } from './types';
 // @ts-ignore
 if (typeof fetch.default !== 'undefined') fetch = fetch.default;
 
-type Trait = {
-    [key: string]: ITraitConfig | any
+type Traits = { [key: string]: ITraitConfig | FlagsmithTraitValue };
+
+export function isTraitConfig(
+    traitValue: ITraitConfig | FlagsmithTraitValue
+): traitValue is ITraitConfig {
+    return !!traitValue && typeof traitValue == 'object' && traitValue.value !== undefined;
 }
 
-export function isTraitConfig(trait: Trait): trait is Trait {
-    return !!trait && typeof trait == 'object' && trait.value !== undefined;
-}
-
-export function generateIdentitiesData(identifier: string, traits: Trait, transient: boolean) {
-    const traitsGenerated = Object.entries(traits).map((trait) => {
-        if(isTraitConfig(trait)) {
+export function generateIdentitiesData(identifier: string, traits: Traits, transient: boolean) {
+    const traitsGenerated = Object.entries(traits).map(([key, value]) => {
+        if (isTraitConfig(value)) {
             return {
-                trait_key: trait[0],
-                trait_value: trait[1].value,
-                transient: true,
+                trait_key: key,
+                trait_value: typeof value == 'object' ? value?.value : value,
+                transient: true
             };
         } else {
             return {
-                trait_key: trait[0],
-                trait_value: trait[1],
+                trait_key: key,
+                trait_value: value
             };
         }
     });
@@ -31,7 +31,7 @@ export function generateIdentitiesData(identifier: string, traits: Trait, transi
             identifier: identifier,
             traits: traitsGenerated,
             transient: true
-        }
+        };
     }
     return {
         identifier: identifier,
@@ -46,7 +46,7 @@ export const retryFetch = (
     url: string,
     fetchOptions: RequestInit,
     retries: number = 3,
-    timeout: number = 10// set an overall timeout for this function
+    timeout: number = 10 // set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
         const retryWrapper = (n: number) => {
@@ -75,9 +75,9 @@ export const retryFetch = (
                         if (timeoutId) {
                             clearTimeout(timeoutId);
                         }
-                    })
-            })
-        }
+                    });
+            });
+        };
 
         retryWrapper(retries);
     });

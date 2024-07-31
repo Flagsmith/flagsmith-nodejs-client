@@ -58,7 +58,7 @@ export function identitiesJSON() {
     return readFileSync(DATA_DIR + 'identities.json', 'utf-8');
 }
 
-export function traitIdentityJSON() {
+export function transientIdentityJSON() {
     return readFileSync(DATA_DIR + 'transient-identity.json', 'utf-8');
 }
 
