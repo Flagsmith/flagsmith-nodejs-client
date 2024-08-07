@@ -187,17 +187,26 @@ test('test_identity_with_transient_traits', async () => {
   // @ts-ignore
   fetch.mockReturnValue(Promise.resolve(new Response(identityWithTransientTraitsJSON())));
   const identifier = 'transient_trait_identifier';
-  const traits = { some_trait: 'some_value', another_trait: {value: 'another_value', transient: true} };
+  const traits = { 
+    some_trait: 'some_value',
+    another_trait: {value: 'another_value', transient: true},
+    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false} 
+  }
   const traitsInRequest = [
     {
       trait_key:Object.keys(traits)[0],
-      trait_value:traits.some_trait
+      trait_value:traits.some_trait,
     },
     {
       trait_key:Object.keys(traits)[1],
       trait_value:traits.another_trait.value,
-      transient: true
-    }
+      transient: true,
+    },
+    {
+      trait_key:Object.keys(traits)[2],
+      trait_value:traits.explicitly_non_transient_trait.value,
+      transient: false,
+    },
   ]
   const flg = flagsmith();
 

@@ -10,6 +10,12 @@
             "trait_key": "transient_key",
             "trait_value": "transient_value",
             "transient": true
+        },
+        {
+            "id": 3,
+            "trait_key": "explicitly_non_transient_trait",
+            "trait_value": "non_transient_value",
+            "transient": false
         }
     ],
     "flags": [

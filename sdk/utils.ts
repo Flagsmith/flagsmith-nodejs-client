@@ -16,13 +16,13 @@ export function generateIdentitiesData(identifier: string, traits: Traits, trans
         if (isTraitConfig(value)) {
             return {
                 trait_key: key,
-                trait_value: typeof value == 'object' ? value?.value : value,
-                transient: true
+                trait_value: value?.value,
+                transient: value?.transient,
             };
         } else {
             return {
                 trait_key: key,
-                trait_value: value
+                trait_value: value,
             };
         }
     });
