@@ -1,6 +1,6 @@
 import Flagsmith from '../../sdk';
 import fetch from 'node-fetch';
-import { environmentJSON, flagsmith, identitiesJSON } from './utils';
+import { environmentJSON, flagsmith, identitiesJSON, identityWithTransientTraitsJSON, transientIdentityJSON } from './utils';
 import { DefaultFlag } from '../../sdk/models';
 
 jest.mock('node-fetch');
@@ -154,4 +154,73 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
 
   expect(identityFlags.getFeatureValue('mv_feature')).toBe('bar');
   expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(false);
+});
+
+
+test('test_transient_identity', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(transientIdentityJSON())));
+  const identifier = 'transient_identifier';
+  const traits = { some_trait: 'some_value' };
+  const traitsInRequest = [{trait_key:Object.keys(traits)[0],trait_value:traits.some_trait}]
+  const transient = true;
+  const flg = flagsmith();
+  const identityFlags = (await flg.getIdentityFlags(identifier, traits, transient)).allFlags();
+
+  expect(fetch).toHaveBeenCalledWith(
+    `https://edge.api.flagsmith.com/api/v1/identities/`,
+    {
+      method: 'POST',
+      agent: undefined,
+      headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
+      body: JSON.stringify({identifier, traits: traitsInRequest, transient })
+    }
+  );
+  
+  expect(identityFlags[0].enabled).toBe(false);
+  expect(identityFlags[0].value).toBe('some-transient-identity-value');
+  expect(identityFlags[0].featureName).toBe('some_feature');
+});
+
+
+test('test_identity_with_transient_traits', async () => {
+  // @ts-ignore
+  fetch.mockReturnValue(Promise.resolve(new Response(identityWithTransientTraitsJSON())));
+  const identifier = 'transient_trait_identifier';
+  const traits = { 
+    some_trait: 'some_value',
+    another_trait: {value: 'another_value', transient: true},
+    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false} 
+  }
+  const traitsInRequest = [
+    {
+      trait_key:Object.keys(traits)[0],
+      trait_value:traits.some_trait,
+    },
+    {
+      trait_key:Object.keys(traits)[1],
+      trait_value:traits.another_trait.value,
+      transient: true,
+    },
+    {
+      trait_key:Object.keys(traits)[2],
+      trait_value:traits.explicitly_non_transient_trait.value,
+      transient: false,
+    },
+  ]
+  const flg = flagsmith();
+
+  const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
+  expect(fetch).toHaveBeenCalledWith(
+    `https://edge.api.flagsmith.com/api/v1/identities/`,
+    {
+      method: 'POST',
+      agent: undefined,
+      headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
+      body: JSON.stringify({identifier, traits: traitsInRequest})
+    }
+  );
+  expect(identityFlags[0].enabled).toBe(true);
+  expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');
+  expect(identityFlags[0].featureName).toBe('some_feature');
 });
