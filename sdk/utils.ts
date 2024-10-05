@@ -46,37 +46,24 @@ export const retryFetch = (
     url: string,
     fetchOptions: RequestInit,
     retries: number = 3,
-    timeout: number = 10 // set an overall timeout for this function
+    timeoutMs: number = 10 // set an overall timeout for this function
 ): Promise<Response> => {
     return new Promise((resolve, reject) => {
         const retryWrapper = (n: number) => {
-            requestWrapper()
-                .then(res => resolve(res))
-                .catch(async err => {
-                    if (n > 0) {
-                        await delay(1000);
-                        retryWrapper(--n);
-                    } else {
-                        reject(err);
-                    }
-                });
-        };
-
-        const requestWrapper = (): Promise<Response> => {
-            return new Promise((resolve, reject) => {
-                let timeoutId: NodeJS.Timeout;
-                if (timeout) {
-                    timeoutId = setTimeout(() => reject('error: timeout'), timeout);
+            fetch(url, {
+                ...fetchOptions,
+                signal: AbortSignal.timeout(timeoutMs)
+            })
+            .then(res => resolve(res))
+            .catch(async err => {
+                if (n > 0) {
+                    await delay(1000);
+                    retryWrapper(--n);
+                } else {
+                    reject(err);
                 }
-                return fetch(url, fetchOptions)
-                    .then(res => resolve(res))
-                    .catch(err => reject(err))
-                    .finally(() => {
-                        if (timeoutId) {
-                            clearTimeout(timeoutId);
-                        }
-                    });
             });
+
         };
 
         retryWrapper(retries);
