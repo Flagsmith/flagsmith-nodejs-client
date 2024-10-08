@@ -1,12 +1,10 @@
-import Flagsmith from '../../sdk';
-import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-import { delay } from '../../sdk/utils';
-jest.mock('../../sdk');
-jest.mock('node-fetch');
+import Flagsmith from '../../sdk/index.js';
+import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
+import { delay } from '../../sdk/utils.js';
+vi.mock('../../sdk');
 
 beforeEach(() => {
-    // @ts-ignore
-    Flagsmith.mockClear();
+    vi.clearAllMocks()
 });
 
 test('test_polling_manager_correctly_stops_if_never_started', async () => {
@@ -55,5 +53,5 @@ test('test_polling_manager_calls_update_environment_on_each_refresh', async () =
     pollingManager.start();
     await delay(450);
     pollingManager.stop();
-    expect(flagsmith.updateEnvironment).toHaveBeenCalledTimes(5);
+    expect(flagsmith.updateEnvironment).toHaveBeenCalledTimes(4);
 });

@@ -1,4 +1,4 @@
-import Flagsmith from "./sdk";
+import Flagsmith from "./sdk/index.js";
 
 export {
   AnalyticsProcessor,
@@ -9,11 +9,11 @@ export {
   DefaultFlag,
   Flags,
   default
-} from './sdk';
+} from './sdk/index.js';
 
 export {
   FlagsmithConfig
-} from './sdk/types'
+} from './sdk/types.js'
 
 export {
   EnvironmentModel,
@@ -22,6 +22,6 @@ export {
   TraitModel,
   SegmentModel,
   OrganisationModel
-} from './flagsmith-engine';
+} from './flagsmith-engine/index.js';
 
 module.exports = Flagsmith;

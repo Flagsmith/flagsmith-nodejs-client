@@ -1,6 +1,5 @@
-import { FeatureStateModel } from '../flagsmith-engine/features/models';
-import { AnalyticsProcessor } from './analytics';
-import { FlagsmithClientError } from './errors';
+import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
+import { AnalyticsProcessor } from './analytics.js';
 
 export class BaseFlag {
     enabled: boolean;

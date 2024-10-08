@@ -1,7 +1,7 @@
 import semver from 'semver';
 
-import { FeatureStateModel } from '../features/models';
-import { getCastingFunction as getCastingFunction } from '../utils';
+import { FeatureStateModel } from '../features/models.js';
+import { getCastingFunction as getCastingFunction } from '../utils/index.js';
 import {
     ALL_RULE,
     ANY_RULE,
@@ -11,8 +11,8 @@ import {
     MODULO,
     IN,
     CONDITION_OPERATORS
-} from './constants';
-import { isSemver } from './util';
+} from './constants.js';
+import { isSemver } from './util.js';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;

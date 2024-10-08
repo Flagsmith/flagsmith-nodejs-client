@@ -1,7 +1,7 @@
-import { buildFeatureStateModel } from '../features/util';
-import { buildIdentityModel } from '../identities/util';
-import { buildProjectModel } from '../projects/util';
-import { EnvironmentAPIKeyModel, EnvironmentModel } from './models';
+import { buildFeatureStateModel } from '../features/util.js';
+import { buildIdentityModel } from '../identities/util.js';
+import { buildProjectModel } from '../projects/util.js';
+import { EnvironmentAPIKeyModel, EnvironmentModel } from './models.js';
 
 export function buildEnvironmentModel(environmentJSON: any) {
     const project = buildProjectModel(environmentJSON.project);

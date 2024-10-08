@@ -1,4 +1,4 @@
-import { removeSemverSuffix } from "../segments/util";
+import { removeSemverSuffix } from "../segments/util.js";
 
 export function getCastingFunction(traitType: 'boolean' | 'string' | 'number' | 'semver' | any): CallableFunction {
     switch (traitType) {

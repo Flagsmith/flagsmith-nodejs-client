@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getHashedPercentateForObjIds } from '../utils/hashing';
+import { getHashedPercentateForObjIds } from '../utils/hashing/index.js';
 
 export class FeatureModel {
     id: number;

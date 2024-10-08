@@ -1,6 +1,6 @@
-import { FeatureStateModel } from '../features/models';
-import { IdentityModel } from '../identities/models';
-import { ProjectModel } from '../projects/models';
+import { FeatureStateModel } from '../features/models.js';
+import { IdentityModel } from '../identities/models.js';
+import { ProjectModel } from '../projects/models.js';
 
 export class EnvironmentAPIKeyModel {
     id: number;

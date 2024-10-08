@@ -1,14 +1,7 @@
-import fetch, { Headers } from 'node-fetch';
-import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON, TestCache } from './utils';
-
-jest.mock('node-fetch');
-jest.mock('../../sdk/polling_manager');
-
-const { Response } = jest.requireActual('node-fetch');
+import { fetch, environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON, TestCache } from './utils.js';
 
 beforeEach(() => {
-  // @ts-ignore
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 test('test_wrong_cache_interface_throws_an_error', async () => {
@@ -21,14 +14,13 @@ test('test_wrong_cache_interface_throws_an_error', async () => {
 });
 
 test('test_empty_cache_not_read_but_populated', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+  fetch.mockResolvedValue(new Response(flagsJSON));
 
   const cache = new TestCache();
-  const set = jest.spyOn(cache, 'set');
+  const set = vi.spyOn(cache, 'set');
 
   const flg = flagsmith({ cache });
-  const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
+  const allFlags = (await flg.getEnvironmentFlags()).allFlags();
 
   expect(set).toBeCalled();
   expect(await cache.has('flags')).toBe(true);
@@ -40,11 +32,10 @@ test('test_empty_cache_not_read_but_populated', async () => {
 });
 
 test('test_api_not_called_when_cache_present', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+  fetch.mockResolvedValue(new Response(flagsJSON));
 
   const cache = new TestCache();
-  const set = jest.spyOn(cache, 'set');
+  const set = vi.spyOn(cache, 'set');
 
   const flg = flagsmith({ cache });
   await (await flg.getEnvironmentFlags()).allFlags();
@@ -60,13 +51,11 @@ test('test_api_not_called_when_cache_present', async () => {
 });
 
 test('test_api_called_twice_when_no_cache', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+  fetch.mockImplementation(() => Promise.resolve(new Response(flagsJSON)));
 
   const flg = flagsmith();
   await (await flg.getEnvironmentFlags()).allFlags();
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+
   const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
 
   expect(fetch).toBeCalledTimes(2);
@@ -76,14 +65,13 @@ test('test_api_called_twice_when_no_cache', async () => {
 });
 
 test('test_get_environment_flags_uses_local_environment_when_available', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
+  fetch.mockResolvedValue(new Response(flagsJSON));
 
   const cache = new TestCache();
-  const set = jest.spyOn(cache, 'set');
+  const set = vi.spyOn(cache, 'set');
 
   const flg = flagsmith({ cache });
-  const model = environmentModel(JSON.parse(environmentJSON()));
+  const model = environmentModel(JSON.parse(environmentJSON));
   flg.environment = model;
 
   const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
@@ -96,11 +84,10 @@ test('test_get_environment_flags_uses_local_environment_when_available', async (
 });
 
 test('test_cache_used_for_identity_flags', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
+  fetch.mockResolvedValue(new Response(identitiesJSON));
 
   const cache = new TestCache();
-  const set = jest.spyOn(cache, 'set');
+  const set = vi.spyOn(cache, 'set');
 
   const identifier = 'identifier';
   const traits = { some_trait: 'some_value' };
@@ -120,11 +107,10 @@ test('test_cache_used_for_identity_flags', async () => {
 });
 
 test('test_cache_used_for_identity_flags_local_evaluation', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+  fetch.mockResolvedValue(new Response(environmentJSON));
 
   const cache = new TestCache();
-  const set = jest.spyOn(cache, 'set');
+  const set = vi.spyOn(cache, 'set');
 
   const identifier = 'identifier';
   const traits = { some_trait: 'some_value' };
@@ -146,5 +132,3 @@ test('test_cache_used_for_identity_flags_local_evaluation', async () => {
   expect(identityFlags[0].value).toBe('some-value');
   expect(identityFlags[0].featureName).toBe('some_feature');
 });
-
-test('test_cache_used_for_all_flags', async () => { });

@@ -1,4 +1,4 @@
-import { OrganisationModel } from './models';
+import { OrganisationModel } from './models.js';
 
 export function buildOrganizationModel(organizationJSON: any): OrganisationModel {
     return new OrganisationModel(

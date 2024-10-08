@@ -1,17 +1,17 @@
-import { EnvironmentModel } from './environments/models';
-import { FeatureStateModel } from './features/models';
-import { IdentityModel } from './identities/models';
-import { TraitModel } from './identities/traits/models';
-import { getIdentitySegments } from './segments/evaluators';
-import { SegmentModel } from './segments/models';
-import { FeatureStateNotFound } from './utils/errors';
+import { EnvironmentModel } from './environments/models.js';
+import { FeatureStateModel } from './features/models.js';
+import { IdentityModel } from './identities/models.js';
+import { TraitModel } from './identities/traits/models.js';
+import { getIdentitySegments } from './segments/evaluators.js';
+import { SegmentModel } from './segments/models.js';
+import { FeatureStateNotFound } from './utils/errors.js';
 
-export { EnvironmentModel } from './environments/models';
-export { FeatureStateModel } from './features/models';
-export { IdentityModel } from './identities/models';
-export { TraitModel } from './identities/traits/models';
-export { SegmentModel } from './segments/models';
-export { OrganisationModel } from './organisations/models';
+export { EnvironmentModel } from './environments/models.js';
+export { FeatureStateModel } from './features/models.js';
+export { IdentityModel } from './identities/models.js';
+export { TraitModel } from './identities/traits/models.js';
+export { SegmentModel } from './segments/models.js';
+export { OrganisationModel } from './organisations/models.js';
 
 function getIdentityFeatureStatesDict(
     environment: EnvironmentModel,

@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
-import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util';
-import { AnalyticsProcessor } from '../../sdk/analytics';
-import Flagsmith from '../../sdk';
-import { FlagsmithCache } from '../../sdk/types';
-import { Flag, Flags } from '../../sdk/models';
+import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util.js';
+import { AnalyticsProcessor } from '../../sdk/analytics.js';
+import Flagsmith from '../../sdk/index.js';
+import { FlagsmithCache } from '../../sdk/types.js';
+import { Flags } from '../../sdk/models.js';
 
 const DATA_DIR = __dirname + '/data/';
 
@@ -24,10 +24,13 @@ export class TestCache implements FlagsmithCache {
     }
 }
 
+export const fetch = vi.fn(global.fetch)
+
 export function analyticsProcessor() {
     return new AnalyticsProcessor({
         environmentKey: 'test-key',
-        baseApiUrl: 'http://testUrl'
+        baseApiUrl: 'http://testUrl',
+        fetch,
     });
 }
 
@@ -38,30 +41,23 @@ export function apiKey(): string {
 export function flagsmith(params = {}) {
     return new Flagsmith({
         environmentKey: apiKey(),
+        fetch,
         ...params,
     });
 }
 
-export function environmentJSON(environmentFilename: string = 'environment.json') {
-    return readFileSync(DATA_DIR + environmentFilename, 'utf-8');
-}
+export const environmentJSON = readFileSync(DATA_DIR + 'environment.json', 'utf-8');
+
+export const offlineEnvironmentJSON = readFileSync(DATA_DIR + 'offline-environment.json', 'utf-8')
 
 export function environmentModel(environmentJSON: any) {
     return buildEnvironmentModel(environmentJSON);
 }
 
-export function flagsJSON() {
-    return readFileSync(DATA_DIR + 'flags.json', 'utf-8');
-}
+export const flagsJSON = readFileSync(DATA_DIR + 'flags.json', 'utf-8')
 
-export function identitiesJSON() {
-    return readFileSync(DATA_DIR + 'identities.json', 'utf-8');
-}
+export const identitiesJSON = readFileSync(DATA_DIR + 'identities.json', 'utf-8')
 
-export function transientIdentityJSON() {
-    return readFileSync(DATA_DIR + 'transient-identity.json', 'utf-8');
-}
+export const transientIdentityJSON = readFileSync(DATA_DIR + 'transient-identity.json', 'utf-8')
 
-export function identityWithTransientTraitsJSON() {
-    return readFileSync(DATA_DIR + 'identity-with-transient-traits.json', 'utf-8');
-}
+export const identityWithTransientTraitsJSON = readFileSync(DATA_DIR + 'identity-with-transient-traits.json', 'utf-8')

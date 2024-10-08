@@ -1,7 +1,7 @@
-import { buildOrganizationModel } from '../organisations/util';
-import { SegmentModel } from '../segments/models';
-import { buildSegmentModel } from '../segments/util';
-import { ProjectModel } from './models';
+import { buildOrganizationModel } from '../organisations/util.js';
+import { SegmentModel } from '../segments/models.js';
+import { buildSegmentModel } from '../segments/util.js';
+import { ProjectModel } from './models.js';
 
 export function buildProjectModel(projectJSON: any): ProjectModel {
     const segments: SegmentModel[] = projectJSON['segments']

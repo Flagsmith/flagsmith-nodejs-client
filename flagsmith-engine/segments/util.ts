@@ -1,5 +1,5 @@
-import { buildFeatureStateModel } from '../features/util';
-import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models';
+import { buildFeatureStateModel } from '../features/util.js';
+import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models.js';
 
 export function buildSegmentConditionModel(segmentConditionJSON: any): SegmentConditionModel {
     return new SegmentConditionModel(

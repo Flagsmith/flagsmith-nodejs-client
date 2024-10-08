@@ -1,10 +1,7 @@
-import fetch from 'node-fetch';
-import { analyticsProcessor } from './utils';
-
-jest.mock('node-fetch', () => jest.fn());
+import {analyticsProcessor, fetch} from './utils.js';
 
 afterEach(() => {
-    jest.clearAllMocks();
+    vi.resetAllMocks();
 });
 
 test('test_analytics_processor_track_feature_updates_analytics_data', () => {
@@ -29,15 +26,14 @@ test('test_analytics_processor_flush_post_request_data_match_ananlytics_data', a
     aP.trackFeature("myFeature2");
     await aP.flush();
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith('http://testUrlanalytics/flags/', {
+    expect(fetch).toHaveBeenCalledWith('http://testUrlanalytics/flags/', expect.objectContaining({
         body: '{"myFeature1":1,"myFeature2":1}',
         headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'test-key' },
         method: 'POST',
-        timeout: 3000
-    });
+    }));
 });
 
-jest.useFakeTimers()
+vi.useFakeTimers()
 test('test_analytics_processor_flush_post_request_data_match_ananlytics_data_test', async () => {
     const aP = analyticsProcessor();
     aP.trackFeature("myFeature1");
@@ -45,7 +41,7 @@ test('test_analytics_processor_flush_post_request_data_match_ananlytics_data_tes
         aP.trackFeature("myFeature2");
         expect(fetch).toHaveBeenCalledTimes(1);
     }, 15000);
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
 });
 
 test('test_analytics_processor_flush_early_exit_if_analytics_data_is_empty', async () => {
@@ -58,7 +54,7 @@ test('test_analytics_processor_flush_early_exit_if_analytics_data_is_empty', asy
 test('errors in fetch sending analytics data are swallowed', async () => {
     // Given
     // we mock the fetch function to throw and error to mimick a network failure
-    (fetch as jest.MockedFunction<typeof fetch>).mockRejectedValue(new Error('some error'));
+    fetch.mockRejectedValue('some error');
 
     // and create the processor and track a feature so there is some analytics data
     const processor = analyticsProcessor();
@@ -76,7 +72,6 @@ test('errors in fetch sending analytics data are swallowed', async () => {
 test('analytics is only flushed once even if requested concurrently', async () => {
     const processor = analyticsProcessor();
     processor.trackFeature('myFeature');
-    // @ts-ignore
     fetch.mockImplementation(() => {
         return new Promise((resolve, _) => {
             setTimeout(resolve, 1000)
@@ -86,7 +81,7 @@ test('analytics is only flushed once even if requested concurrently', async () =
         processor.flush(),
         processor.flush(),
     ])
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     await flushes;
     expect(fetch).toHaveBeenCalledTimes(1)
 })

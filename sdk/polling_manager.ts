@@ -1,7 +1,7 @@
-import Flagsmith from '.';
+import Flagsmith from './index.js';
 
 export class EnvironmentDataPollingManager {
-    private interval?: NodeJS.Timer;
+    private interval?: NodeJS.Timeout;
     private main: Flagsmith;
     private refreshIntervalSeconds: number;
 
@@ -17,7 +17,6 @@ export class EnvironmentDataPollingManager {
                 await this.main.updateEnvironment();
             }, this.refreshIntervalSeconds * 1000);
         };
-        this.main.updateEnvironment();
         updateEnvironment();
     }
 
