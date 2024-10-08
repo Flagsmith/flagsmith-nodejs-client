@@ -25,7 +25,7 @@ jobs:
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
       - uses: actions/setup-node@v1
         with:
-          node-version: "15.x"
+          node-version: "18.x"
       - name: cache node modules
         uses: actions/cache@v1
         with:
