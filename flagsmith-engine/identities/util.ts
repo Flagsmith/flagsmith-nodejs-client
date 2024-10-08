@@ -1,7 +1,7 @@
-import { buildFeatureStateModel } from '../features/util';
-import { IdentityFeaturesList } from '../utils/collections';
-import { IdentityModel } from './models';
-import { TraitModel } from './traits/models';
+import { buildFeatureStateModel } from '../features/util.js';
+import { IdentityFeaturesList } from '../utils/collections.js';
+import { IdentityModel } from './models.js';
+import { TraitModel } from './traits/models.js';
 
 export function buildTraitModel(traitJSON: any): TraitModel {
     return new TraitModel(traitJSON.trait_key, traitJSON.trait_value);

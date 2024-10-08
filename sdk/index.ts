@@ -1,28 +1,28 @@
-import { RequestInit } from 'node-fetch';
-import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine';
-import { EnvironmentModel } from '../flagsmith-engine/environments/models';
-import { buildEnvironmentModel } from '../flagsmith-engine/environments/util';
-import { IdentityModel } from '../flagsmith-engine/identities/models';
-import { TraitModel } from '../flagsmith-engine/identities/traits/models';
+import { Dispatcher } from 'undici-types';
+import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine/index.js';
+import { EnvironmentModel } from '../flagsmith-engine/index.js';
+import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
+import { IdentityModel } from '../flagsmith-engine/index.js';
+import { TraitModel } from '../flagsmith-engine/index.js';
 
-import { AnalyticsProcessor } from './analytics';
-import { BaseOfflineHandler } from './offline_handlers';
-import { FlagsmithAPIError, FlagsmithClientError } from './errors';
+import { AnalyticsProcessor } from './analytics.js';
+import { BaseOfflineHandler } from './offline_handlers.js';
+import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
-import { DefaultFlag, Flags } from './models';
-import { EnvironmentDataPollingManager } from './polling_manager';
-import { generateIdentitiesData, retryFetch } from './utils';
-import { SegmentModel } from '../flagsmith-engine/segments/models';
-import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators';
-import { FlagsmithCache, FlagsmithConfig, FlagsmithTraitValue, ITraitConfig } from './types';
-import pino, { Logger } from 'pino';
+import { DefaultFlag, Flags } from './models.js';
+import { EnvironmentDataPollingManager } from './polling_manager.js';
+import { generateIdentitiesData, retryFetch } from './utils.js';
+import { SegmentModel } from '../flagsmith-engine/index.js';
+import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js';
+import { Fetch, FlagsmithCache, FlagsmithConfig, FlagsmithTraitValue, ITraitConfig } from './types.js';
+import { pino, Logger } from 'pino';
 
-export { AnalyticsProcessor } from './analytics';
-export { FlagsmithAPIError, FlagsmithClientError } from './errors';
+export { AnalyticsProcessor } from './analytics.js';
+export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
-export { DefaultFlag, Flags } from './models';
-export { EnvironmentDataPollingManager } from './polling_manager';
-export { FlagsmithCache, FlagsmithConfig } from './types';
+export { DefaultFlag, Flags } from './models.js';
+export { EnvironmentDataPollingManager } from './polling_manager.js';
+export { FlagsmithCache, FlagsmithConfig } from './types.js';
 
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
@@ -31,7 +31,7 @@ export class Flagsmith {
     environmentKey?: string = undefined;
     apiUrl?: string = undefined;
     customHeaders?: { [key: string]: any };
-    agent: RequestInit['agent'];
+    agent?: Dispatcher;
     requestTimeoutMs?: number;
     enableLocalEvaluation?: boolean = false;
     environmentRefreshIntervalSeconds: number = 60;
@@ -54,6 +54,7 @@ export class Flagsmith {
     private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
     private logger: Logger;
+    private customFetch: Fetch;
     /**
      * A Flagsmith client.
      *
@@ -97,6 +98,7 @@ export class Flagsmith {
         // }
 
         this.agent = data.agent;
+        this.customFetch = data.fetch ?? fetch;
         this.environmentKey = data.environmentKey;
         this.apiUrl = data.apiUrl || this.apiUrl;
         this.customHeaders = data.customHeaders;
@@ -335,13 +337,14 @@ export class Flagsmith {
         const data = await retryFetch(
             url,
             {
-                agent: this.agent,
+                dispatcher: this.agent,
                 method: method,
                 body: JSON.stringify(body),
                 headers: headers
             },
             this.retries,
-            this.requestTimeoutMs || undefined
+            this.requestTimeoutMs,
+            this.customFetch,
         );
 
         if (data.status !== 200) {
@@ -373,7 +376,6 @@ export class Flagsmith {
             defaultFlagHandler: this.defaultFlagHandler
         });
         if (!!this.cache) {
-            // @ts-ignore node-cache types are incorrect, ttl should be optional
             await this.cache.set('flags', flags);
         }
         return flags;
@@ -401,7 +403,6 @@ export class Flagsmith {
         });
 
         if (!!this.cache) {
-            // @ts-ignore node-cache types are incorrect, ttl should be optional
             await this.cache.set(`flags-${identifier}`, flags);
         }
 
@@ -420,7 +421,6 @@ export class Flagsmith {
                 defaultFlagHandler: this.defaultFlagHandler
             });
             if (!!this.cache) {
-                // @ts-ignore node-cache types are incorrect, ttl should be optional
                 await this.cache.set('flags', flags);
             }
             return flags;
@@ -456,7 +456,6 @@ export class Flagsmith {
                 defaultFlagHandler: this.defaultFlagHandler
             });
             if (!!this.cache) {
-                // @ts-ignore node-cache types are incorrect, ttl should be optional
                 await this.cache.set(`flags-${identifier}`, flags);
             }
             return flags;

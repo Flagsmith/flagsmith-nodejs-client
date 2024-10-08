@@ -1,6 +1,5 @@
-import { FeatureStateModel } from '../features/models';
-import { IdentityFeaturesList } from '../utils/collections';
-import { TraitModel } from './traits/models';
+import { IdentityFeaturesList } from '../utils/collections.js';
+import { TraitModel } from './traits/models.js';
 
 const { v4: uuidv4 } = require('uuid');
 

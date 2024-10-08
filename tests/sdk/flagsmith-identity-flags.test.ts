@@ -1,21 +1,16 @@
-import Flagsmith from '../../sdk';
-import fetch from 'node-fetch';
-import { environmentJSON, flagsmith, identitiesJSON, identityWithTransientTraitsJSON, transientIdentityJSON } from './utils';
-import { DefaultFlag } from '../../sdk/models';
+import Flagsmith from '../../sdk/index.js';
+import { fetch, environmentJSON, flagsmith, identitiesJSON, identityWithTransientTraitsJSON, transientIdentityJSON } from './utils.js';
+import { DefaultFlag } from '../../sdk/models.js';
 
-jest.mock('node-fetch');
-jest.mock('../../sdk/polling_manager');
-const { Response } = jest.requireActual('node-fetch');
+vi.mock('../../sdk/polling_manager');
 
 beforeEach(() => {
-    // @ts-ignore
-    jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 
 test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
+  fetch.mockResolvedValue(new Response(identitiesJSON));
   const identifier = 'identifier';
 
   const flg = flagsmith();
@@ -28,14 +23,12 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', as
 });
 
 test('test_get_identity_flags_uses_environment_when_local_environment_no_traits', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+  fetch.mockResolvedValue(new Response(environmentJSON))
   const identifier = 'identifier';
 
   const flg = flagsmith({
-      environmentKey: 'ser.key',
-      enableLocalEvaluation: true,
-
+    environmentKey: 'ser.key',
+    enableLocalEvaluation: true,
   });
 
 
@@ -47,8 +40,7 @@ test('test_get_identity_flags_uses_environment_when_local_environment_no_traits'
 });
 
 test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
+  fetch.mockResolvedValue(new Response(identitiesJSON))
   const identifier = 'identifier';
   const traits = { some_trait: 'some_value' };
   const flg = flagsmith();
@@ -61,14 +53,13 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', 
 });
 
 test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(identitiesJSON())));
+  fetch.mockResolvedValue(new Response(identitiesJSON))
 
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
 
-  const flg = new Flagsmith({
+  const flg = flagsmith({
       environmentKey: 'key',
       defaultFlagHandler: defaultFlagHandler
   });
@@ -82,8 +73,7 @@ test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
 });
 
 test('test_default_flag_is_used_when_no_identity_flags_returned', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(JSON.stringify({ flags: [], traits: [] }))));
+  fetch.mockResolvedValue(new Response(JSON.stringify({ flags: [], traits: [] })));
 
   const defaultFlag = new DefaultFlag('some-default-value', true);
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -102,8 +92,7 @@ test('test_default_flag_is_used_when_no_identity_flags_returned', async () => {
 });
 
 test('test_default_flag_is_used_when_no_identity_flags_returned_due_to_error', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
+  fetch.mockResolvedValue(new Response('bad data'))
 
   const defaultFlag = new DefaultFlag('some-default-value', true);
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -122,12 +111,10 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_due_to_error', a
 });
 
 test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_default_flag_handler', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(JSON.stringify({ flags: [], traits: [] }))));
+  fetch.mockResolvedValue(new Response(JSON.stringify({ flags: [], traits: [] })))
 
-
-  const flg = new Flagsmith({
-      environmentKey: 'key',
+  const flg = flagsmith({
+    environmentKey: 'key',
   });
 
   const flags = await flg.getIdentityFlags('identifier');
@@ -140,8 +127,7 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
 
 
 test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+  fetch.mockResolvedValue(new Response(environmentJSON));
   const identifier = 'identifier';
 
   const flg = flagsmith({
@@ -158,8 +144,7 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
 
 
 test('test_transient_identity', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(transientIdentityJSON())));
+  fetch.mockResolvedValue(new Response(transientIdentityJSON));
   const identifier = 'transient_identifier';
   const traits = { some_trait: 'some_value' };
   const traitsInRequest = [{trait_key:Object.keys(traits)[0],trait_value:traits.some_trait}]
@@ -169,14 +154,13 @@ test('test_transient_identity', async () => {
 
   expect(fetch).toHaveBeenCalledWith(
     `https://edge.api.flagsmith.com/api/v1/identities/`,
-    {
+    expect.objectContaining({
       method: 'POST',
-      agent: undefined,
       headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
       body: JSON.stringify({identifier, traits: traitsInRequest, transient })
     }
-  );
-  
+  ));
+
   expect(identityFlags[0].enabled).toBe(false);
   expect(identityFlags[0].value).toBe('some-transient-identity-value');
   expect(identityFlags[0].featureName).toBe('some_feature');
@@ -184,8 +168,7 @@ test('test_transient_identity', async () => {
 
 
 test('test_identity_with_transient_traits', async () => {
-  // @ts-ignore
-  fetch.mockReturnValue(Promise.resolve(new Response(identityWithTransientTraitsJSON())));
+  fetch.mockResolvedValue(new Response(identityWithTransientTraitsJSON));
   const identifier = 'transient_trait_identifier';
   const traits = { 
     some_trait: 'some_value',
@@ -213,12 +196,11 @@ test('test_identity_with_transient_traits', async () => {
   const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
   expect(fetch).toHaveBeenCalledWith(
     `https://edge.api.flagsmith.com/api/v1/identities/`,
-    {
+    expect.objectContaining({
       method: 'POST',
-      agent: undefined,
       headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
       body: JSON.stringify({identifier, traits: traitsInRequest})
-    }
+    })
   );
   expect(identityFlags[0].enabled).toBe(true);
   expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');

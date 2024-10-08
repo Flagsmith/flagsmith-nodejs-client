@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
-import { getIdentityFeatureStates } from '../../../flagsmith-engine';
-import { EnvironmentModel } from '../../../flagsmith-engine/environments/models';
-import { buildEnvironmentModel } from '../../../flagsmith-engine/environments/util';
-import { IdentityModel } from '../../../flagsmith-engine/identities/models';
-import { buildIdentityModel } from '../../../flagsmith-engine/identities/util';
+import { getIdentityFeatureStates } from '../../../flagsmith-engine/index.js';
+import { EnvironmentModel } from '../../../flagsmith-engine/environments/models.js';
+import { buildEnvironmentModel } from '../../../flagsmith-engine/environments/util.js';
+import { IdentityModel } from '../../../flagsmith-engine/identities/models.js';
+import { buildIdentityModel } from '../../../flagsmith-engine/identities/util.js';
 
 function extractTestCases(
     filePath: string

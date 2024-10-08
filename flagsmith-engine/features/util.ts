@@ -4,7 +4,7 @@ import {
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel
-} from './models';
+} from './models.js';
 
 export function buildFeatureModel(featuresModelJSON: any): FeatureModel {
     return new FeatureModel(featuresModelJSON.id, featuresModelJSON.name, featuresModelJSON.type);

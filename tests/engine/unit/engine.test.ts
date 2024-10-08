@@ -3,10 +3,10 @@ import {
     getEnvironmentFeatureStates,
     getIdentityFeatureState,
     getIdentityFeatureStates
-} from '../../../flagsmith-engine';
-import { CONSTANTS } from '../../../flagsmith-engine/features/constants';
-import { FeatureModel, FeatureStateModel } from '../../../flagsmith-engine/features/models';
-import { TraitModel } from '../../../flagsmith-engine/identities/traits/models';
+} from '../../../flagsmith-engine/index.js';
+import { CONSTANTS } from '../../../flagsmith-engine/features/constants.js';
+import { FeatureModel, FeatureStateModel } from '../../../flagsmith-engine/features/models.js';
+import { TraitModel } from '../../../flagsmith-engine/identities/traits/models.js';
 import {
     environment,
     environmentWithSegmentOverride,
@@ -17,7 +17,7 @@ import {
     identityInSegment,
     segmentConditionProperty,
     segmentConditionStringValue
-} from './utils';
+} from './utils.js';
 
 test('test_identity_get_feature_state_without_any_override', () => {
     const feature_state = getIdentityFeatureState(environment(), identity(), feature1().name);

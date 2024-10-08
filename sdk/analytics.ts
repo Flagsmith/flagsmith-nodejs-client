@@ -1,5 +1,5 @@
-import fetch from 'node-fetch';
-import pino, { Logger } from 'pino';
+import { pino, Logger } from 'pino';
+import { Fetch } from "./types.js";
 
 const ANALYTICS_ENDPOINT = 'analytics/flags/';
 
@@ -14,6 +14,7 @@ export class AnalyticsProcessor {
     private requestTimeoutMs: number = 3000;
     private logger: Logger;
     private currentFlush: ReturnType<typeof fetch> | undefined;
+    private customFetch: Fetch;
 
     /**
      * AnalyticsProcessor is used to track how often individual Flags are evaluated within
@@ -24,13 +25,14 @@ export class AnalyticsProcessor {
      * @param data.requestTimeoutMs used to tell requests to stop waiting for a response after a
             given number of milliseconds
      */
-    constructor(data: { environmentKey: string; baseApiUrl: string; requestTimeoutMs?: number, logger?: Logger }) {
+    constructor(data: { environmentKey: string; baseApiUrl: string; requestTimeoutMs?: number, logger?: Logger, fetch?: Fetch }) {
         this.analyticsEndpoint = data.baseApiUrl + ANALYTICS_ENDPOINT;
         this.environmentKey = data.environmentKey;
         this.lastFlushed = Date.now();
         this.analyticsData = {};
         this.requestTimeoutMs = data.requestTimeoutMs || this.requestTimeoutMs;
         this.logger = data.logger || pino();
+        this.customFetch = data.fetch ?? fetch;
     }
     /**
      * Sends all the collected data to the api asynchronously and resets the timer
@@ -41,10 +43,10 @@ export class AnalyticsProcessor {
         }
 
         try {
-            this.currentFlush = fetch(this.analyticsEndpoint, {
+            this.currentFlush = this.customFetch(this.analyticsEndpoint, {
                 method: 'POST',
                 body: JSON.stringify(this.analyticsData),
-                timeout: this.requestTimeoutMs,
+                signal: AbortSignal.timeout(this.requestTimeoutMs),
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Environment-Key': this.environmentKey

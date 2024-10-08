@@ -2,18 +2,18 @@ import {
     ALL_RULE,
     CONDITION_OPERATORS,
     PERCENTAGE_SPLIT,
-} from '../../../../flagsmith-engine/segments/constants';
-import {SegmentConditionModel} from '../../../../flagsmith-engine/segments/models';
-import {traitsMatchSegmentCondition, evaluateIdentityInSegment} from "../../../../flagsmith-engine/segments/evaluators";
-import {TraitModel, IdentityModel} from "../../../../flagsmith-engine";
-import {environment} from "../utils";
-import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util';
-import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing';
+} from '../../../../flagsmith-engine/segments/constants.js';
+import {SegmentConditionModel} from '../../../../flagsmith-engine/segments/models.js';
+import {traitsMatchSegmentCondition, evaluateIdentityInSegment} from "../../../../flagsmith-engine/segments/evaluators.js";
+import {TraitModel, IdentityModel} from "../../../../flagsmith-engine/index.js";
+import {environment} from "../utils.js";
+import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
+import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
 
 
 // todo: work out how to implement this in a test function or before hook
-jest.mock('../../../../flagsmith-engine/utils/hashing', () => ({
-    getHashedPercentateForObjIds: jest.fn(() => 1)
+vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
+    getHashedPercentateForObjIds: vi.fn(() => 1)
 }));
 
 

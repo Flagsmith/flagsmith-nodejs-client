@@ -1,9 +1,9 @@
-import { EnvironmentModel } from '../environments/models';
-import { IdentityModel } from '../identities/models';
-import { TraitModel } from '../identities/traits/models';
-import { getHashedPercentateForObjIds } from '../utils/hashing';
-import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants';
-import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models';
+import { EnvironmentModel } from '../environments/models.js';
+import { IdentityModel } from '../identities/models.js';
+import { TraitModel } from '../identities/traits/models.js';
+import { getHashedPercentateForObjIds } from '../utils/hashing/index.js';
+import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants.js';
+import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models.js';
 
 export function getIdentitySegments(
     environment: EnvironmentModel,

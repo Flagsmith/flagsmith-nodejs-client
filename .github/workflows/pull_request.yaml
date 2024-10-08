@@ -23,9 +23,9 @@ jobs:
           auth_header="$(git config --local --get http.https://github.com/.extraheader)"
           git submodule sync --recursive
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: "15.x"
+          node-version: "18.x"
       - name: cache node modules
         uses: actions/cache@v1
         with:
@@ -34,8 +34,7 @@ jobs:
           restore-keys: |
             npm-${{ hashFiles('package-lock.json') }}
             npm-
-      - run: npm i -g npm@7.0.2
-      - run: npm install
+      - run: npm ci
       - run: npm test
         env:
           CI: true

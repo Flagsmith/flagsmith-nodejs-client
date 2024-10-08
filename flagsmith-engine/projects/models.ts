@@ -1,5 +1,5 @@
-import { OrganisationModel } from '../organisations/models';
-import { SegmentModel } from '../segments/models';
+import { OrganisationModel } from '../organisations/models.js';
+import { SegmentModel } from '../segments/models.js';
 
 export class ProjectModel {
     id: number;

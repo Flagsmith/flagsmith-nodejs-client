@@ -1,21 +1,24 @@
-import { DefaultFlag, Flags } from './models';
-import { EnvironmentModel } from '../flagsmith-engine';
-import { RequestInit } from 'node-fetch';
+import { DefaultFlag, Flags } from './models.js';
+import { EnvironmentModel } from '../flagsmith-engine/index.js';
+import { Dispatcher } from 'undici-types';
 import { Logger } from 'pino';
-import { BaseOfflineHandler } from './offline_handlers';
+import { BaseOfflineHandler } from './offline_handlers.js';
 
 export type IFlagsmithValue<T = string | number | boolean | null> = T;
 export interface FlagsmithCache {
     get(key: string): Promise<Flags | undefined> | undefined;
-    set(key: string, value: Flags, ttl: string | number): boolean | Promise<boolean>;
+    set(key: string, value: Flags, ttl?: string | number): boolean | Promise<boolean>;
     has(key: string): boolean | Promise<boolean>;
     [key: string]: any;
 }
 
+export type Fetch = typeof fetch
+
 export interface FlagsmithConfig {
     environmentKey?: string;
     apiUrl?: string;
-    agent?: RequestInit['agent'];
+    agent?: Dispatcher;
+    fetch?: Fetch;
     customHeaders?: { [key: string]: any };
     requestTimeoutSeconds?: number;
     enableLocalEvaluation?: boolean;

@@ -1,25 +1,19 @@
-import Flagsmith from '../../sdk';
-import { EnvironmentDataPollingManager } from '../../sdk/polling_manager';
-import fetch, { RequestInit } from 'node-fetch';
-import { environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON } from './utils';
-import { DefaultFlag, Flags } from '../../sdk/models';
-import { delay } from '../../sdk/utils';
-import { EnvironmentModel } from '../../flagsmith-engine/environments/models';
-import https from 'https'
-import { BaseOfflineHandler } from '../../sdk/offline_handlers';
+import Flagsmith from '../../sdk/index.js';
+import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
+import { environmentJSON, environmentModel, flagsJSON, flagsmith, fetch, offlineEnvironmentJSON } from './utils.js';
+import { DefaultFlag, Flags } from '../../sdk/models.js';
+import { delay } from '../../sdk/utils.js';
+import { EnvironmentModel } from '../../flagsmith-engine/environments/models.js';
+import { BaseOfflineHandler } from '../../sdk/offline_handlers.js';
+import { Agent } from 'undici';
 
-jest.mock('node-fetch');
-jest.mock('../../sdk/polling_manager');
-const { Response } = jest.requireActual('node-fetch');
-
+vi.mock('../../sdk/polling_manager');
 beforeEach(() => {
-    // @ts-ignore
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 });
 
 test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    fetch.mockResolvedValue(new Response(environmentJSON));
     new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
@@ -28,9 +22,8 @@ test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
 });
 
 test('test_flagsmith_local_evaluation_key_required', () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
-    console.error = jest.fn();
+    fetch.mockResolvedValue(new Response(environmentJSON));
+    console.error = vi.fn();
     new Flagsmith({
         environmentKey: 'bad.key',
         enableLocalEvaluation: true
@@ -39,26 +32,25 @@ test('test_flagsmith_local_evaluation_key_required', () => {
 });
 
 test('test_update_environment_sets_environment', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    fetch.mockResolvedValue(new Response(environmentJSON));
     const flg = flagsmith();
     await flg.updateEnvironment();
     expect(flg.environment).toBeDefined();
 
-    const model = environmentModel(JSON.parse(environmentJSON()));
+    const model = environmentModel(JSON.parse(environmentJSON));
 
     expect(flg.environment).toStrictEqual(model);
 });
 
 test('test_set_agent_options', async () => {
-    const agent = new https.Agent({})
+    const agent = new Agent({})
 
-    // @ts-ignore
-    fetch.mockImplementation((url: string, options: RequestInit) => {
-        if (options.agent !== agent) {
+    fetch.mockImplementation((url, options) => {
+        //@ts-ignore I give up
+        if (options.dispatcher !== agent) {
             throw new Error("Agent has not been set on retry fetch")
         }
-        return Promise.resolve(new Response(environmentJSON()))
+        return Promise.resolve(new Response(environmentJSON))
     });
 
     const flg = flagsmith({
@@ -67,13 +59,11 @@ test('test_set_agent_options', async () => {
 
     await flg.updateEnvironment();
     expect(flg.environment).toBeDefined();
-
 });
 
 test('test_get_identity_segments', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
-    const flg = new Flagsmith({
+    fetch.mockResolvedValue(new Response(environmentJSON));
+    const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
     });
@@ -85,8 +75,7 @@ test('test_get_identity_segments', async () => {
 
 
 test('test_get_identity_segments_empty_without_local_eval', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
+    fetch.mockResolvedValue(new Response(environmentJSON));
     const flg = new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: false
@@ -96,14 +85,11 @@ test('test_get_identity_segments_empty_without_local_eval', async () => {
 });
 
 test('test_update_environment_uses_req_when_inited', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
-    const identifier = 'identifier';
+    fetch.mockResolvedValue(new Response(environmentJSON));
 
     const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
-
     });
 
     delay(400);
@@ -114,9 +100,7 @@ test('test_update_environment_uses_req_when_inited', async () => {
 });
 
 test('test_isFeatureEnabled_environment', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(flagsJSON())));
-
+    fetch.mockResolvedValue(new Response(environmentJSON));
     const defaultFlag = new DefaultFlag('some-default-value', true);
 
     const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -135,10 +119,9 @@ test('test_isFeatureEnabled_environment', async () => {
 
 test('test_fetch_recovers_after_single_API_error', async () => {
     fetch
-        // @ts-ignore
-        .mockRejectedValueOnce(new Error('Error during fetching the API response'))
-        .mockReturnValue(Promise.resolve(new Response(flagsJSON())));
-    const flg = new Flagsmith({
+        .mockRejectedValue('Error during fetching the API response')
+        .mockResolvedValue(new Response(flagsJSON));
+    const flg = flagsmith({
         environmentKey: 'key',
     });
 
@@ -151,7 +134,6 @@ test('test_fetch_recovers_after_single_API_error', async () => {
 
 test('test_default_flag_used_after_multiple_API_errors', async () => {
     fetch
-        // @ts-ignore
         .mockRejectedValue(new Error('Error during fetching the API response'));
     const defaultFlag = new DefaultFlag('some-default-value', true);
 
@@ -170,8 +152,10 @@ test('test_default_flag_used_after_multiple_API_errors', async () => {
 });
 
 test('default flag handler used when timeout occurs', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(sleep(10000)));
+    fetch.mockImplementation(async (...args) => {
+        await sleep(10000)
+        return fetch(...args)
+    });
 
     const defaultFlag = new DefaultFlag('some-default-value', true);
 
@@ -180,7 +164,7 @@ test('default flag handler used when timeout occurs', async () => {
     const flg = new Flagsmith({
         environmentKey: 'key',
         defaultFlagHandler: defaultFlagHandler,
-        requestTimeoutSeconds: 0.001,
+        requestTimeoutSeconds: 0.0001,
     });
 
     const flags = await flg.getEnvironmentFlags();
@@ -200,28 +184,22 @@ test('request timeout uses default if not provided', async () => {
 })
 
 test('test_throws_when_no_identityFlags_returned_due_to_error', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response('bad data')));
-
+    fetch.mockResolvedValue(new Response('bad data'));
 
     const flg = new Flagsmith({
         environmentKey: 'key',
     });
 
-    expect(async () => {
-        await flg.getIdentityFlags('identifier');
-    }).rejects.toThrow();
-
+    await expect(async () => await flg.getIdentityFlags('identifier'))
+        .rejects
+        .toThrow();
 });
 
 test('test onEnvironmentChange is called when provided', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
-
     const callback = {
         callback: (e: Error | null, result: EnvironmentModel) => { }
     };
-    const callbackSpy = jest.spyOn(callback, 'callback');
+    const callbackSpy = vi.spyOn(callback, 'callback');
 
     const flg = new Flagsmith({
         environmentKey: 'ser.key',
@@ -235,46 +213,40 @@ test('test onEnvironmentChange is called when provided', async () => {
 });
 
 test('test onEnvironmentChange is called after error', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response('aaa')));
-
-    const callback = {
-        callback: (e: Error | null, result: EnvironmentModel) => { }
-    };
-    const callbackSpy = jest.spyOn(callback, 'callback');
+    const callback = vi.fn((e, result) => {})
 
     const flg = new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
-        onEnvironmentChange: callback.callback,
+        onEnvironmentChange: callback,
     });
 
     await delay(200);
 
-    expect(callbackSpy).toBeCalled();
+    expect(callback).toBeCalled();
 });
 
 test('getIdentityFlags throws error if identifier is empty string', async () => {
-    const flagsmith = new Flagsmith({
+    const flg = flagsmith({
         environmentKey: 'key',
     });
 
-    await expect(flagsmith.getIdentityFlags('')).rejects.toThrow('`identifier` argument is missing or invalid.');
+    await expect(flg.getIdentityFlags('')).rejects.toThrow('`identifier` argument is missing or invalid.');
 })
 
 
 test('getIdentitySegments throws error if identifier is empty string', () => {
-    const flagsmith = new Flagsmith({
+    const flg = flagsmith({
         environmentKey: 'key',
     });
 
-    expect(() => { flagsmith.getIdentitySegments(''); }).toThrow('`identifier` argument is missing or invalid.');
+    expect(() => { flg.getIdentitySegments(''); }).toThrow('`identifier` argument is missing or invalid.');
 })
 
 
 test('offline_mode', async () => {
     // Given
-    const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
+    const environment: EnvironmentModel = environmentModel(JSON.parse(offlineEnvironmentJSON));
 
     class DummyOfflineHandler extends BaseOfflineHandler {
         getEnvironment(): EnvironmentModel {
@@ -283,18 +255,18 @@ test('offline_mode', async () => {
     }
 
     // When
-    const flagsmith = new Flagsmith({ offlineMode: true, offlineHandler: new DummyOfflineHandler() });
+    const flg = flagsmith({ offlineMode: true, offlineHandler: new DummyOfflineHandler() });
 
     // Then
     // we can request the flags from the client successfully
-    const environmentFlags: Flags = await flagsmith.getEnvironmentFlags();
+    const environmentFlags: Flags = await flg.getEnvironmentFlags();
     let flag = environmentFlags.getFlag('some_feature');
     expect(flag.isDefault).toBe(false);
     expect(flag.enabled).toBe(true);
     expect(flag.value).toBe('offline-value');
 
 
-    const identityFlags: Flags = await flagsmith.getIdentityFlags("identity");
+    const identityFlags: Flags = await flg.getIdentityFlags("identity");
     flag = identityFlags.getFlag('some_feature');
     expect(flag.isDefault).toBe(false);
     expect(flag.enabled).toBe(true);
@@ -304,24 +276,24 @@ test('offline_mode', async () => {
 
 test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () => {
     // Given
-    const environment: EnvironmentModel = environmentModel(JSON.parse(environmentJSON('offline-environment.json')));
+    const environment: EnvironmentModel = environmentModel(JSON.parse(offlineEnvironmentJSON));
     const api_url = 'http://some.flagsmith.com/api/v1/';
-    const mock_offline_handler = new BaseOfflineHandler() as jest.Mocked<BaseOfflineHandler>;
+    const mock_offline_handler = new BaseOfflineHandler();
 
-    jest.spyOn(mock_offline_handler, 'getEnvironment').mockReturnValue(environment);
+    vi.spyOn(mock_offline_handler, 'getEnvironment').mockReturnValue(environment);
 
-    const flagsmith = new Flagsmith({
+    const flg = flagsmith({
         environmentKey: 'some-key',
         apiUrl: api_url,
         offlineHandler: mock_offline_handler,
     });
 
-    jest.spyOn(flagsmith, 'getEnvironmentFlags');
-    jest.spyOn(flagsmith, 'getIdentityFlags');
+    vi.spyOn(flg, 'getEnvironmentFlags');
+    vi.spyOn(flg, 'getIdentityFlags');
 
 
-    flagsmith.environmentFlagsUrl = 'http://some.flagsmith.com/api/v1/environment-flags';
-    flagsmith.identitiesUrl = 'http://some.flagsmith.com/api/v1/identities';
+    flg.environmentFlagsUrl = 'http://some.flagsmith.com/api/v1/environment-flags';
+    flg.identitiesUrl = 'http://some.flagsmith.com/api/v1/identities';
 
     // Mock a 500 Internal Server Error response
     const errorResponse = new Response(null, {
@@ -329,17 +301,16 @@ test('test_flagsmith_uses_offline_handler_if_set_and_no_api_response', async () 
         statusText: 'Internal Server Error',
     });
 
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(errorResponse));
+    fetch.mockResolvedValue(errorResponse);
 
     // When
-    const environmentFlags: Flags = await flagsmith.getEnvironmentFlags();
-    const identityFlags: Flags = await flagsmith.getIdentityFlags('identity', {});
+    const environmentFlags: Flags = await flg.getEnvironmentFlags();
+    const identityFlags: Flags = await flg.getIdentityFlags('identity', {});
 
     // Then
     expect(mock_offline_handler.getEnvironment).toHaveBeenCalledTimes(1);
-    expect(flagsmith.getEnvironmentFlags).toHaveBeenCalled();
-    expect(flagsmith.getIdentityFlags).toHaveBeenCalled();
+    expect(flg.getEnvironmentFlags).toHaveBeenCalled();
+    expect(flg.getIdentityFlags).toHaveBeenCalled();
 
     expect(environmentFlags.isFeatureEnabled('some_feature')).toBe(true);
     expect(environmentFlags.getFeatureValue('some_feature')).toBe('offline-value');
@@ -357,15 +328,14 @@ test('cannot use offline mode without offline handler', () => {
 
 test('cannot use both default handler and offline handler', () => {
     // When and Then
-    expect(() => new Flagsmith({
+    expect(() => flagsmith({
         offlineHandler: new BaseOfflineHandler(),
-        defaultFlagHandler: (flagName) => new DefaultFlag('foo', true)
+        defaultFlagHandler: () => new DefaultFlag('foo', true)
     })).toThrowError('ValueError: Cannot use both defaultFlagHandler and offlineHandler.');
 });
 
 test('cannot create Flagsmith client in remote evaluation without API key', () => {
     // When and Then
-    // @ts-ignore
     expect(() => new Flagsmith()).toThrowError('ValueError: environmentKey is required.');
 });
 
@@ -376,10 +346,8 @@ function sleep(ms: number) {
     });
 }
 test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
-    // @ts-ignore
-    fetch.mockReturnValue(Promise.resolve(new Response(environmentJSON())));
-
-    const flg = new Flagsmith({
+    fetch.mockResolvedValue(new Response(environmentJSON));
+    const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
     });

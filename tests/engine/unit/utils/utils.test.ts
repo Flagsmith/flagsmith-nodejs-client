@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing';
+import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
 
 describe('getHashedPercentageForObjIds', () => {
     it.each([
