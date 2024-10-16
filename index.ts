@@ -6,6 +6,7 @@ export {
   FlagsmithCache,
   DefaultFlag,
   Flags,
+  Flagsmith,
   default
 } from './sdk/index.js';
 
