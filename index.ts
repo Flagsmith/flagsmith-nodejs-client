@@ -1,5 +1,3 @@
-import Flagsmith from "./sdk/index.js";
-
 export {
   AnalyticsProcessor,
   FlagsmithAPIError,
@@ -23,5 +21,3 @@ export {
   SegmentModel,
   OrganisationModel
 } from './flagsmith-engine/index.js';
-
-module.exports = Flagsmith;
