@@ -1,18 +1,19 @@
-import md5 from 'md5';
-import bigInt from 'big-integer';
+import {BinaryLike, createHash} from "node:crypto";
+
+const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex')
 
 const makeRepeated = (arr: Array<any>, repeats: number) =>
     Array.from({ length: repeats }, () => arr).flat();
 
 // https://stackoverflow.com/questions/12532871/how-to-convert-a-very-large-hex-number-to-decimal-in-javascript
-function h2d(s: any): string {
-    function add(x: any, y: any) {
+function h2d(s: string): string {
+    function add(x: string, y: string) {
         var c = 0,
-            r = [];
-        var x = x.split('').map(Number);
-        var y = y.split('').map(Number);
+            r: number[] = [];
+        const a  = x.split('').map(Number);
+        const b = y.split('').map(Number);
         while (x.length || y.length) {
-            var s = (x.pop() || 0) + (y.pop() || 0) + c;
+            var s = (a.pop() || 0) + (b.pop() || 0) + c;
             r.unshift(s < 10 ? s : s - 10);
             c = s < 10 ? 0 : 1;
         }
@@ -41,15 +42,15 @@ function h2d(s: any): string {
 export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations = 1): number {
     let toHash = makeRepeated(objectIds, iterations).join(',');
     const hashedValue = md5(toHash);
-    const hashedInt = bigInt(h2d(hashedValue));
-    const value = (hashedInt.mod(9999).toJSNumber() / 9998) * 100;
+    const hashedInt = BigInt(h2d(hashedValue));
+    const value = (((hashedInt) % 9999n) / 9998n) * 100n;
 
     // we ignore this for it's nearly impossible use case to catch
     /* istanbul ignore next */
-    if (value === 100) {
+    if (value === 100n) {
         /* istanbul ignore next */
         return getHashedPercentateForObjIds(objectIds, iterations + 1);
     }
 
-    return value;
+    return Number(value);
 }
