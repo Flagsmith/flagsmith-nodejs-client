@@ -1,4 +1,4 @@
-import semver from 'semver';
+import * as semver from 'semver';
 
 import { FeatureStateModel } from '../features/models.js';
 import { getCastingFunction as getCastingFunction } from '../utils/index.js';

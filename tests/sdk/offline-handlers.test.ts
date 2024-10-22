@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { LocalFileHandler } from '../../sdk/offline_handlers.js';
 import { EnvironmentModel } from '../../flagsmith-engine/index.js';
 
-import offlineEnvironment from "./data/offline-environment.json";
+import * as offlineEnvironment from "./data/offline-environment.json";
 
 vi.mock('fs')
 
