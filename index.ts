@@ -7,7 +7,6 @@ export {
   DefaultFlag,
   Flags,
   Flagsmith,
-  default
 } from './sdk/index.js';
 
 export {
