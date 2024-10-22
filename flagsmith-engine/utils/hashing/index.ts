@@ -27,5 +27,5 @@ export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations =
         return getHashedPercentateForObjIds(objectIds, iterations + 1);
     }
 
-    return Number(value);
+    return value;
 }
