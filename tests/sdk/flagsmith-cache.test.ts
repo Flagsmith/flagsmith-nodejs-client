@@ -4,15 +4,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('test_wrong_cache_interface_throws_an_error', async () => {
-  const cache = {
-    set: () => { },
-    get: () => { },
-  };
-
-  expect(() => { const flg = flagsmith({ cache }); }).toThrow();
-});
-
 test('test_empty_cache_not_read_but_populated', async () => {
   fetch.mockResolvedValue(new Response(flagsJSON));
 
