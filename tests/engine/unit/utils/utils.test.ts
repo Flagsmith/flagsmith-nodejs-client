@@ -1,7 +1,21 @@
 import { randomUUID as uuidv4 } from 'node:crypto';
-import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
+import {
+    getHashedPercentateForObjIds,
+    getHashedPercentateForObjIdsOld
+} from '../../../../flagsmith-engine/utils/hashing/index.js';
 
 describe('getHashedPercentageForObjIds', () => {
+    test('is equivalent to the previous implementation', () => {
+        for (let i = 0; i < 10000; i++) {
+            const data = [uuidv4()]
+            const a = getHashedPercentateForObjIdsOld(data)
+            const b = getHashedPercentateForObjIds(data)
+            console.log(a, b)
+            expect(a).toEqual(b)
+        }
+    })
+    
+    
     it.each([
         [[12, 93]],
         [[uuidv4(), 99]],

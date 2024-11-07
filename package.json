@@ -69,6 +69,7 @@
     "@types/semver": "^7.3.9",
     "@types/uuid": "^8.3.4",
     "@vitest/coverage-v8": "^2.1.2",
+    "big-integer": "^1.6.52",
     "esbuild": "^0.14.25",
     "husky": "^7.0.4",
     "prettier": "^2.2.1",
