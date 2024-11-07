@@ -10,12 +10,8 @@ const DATA_DIR = __dirname + '/data/';
 export class TestCache implements FlagsmithCache {
     cache: Record<string, Flags> = {};
 
-    async get(name: string): Promise<Flags> {
+    async get(name: string): Promise<Flags | undefined> {
         return this.cache[name];
-    }
-
-    async has(name: string): Promise<boolean> {
-        return !!this.cache[name];
     }
 
     async set(name: string, value: Flags) {
