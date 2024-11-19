@@ -10,6 +10,11 @@ export {
 } from './sdk/index.js';
 
 export {
+  BaseOfflineHandler,
+  LocalFileHandler,
+} from './sdk/offline_handlers.js';
+
+export {
   FlagsmithConfig
 } from './sdk/types.js'
 
