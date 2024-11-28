@@ -4,15 +4,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test('test_wrong_cache_interface_throws_an_error', async () => {
-  const cache = {
-    set: () => { },
-    get: () => { },
-  };
-
-  expect(() => { const flg = flagsmith({ cache }); }).toThrow();
-});
-
 test('test_empty_cache_not_read_but_populated', async () => {
   fetch.mockResolvedValue(new Response(flagsJSON));
 
@@ -23,7 +14,7 @@ test('test_empty_cache_not_read_but_populated', async () => {
   const allFlags = (await flg.getEnvironmentFlags()).allFlags();
 
   expect(set).toBeCalled();
-  expect(await cache.has('flags')).toBe(true);
+  expect(await cache.get('flags')).toBeTruthy();
 
   expect(fetch).toBeCalledTimes(1);
   expect(allFlags[0].enabled).toBe(true);
@@ -42,7 +33,7 @@ test('test_api_not_called_when_cache_present', async () => {
   const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
 
   expect(set).toBeCalled();
-  expect(await cache.has('flags')).toBe(true);
+  expect(await cache.get('flags')).toBeTruthy();
 
   expect(fetch).toBeCalledTimes(1);
   expect(allFlags[0].enabled).toBe(true);
@@ -97,7 +88,7 @@ test('test_cache_used_for_identity_flags', async () => {
   const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
 
   expect(set).toBeCalled();
-  expect(await cache.has('flags-identifier')).toBe(true);
+  expect(await cache.get('flags-identifier')).toBeTruthy();
 
   expect(fetch).toBeCalledTimes(1);
 
@@ -124,7 +115,7 @@ test('test_cache_used_for_identity_flags_local_evaluation', async () => {
   const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
 
   expect(set).toBeCalled();
-  expect(await cache.has('flags-identifier')).toBe(true);
+  expect(await cache.get('flags-identifier')).toBeTruthy();
 
   expect(fetch).toBeCalledTimes(1);
 

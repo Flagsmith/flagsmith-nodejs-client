@@ -5,11 +5,24 @@ import { Logger } from 'pino';
 import { BaseOfflineHandler } from './offline_handlers.js';
 
 export type IFlagsmithValue<T = string | number | boolean | null> = T;
+
+
+/**
+ * Stores and retrieves {@link Flags} from a cache.
+ */
 export interface FlagsmithCache {
-    get(key: string): Promise<Flags | undefined> | undefined;
-    set(key: string, value: Flags, ttl?: string | number): boolean | Promise<boolean>;
-    has(key: string): boolean | Promise<boolean>;
-    [key: string]: any;
+    /**
+     * Retrieve the cached {@link Flags} for the given environment or identity, or `undefined` if no cached value exists.
+     * @param key An environment ID or identity identifier, which is used as the cache key.
+     */
+    get(key: string): Promise<Flags | undefined>;
+
+    /**
+     * Persist an environment or identity's {@link Flags} in the cache.
+     * @param key An environment ID or identity identifier, which is used as the cache key.
+     * @param value The {@link Flags} to be stored in the cache.
+     */
+    set(key: string, value: Flags): Promise<void>;
 }
 
 export type Fetch = typeof fetch

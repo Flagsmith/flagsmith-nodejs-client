@@ -128,17 +128,6 @@ export class Flagsmith {
         }
 
         if (!!data.cache) {
-            const missingMethods: string[] = ['has', 'get', 'set'].filter(
-                method => data.cache && !data.cache[method]
-            );
-
-            if (missingMethods.length > 0) {
-                throw new Error(
-                    `Please implement the following methods in your cache: ${missingMethods.join(
-                        ', '
-                    )}`
-                );
-            }
             this.cache = data.cache;
         }
 
