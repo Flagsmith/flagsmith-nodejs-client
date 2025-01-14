@@ -54,7 +54,7 @@ export class Flag extends BaseFlag {
     static fromAPIFlag(flagData: any): Flag {
         return new Flag({
             enabled: flagData['enabled'],
-            value: flagData['feature_state_value'] || flagData['value'],
+            value: flagData['feature_state_value'] ?? flagData['value'],
             featureId: flagData['feature']['id'],
             featureName: flagData['feature']['name']
         });
