@@ -1,5 +1,6 @@
 export {
   AnalyticsProcessor,
+  AnalyticsProcessorOptions,
   FlagsmithAPIError,
   FlagsmithClientError,
   EnvironmentDataPollingManager,

@@ -5,7 +5,7 @@ import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js'
 import { IdentityModel } from '../flagsmith-engine/index.js';
 import { TraitModel } from '../flagsmith-engine/index.js';
 
-import { AnalyticsProcessor } from './analytics.js';
+import {ANALYTICS_ENDPOINT, AnalyticsProcessor} from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
 import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
@@ -17,7 +17,7 @@ import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js'
 import { Fetch, FlagsmithCache, FlagsmithConfig, FlagsmithTraitValue, ITraitConfig } from './types.js';
 import { pino, Logger } from 'pino';
 
-export { AnalyticsProcessor } from './analytics.js';
+export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
 export { DefaultFlag, Flags } from './models.js';
@@ -30,6 +30,7 @@ const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 export class Flagsmith {
     environmentKey?: string = undefined;
     apiUrl?: string = undefined;
+    analyticsUrl?: string = undefined;
     customHeaders?: { [key: string]: any };
     agent?: Dispatcher;
     requestTimeoutMs?: number;
@@ -138,6 +139,7 @@ export class Flagsmith {
 
             const apiUrl = data.apiUrl || DEFAULT_API_URL;
             this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
+            this.analyticsUrl = this.analyticsUrl || new URL(ANALYTICS_ENDPOINT, new Request(this.apiUrl).url).href
             this.environmentFlagsUrl = `${this.apiUrl}flags/`;
             this.identitiesUrl = `${this.apiUrl}identities/`;
             this.environmentUrl = `${this.apiUrl}environment-document/`;
@@ -156,14 +158,14 @@ export class Flagsmith {
                 this.updateEnvironment();
             }
 
-            this.analyticsProcessor = data.enableAnalytics
-                ? new AnalyticsProcessor({
-                      environmentKey: this.environmentKey,
-                      baseApiUrl: this.apiUrl,
-                      requestTimeoutMs: this.requestTimeoutMs,
-                      logger: this.logger
-                  })
-                : undefined;
+            if (data.enableAnalytics) {
+                this.analyticsProcessor = new AnalyticsProcessor({
+                    environmentKey: this.environmentKey,
+                    analyticsUrl: this.analyticsUrl,
+                    requestTimeoutMs: this.requestTimeoutMs,
+                    logger: this.logger,
+                })
+            }
         }
     }
     /**

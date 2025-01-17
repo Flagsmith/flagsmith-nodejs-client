@@ -1,32 +1,52 @@
 import { pino, Logger } from 'pino';
 import { Fetch } from "./types.js";
+import { Flags } from "./models.js";
 
-const ANALYTICS_ENDPOINT = 'analytics/flags/';
+export const ANALYTICS_ENDPOINT = './analytics/flags/';
 
-// Used to control how often we send data(in seconds)
+/** Duration in seconds to wait before trying to flush collected data after {@link trackFeature} is called. **/
 const ANALYTICS_TIMER = 10;
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 3000
+
+export interface AnalyticsProcessorOptions {
+    /** URL of the Flagsmith analytics events API endpoint
+     * @example https://flagsmith.example.com/api/v1/analytics
+     */
+    analyticsUrl?: string;
+    /** Client-side key of the environment that analytics will be recorded for. **/
+    environmentKey: string;
+    /** Duration in milliseconds to wait for API requests to complete before timing out. Defaults to {@link DEFAULT_REQUEST_TIMEOUT_MS}. **/
+    requestTimeoutMs?: number;
+    logger?: Logger;
+    /** Custom {@link fetch} implementation to use for API requests. **/
+    fetch?: Fetch
+    
+    /** @deprecated Use {@link analyticsUrl} instead. **/
+    baseApiUrl?: string;
+}
+
+/**
+ * Tracks how often individual features are evaluated whenever {@link trackFeature} is called.
+ * 
+ * Analytics data is posted after {@link trackFeature} is called and at least {@link ANALYTICS_TIMER} seconds have
+ * passed since the previous analytics API request was made (if any), or by calling {@link flush}.
+ * 
+ * Data will stay in memory indefinitely until it can be successfully posted to the API.
+ * @see https://docs.flagsmith.com/advanced-use/flag-analytics.
+ */
 export class AnalyticsProcessor {
-    private analyticsEndpoint: string;
+    private analyticsUrl: string;
     private environmentKey: string;
     private lastFlushed: number;
     analyticsData: { [key: string]: any };
-    private requestTimeoutMs: number = 3000;
+    private requestTimeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS;
     private logger: Logger;
     private currentFlush: ReturnType<typeof fetch> | undefined;
     private customFetch: Fetch;
 
-    /**
-     * AnalyticsProcessor is used to track how often individual Flags are evaluated within
-     * the Flagsmith SDK. Docs: https://docs.flagsmith.com/advanced-use/flag-analytics.
-     *
-     * @param data.environmentKey environment key obtained from the Flagsmith UI
-     * @param data.baseApiUrl base api url to override when using self hosted version
-     * @param data.requestTimeoutMs used to tell requests to stop waiting for a response after a
-            given number of milliseconds
-     */
-    constructor(data: { environmentKey: string; baseApiUrl: string; requestTimeoutMs?: number, logger?: Logger, fetch?: Fetch }) {
-        this.analyticsEndpoint = data.baseApiUrl + ANALYTICS_ENDPOINT;
+    constructor(data: AnalyticsProcessorOptions) {
+        this.analyticsUrl = data.analyticsUrl || data.baseApiUrl + ANALYTICS_ENDPOINT;
         this.environmentKey = data.environmentKey;
         this.lastFlushed = Date.now();
         this.analyticsData = {};
@@ -35,7 +55,7 @@ export class AnalyticsProcessor {
         this.customFetch = data.fetch ?? fetch;
     }
     /**
-     * Sends all the collected data to the api asynchronously and resets the timer
+     * Try to flush pending collected data to the Flagsmith analytics API.
      */
     async flush() {
         if (this.currentFlush || !Object.keys(this.analyticsData).length) {
@@ -43,7 +63,7 @@ export class AnalyticsProcessor {
         }
 
         try {
-            this.currentFlush = this.customFetch(this.analyticsEndpoint, {
+            this.currentFlush = this.customFetch(this.analyticsUrl, {
                 method: 'POST',
                 body: JSON.stringify(this.analyticsData),
                 signal: AbortSignal.timeout(this.requestTimeoutMs),
@@ -66,6 +86,11 @@ export class AnalyticsProcessor {
         this.lastFlushed = Date.now();
     }
 
+    /**
+     * Track a single evaluation event for a feature.
+     *
+     * This method is called whenever {@link Flags.isFeatureEnabled}, {@link Flags.getFeatureValue} or {@link Flags.getFlag} are called.
+     */
     trackFeature(featureName: string) {
         this.analyticsData[featureName] = (this.analyticsData[featureName] || 0) + 1;
         if (Date.now() - this.lastFlushed > ANALYTICS_TIMER * 1000) {
