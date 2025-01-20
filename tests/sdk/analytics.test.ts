@@ -26,7 +26,7 @@ test('test_analytics_processor_flush_post_request_data_match_ananlytics_data', a
     aP.trackFeature("myFeature2");
     await aP.flush();
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith('http://testUrlanalytics/flags/', expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith('http://testUrl/analytics/flags/', expect.objectContaining({
         body: '{"myFeature1":1,"myFeature2":1}',
         headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'test-key' },
         method: 'POST',

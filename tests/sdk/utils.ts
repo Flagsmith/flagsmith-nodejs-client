@@ -24,7 +24,7 @@ export const fetch = vi.fn(global.fetch)
 export function analyticsProcessor() {
     return new AnalyticsProcessor({
         environmentKey: 'test-key',
-        baseApiUrl: 'http://testUrl',
+        analyticsUrl: 'http://testUrl/analytics/flags/',
         fetch,
     });
 }
