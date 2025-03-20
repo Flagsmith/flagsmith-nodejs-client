@@ -40,7 +40,7 @@ export interface FlagsmithConfig {
     enableAnalytics?: boolean;
     defaultFlagHandler?: (featureName: string) => DefaultFlag;
     cache?: FlagsmithCache;
-    onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
+    onEnvironmentChange?: (error: Error | null, result?: EnvironmentModel) => void;
     logger?: Logger;
     offlineMode?: boolean;
     offlineHandler?: BaseOfflineHandler;

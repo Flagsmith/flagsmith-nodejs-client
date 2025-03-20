@@ -125,6 +125,34 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
   expect(flag.enabled).toBe(false);
 });
 
+test("default flags are used when network is unavailable", async () => {
+  fetch.mockRejectedValue(new Error('API is unavailable'))
+
+  const flg = flagsmith({
+    environmentKey: 'key',
+    defaultFlagHandler: () => new DefaultFlag(undefined, true)
+  });
+
+  const flags = await flg.getIdentityFlags('identifier');
+  const flag = flags.getFlag('some_feature');
+
+  expect(flag.isDefault).toBe(true);
+  expect(flag.enabled).toBe(true);
+});
+
+test("default flags are used when network is unavailable in local evaluation", async () => {
+  fetch.mockRejectedValue(new Error('API is unavailable'))
+
+  const flg = flagsmith({
+    environmentKey: 'ser.key',
+    enableLocalEvaluation: true,
+    defaultFlagHandler: () => new DefaultFlag(undefined, true)
+  });
+
+  const flags = await flg.getIdentityFlags('identifier');
+  expect(flags.isFeatureEnabled('some_feature')).toBe(true);
+});
+
 
 test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled', async () => {
   fetch.mockResolvedValue(new Response(environmentJSON));
@@ -170,10 +198,10 @@ test('test_transient_identity', async () => {
 test('test_identity_with_transient_traits', async () => {
   fetch.mockResolvedValue(new Response(identityWithTransientTraitsJSON));
   const identifier = 'transient_trait_identifier';
-  const traits = { 
+  const traits = {
     some_trait: 'some_value',
     another_trait: {value: 'another_value', transient: true},
-    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false} 
+    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false}
   }
   const traitsInRequest = [
     {

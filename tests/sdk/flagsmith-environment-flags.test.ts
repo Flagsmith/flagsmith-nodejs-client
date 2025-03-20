@@ -20,20 +20,6 @@ test('test_get_environment_flags_calls_api_when_no_local_environment', async () 
   expect(allFlags[0].featureName).toBe('some_feature');
 });
 
-test('test_get_environment_flags_uses_local_environment_when_available', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
-  const flg = flagsmith();
-  const model = environmentModel(JSON.parse(environmentJSON));
-  flg.environment = model;
-
-  const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
-  expect(fetch).toBeCalledTimes(0);
-  expect(allFlags[0].enabled).toBe(model.featureStates[0].enabled);
-  expect(allFlags[0].value).toBe(model.featureStates[0].getValue());
-  expect(allFlags[0].featureName).toBe(model.featureStates[0].feature.name);
-});
-
 test('test_default_flag_is_used_when_no_environment_flags_returned', async () => {
   fetch.mockResolvedValue(new Response(JSON.stringify([])));
 

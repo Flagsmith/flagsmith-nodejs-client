@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util.js';
 import { AnalyticsProcessor } from '../../sdk/analytics.js';
-import Flagsmith from '../../sdk/index.js';
+import Flagsmith, {FlagsmithConfig} from '../../sdk/index.js';
 import { FlagsmithCache } from '../../sdk/types.js';
 import { Flags } from '../../sdk/models.js';
 
@@ -33,7 +33,7 @@ export function apiKey(): string {
     return 'sometestfakekey';
 }
 
-export function flagsmith(params = {}) {
+export function flagsmith(params: FlagsmithConfig = {}) {
     return new Flagsmith({
         environmentKey: apiKey(),
         fetch,

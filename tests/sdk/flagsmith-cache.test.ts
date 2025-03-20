@@ -61,14 +61,16 @@ test('test_get_environment_flags_uses_local_environment_when_available', async (
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
-  const flg = flagsmith({ cache });
+  const flg = flagsmith({ cache, enableLocalEvaluation: true });
   const model = environmentModel(JSON.parse(environmentJSON));
-  flg.environment = model;
+  const getEnvironment = vi.spyOn(flg, 'getEnvironment')
+  getEnvironment.mockResolvedValue(model)
 
-  const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
+  const allFlags = (await flg.getEnvironmentFlags()).allFlags();
 
   expect(set).toBeCalled();
   expect(fetch).toBeCalledTimes(0);
+  expect(getEnvironment).toBeCalledTimes(1);
   expect(allFlags[0].enabled).toBe(model.featureStates[0].enabled);
   expect(allFlags[0].value).toBe(model.featureStates[0].getValue());
   expect(allFlags[0].featureName).toBe(model.featureStates[0].feature.name);
