@@ -1,6 +1,14 @@
 import Flagsmith from '../../sdk/index.js';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
-import { environmentJSON, environmentModel, flagsJSON, flagsmith, fetch, offlineEnvironmentJSON } from './utils.js';
+import {
+    environmentJSON,
+    environmentModel,
+    flagsJSON,
+    flagsmith,
+    fetch,
+    offlineEnvironmentJSON,
+    badFetch
+} from './utils.js';
 import { DefaultFlag, Flags } from '../../sdk/models.js';
 import { delay } from '../../sdk/utils.js';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models.js';
@@ -133,19 +141,17 @@ test.each([
 ])(
     'default flag handler is used when API is unavailable (local evaluation = %s)',
     async (enableLocalEvaluation, environmentKey) => {
-        fetch.mockRejectedValue(new Error('API is unavailable'))
-        try {
-            const flg = flagsmith({
-                enableLocalEvaluation,
-                environmentKey,
-                defaultFlagHandler: () => new DefaultFlag('some-default-value', true)
-            });
-            const flags = await flg.getEnvironmentFlags();
-            const flag = flags.getFlag('some_feature');
-            expect(flag.isDefault).toBe(true);
-            expect(flag.enabled).toBe(true);
-            expect(flag.value).toBe('some-default-value');
-        } catch {}
+        const flg = flagsmith({
+            enableLocalEvaluation,
+            environmentKey,
+            defaultFlagHandler: () => new DefaultFlag('some-default-value', true),
+            fetch: badFetch,
+        });
+        const flags = await flg.getEnvironmentFlags();
+        const flag = flags.getFlag('some_feature');
+        expect(flag.isDefault).toBe(true);
+        expect(flag.enabled).toBe(true);
+        expect(flag.value).toBe('some-default-value');
     }
 );
 
@@ -182,10 +188,9 @@ test('request timeout uses default if not provided', async () => {
 })
 
 test('test_throws_when_no_identityFlags_returned_due_to_error', async () => {
-    fetch.mockResolvedValue(new Response('bad data'));
-
     const flg = new Flagsmith({
         environmentKey: 'key',
+        fetch: badFetch,
     });
 
     await expect(async () => await flg.getIdentityFlags('identifier'))
@@ -211,19 +216,15 @@ test('test onEnvironmentChange is called when provided', async () => {
 });
 
 test('test onEnvironmentChange is called after error', async () => {
-    try {
-        fetch.mockRejectedValue(new Error('API error'))
-        const callback = vi.fn();
-        const flg = new Flagsmith({
-            environmentKey: 'ser.key',
-            enableLocalEvaluation: true,
-            onEnvironmentChange: callback,
-        });
-        await flg.updateEnvironment();
-        expect(callback).toHaveBeenCalled();
-    } catch(e) {
-        console.log("????")
-    }
+    const callback = vi.fn();
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        onEnvironmentChange: callback,
+        fetch: badFetch,
+    });
+    await flg.updateEnvironment();
+    expect(callback).toHaveBeenCalled();
 });
 
 test('getIdentityFlags throws error if identifier is empty string', async () => {
@@ -347,18 +348,18 @@ function sleep(ms: number) {
     });
 }
 test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
     });
 
+    await flg.updateEnvironment()
     const flags = await flg.getIdentityFlags('overridden-id');
     expect(flags.getFeatureValue('some_feature')).toEqual('some-overridden-value');
 });
 
 test('getIdentityFlags succeeds if initial fetch failed then succeeded', async () => {
-    const defaultFlagHandler = vi.fn(() => new DefaultFlag('mock-default-value', false));
+    const defaultFlagHandler = vi.fn(() => new DefaultFlag('mock-default-value', true));
 
     fetch.mockRejectedValueOnce(new Error('Initial API error'));
     const flg = flagsmith({
@@ -368,7 +369,7 @@ test('getIdentityFlags succeeds if initial fetch failed then succeeded', async (
     });
 
     const defaultFlags = await flg.getIdentityFlags('test-user');
-    expect(defaultFlags.isFeatureEnabled('some_feature')).toBe(false);
+    expect(defaultFlags.isFeatureEnabled('mock-default-value')).toBe(true);
     expect(defaultFlagHandler).toHaveBeenCalled();
 
     fetch.mockResolvedValue(new Response(environmentJSON));

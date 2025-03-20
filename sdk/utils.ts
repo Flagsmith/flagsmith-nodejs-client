@@ -57,7 +57,7 @@ export const retryFetch = (
         } catch (e) {
             if (n > 0) {
                 await delay(1000);
-                return retryWrapper(--n);
+                return await retryWrapper(n - 1);
             } else {
                 throw e;
             }

@@ -286,7 +286,7 @@ export class Flagsmith {
             return deferred.promise;
         } catch (error) {
             deferred.reject(error);
-            throw error;
+            return deferred.promise;
         } finally {
             this.environmentPromise = undefined;
         }
@@ -412,7 +412,6 @@ export class Flagsmith {
 
         let featureStates: FeatureStateModel[] = [];
         try {
-            const environment = await this.getEnvironment();
             featureStates = getIdentityFeatureStates(environment, identityModel);
         } catch {}
 

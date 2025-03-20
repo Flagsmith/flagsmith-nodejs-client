@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util.js';
 import { AnalyticsProcessor } from '../../sdk/analytics.js';
 import Flagsmith, {FlagsmithConfig} from '../../sdk/index.js';
-import { FlagsmithCache } from '../../sdk/types.js';
+import { Fetch, FlagsmithCache } from '../../sdk/types.js';
 import { Flags } from '../../sdk/models.js';
 
 const DATA_DIR = __dirname + '/data/';
@@ -19,7 +19,18 @@ export class TestCache implements FlagsmithCache {
     }
 }
 
-export const fetch = vi.fn(global.fetch)
+export const fetch = vi.fn((_, options) => {
+    const headers = options?.headers as Record<string, string>;
+    if (!headers) throw new Error('missing request headers')
+    const env = headers['X-Environment-Key'];
+    if (!env) return Promise.resolve(new Response("missing x-environment-key header", { status: 404 }))
+    if (env.startsWith('ser.')) {
+        return Promise.resolve(new Response(environmentJSON, { status: 200 }))
+    }
+    return Promise.resolve(new Response(identitiesJSON, { status: 200 }))
+});
+
+export const badFetch: Fetch = () => { throw new Error('fetch failed')}
 
 export function analyticsProcessor() {
     return new AnalyticsProcessor({
