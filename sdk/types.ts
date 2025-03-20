@@ -61,13 +61,13 @@ export interface FlagsmithConfig {
      */
     requestRetryDelayMilliseconds?: number;
     /**
-     * If enabled, flags are evaluated locally using an environment definition cached in memory.
+     * If enabled, flags are evaluated locally using the environment state cached in memory.
      *
      * The client will lazily fetch the environment from the Flagsmith API, and poll it every {@link environmentRefreshIntervalSeconds}.
      */
     enableLocalEvaluation?: boolean;
     /**
-     * The time, in seconds, to wait before refreshing the cached environment definition.
+     * The time, in seconds, to wait before refreshing the cached environment state.
      * @default 60
      */
     environmentRefreshIntervalSeconds?: number;
