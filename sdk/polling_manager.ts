@@ -20,7 +20,7 @@ export class EnvironmentDataPollingManager {
                 try {
                     await this.main.updateEnvironment();
                 } catch (error) {
-                    this.logger.error('failed to poll environment', error);
+                    this.logger.error(error, 'failed to poll environment');
                 }
             }, this.refreshIntervalSeconds * 1000);
         };
