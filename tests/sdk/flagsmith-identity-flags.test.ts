@@ -1,5 +1,13 @@
 import Flagsmith from '../../sdk/index.js';
-import { fetch, environmentJSON, flagsmith, identitiesJSON, identityWithTransientTraitsJSON, transientIdentityJSON } from './utils.js';
+import {
+  fetch,
+  environmentJSON,
+  flagsmith,
+  identitiesJSON,
+  identityWithTransientTraitsJSON,
+  transientIdentityJSON,
+  badFetch
+} from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
 
 vi.mock('../../sdk/polling_manager');
@@ -205,3 +213,12 @@ test('test_identity_with_transient_traits', async () => {
   expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');
   expect(identityFlags[0].featureName).toBe('some_feature');
 });
+
+test('getIdentityFlags fails if API call failed and no default flag handler was provided', async () => {
+  const flg = flagsmith({
+    fetch: badFetch,
+  })
+  expect(flg.getIdentityFlags('user'))
+      .rejects
+      .toThrow('getIdentityFlags failed and no default flag handler was provided')
+})
