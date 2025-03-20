@@ -251,7 +251,7 @@ export class Flagsmith {
             throw new Error('`identifier` argument is missing or invalid.');
         }
         if (!this.enableLocalEvaluation) {
-            console.error('This function is only permitted with local evaluation.');
+            this.logger.error('This function is only permitted with local evaluation.');
             return Promise.resolve([]);
         }
 
