@@ -56,48 +56,30 @@ export class Flagsmith {
     private analyticsProcessor?: AnalyticsProcessor;
     private logger: Logger;
     private customFetch: Fetch;
+    private readonly requestRetryDelayMilliseconds: number;
     /**
-     * A Flagsmith client.
+     * A client for evaluating Flagsmith feature flags.
      *
-     * Provides an interface for interacting with the Flagsmith http API.
-     * Basic Usage::
+     * Flags are evaluated remotely by the Flagsmith API over HTTP by default.
+     * To evaluate flags locally, use {@link enableLocalEvaluation}.
      *
-     * import flagsmith from Flagsmith
-     * const flagsmith = new Flagsmith({environmentKey: '<your API key>'});
-     * const environmentFlags = flagsmith.getEnvironmentFlags();
-     * const featureEnabled = environmentFlags.isFeatureEnabled('foo');
-     * const identityFlags = flagsmith.getIdentityFlags('identifier', {'foo': 'bar'});
-     * const featureEnabledForIdentity = identityFlags.isFeatureEnabled("foo")
+     * @example
+     * import { Flagsmith, Flags, DefaultFlag } from 'flagsmith-nodejs'
      *
-     *  @param {string} data.environmentKey: The environment key obtained from Flagsmith interface
-     *      Required unless offlineMode is True.
-        @param {string} data.apiUrl: Override the URL of the Flagsmith API to communicate with
-        @param  data.customHeaders: Additional headers to add to requests made to the
-            Flagsmith API
-        @param {number} data.requestTimeoutSeconds: Number of seconds to wait for a request to
-            complete before terminating the request
-        @param {boolean} data.enableLocalEvaluation: Enables local evaluation of flags
-        @param {number} data.environmentRefreshIntervalSeconds: If using local evaluation,
-            specify the interval period between refreshes of local environment data
-        @param {number} data.retries: a urllib3.Retry object to use on all http requests to the
-            Flagsmith API
-        @param {boolean} data.enableAnalytics: if enabled, sends additional requests to the Flagsmith
-            API to power flag analytics charts
-        @param data.defaultFlagHandler: callable which will be used in the case where
-            flags cannot be retrieved from the API or a non-existent feature is
-            requested
-        @param data.logger: an instance of the pino Logger class to use for logging
-        @param {boolean} data.offlineMode: sets the client into offline mode. Relies on offlineHandler for
-            evaluating flags.
-        @param {BaseOfflineHandler} data.offlineHandler: provide a handler for offline logic. Used to get environment
-            document from another source when in offlineMode. Works in place of
-            defaultFlagHandler if offlineMode is not set and using remote evaluation.
+     * const flagsmith = new Flagsmith({
+     *   environmentKey: '<your API key>',
+     *   defaultFlagHandler: (flagKey: string) => { new DefaultFlag(...) },
+     * });
+     *
+     * // Fetch the current environment flags
+     * const environmentFlags: Flags = flagsmith.getEnvironmentFlags()
+     * const isFooEnabled: boolean = environmentFlags.isFeatureEnabled('foo')
+     *
+     * // Evaluate flags for any identity
+     * const identityFlags: Flags = flagsmith.getIdentityFlags('my_user_123', {'vip': true})
+     * const bannerVariation = identityFlags.getFeatureValue('banner_flag')
     */
     constructor(data: FlagsmithConfig = {}) {
-        // if (!data.offlineMode && !data.environmentKey) {
-        //     throw new Error('ValueError: environmentKey is required.');
-        // }
-
         this.agent = data.agent;
         this.customFetch = data.fetch ?? fetch;
         this.environmentKey = data.environmentKey;
@@ -105,6 +87,7 @@ export class Flagsmith {
         this.customHeaders = data.customHeaders;
         this.requestTimeoutMs =
             1000 * (data.requestTimeoutSeconds ?? DEFAULT_REQUEST_TIMEOUT_SECONDS);
+        this.requestRetryDelayMilliseconds = data.requestRetryDelayMilliseconds ?? 1000;
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
@@ -339,6 +322,7 @@ export class Flagsmith {
             },
             this.retries,
             this.requestTimeoutMs,
+            this.requestRetryDelayMilliseconds,
             this.customFetch,
         );
 

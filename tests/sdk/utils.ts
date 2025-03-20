@@ -47,6 +47,8 @@ export function apiKey(): string {
 export function flagsmith(params: FlagsmithConfig = {}) {
     return new Flagsmith({
         environmentKey: apiKey(),
+        environmentRefreshIntervalSeconds: 0,
+        requestRetryDelayMilliseconds: 0,
         fetch,
         ...params,
     });

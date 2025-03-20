@@ -163,9 +163,9 @@ test('default flag handler used when timeout occurs', async () => {
 
     const defaultFlag = new DefaultFlag('some-default-value', true);
 
-    const defaultFlagHandler = (featureName: string) => defaultFlag;
+    const defaultFlagHandler = () => defaultFlag;
 
-    const flg = new Flagsmith({
+    const flg = flagsmith({
         environmentKey: 'key',
         defaultFlagHandler: defaultFlagHandler,
         requestTimeoutSeconds: 0.0001,
@@ -188,7 +188,7 @@ test('request timeout uses default if not provided', async () => {
 })
 
 test('test_throws_when_no_identityFlags_returned_due_to_error', async () => {
-    const flg = new Flagsmith({
+    const flg = flagsmith({
         environmentKey: 'key',
         fetch: badFetch,
     });
@@ -342,11 +342,6 @@ test('cannot create Flagsmith client in remote evaluation without API key', () =
 });
 
 
-function sleep(ms: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
 test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
     const flg = flagsmith({
         environmentKey: 'ser.key',

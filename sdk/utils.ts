@@ -46,6 +46,7 @@ export const retryFetch = (
     fetchOptions: RequestInit & { dispatcher?: Dispatcher },
     retries: number = 3,
     timeoutMs: number = 10, // set an overall timeout for this function
+    retryDelayMs: number = 1000,
     customFetch: Fetch,
 ): Promise<Response> => {
     const retryWrapper = async (n: number): Promise<Response> => {
@@ -56,7 +57,7 @@ export const retryFetch = (
             });
         } catch (e) {
             if (n > 0) {
-                await delay(1000);
+                await delay(retryDelayMs);
                 return await retryWrapper(n - 1);
             } else {
                 throw e;
