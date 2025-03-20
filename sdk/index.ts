@@ -408,10 +408,7 @@ export class Flagsmith {
             }))
         );
 
-        let featureStates: FeatureStateModel[] = [];
-        try {
-            featureStates = getIdentityFeatureStates(environment, identityModel);
-        } catch {}
+        const featureStates = getIdentityFeatureStates(environment, identityModel);
 
         const flags = Flags.fromFeatureStateModels({
             featureStates: featureStates,
