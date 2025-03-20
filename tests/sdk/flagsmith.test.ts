@@ -338,7 +338,7 @@ test('cannot use both default handler and offline handler', () => {
 
 test('cannot create Flagsmith client in remote evaluation without API key', () => {
     // When and Then
-    expect(() => new Flagsmith()).toThrowError('ValueError: environmentKey is required.');
+    expect(() => new Flagsmith({ environmentKey: '' })).toThrowError('ValueError: environmentKey is required.');
 });
 
 

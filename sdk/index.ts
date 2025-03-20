@@ -27,6 +27,30 @@ export { FlagsmithCache, FlagsmithConfig } from './types.js';
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 
+/**
+ * A client for evaluating Flagsmith feature flags.
+ *
+ * Flags are evaluated remotely by the Flagsmith API over HTTP by default.
+ * To evaluate flags locally, create the client using {@link enableLocalEvaluation} and a server-side SDK key.
+ *
+ * @example
+ * import { Flagsmith, Flags, DefaultFlag } from 'flagsmith-nodejs'
+ *
+ * const flagsmith = new Flagsmith({
+ *   environmentKey: 'your_sdk_key',
+ *   defaultFlagHandler: (flagKey: string) => { new DefaultFlag(...) },
+ * });
+ *
+ * // Fetch the current environment flags
+ * const environmentFlags: Flags = flagsmith.getEnvironmentFlags()
+ * const isFooEnabled: boolean = environmentFlags.isFeatureEnabled('foo')
+ *
+ * // Evaluate flags for any identity
+ * const identityFlags: Flags = flagsmith.getIdentityFlags('my_user_123', {'vip': true})
+ * const bannerVariation = identityFlags.getFeatureValue('banner_flag')
+ *
+ * @see FlagsmithConfig
+*/
 export class Flagsmith {
     environmentKey?: string = undefined;
     apiUrl?: string = undefined;
@@ -57,29 +81,15 @@ export class Flagsmith {
     private logger: Logger;
     private customFetch: Fetch;
     private readonly requestRetryDelayMilliseconds: number;
+
     /**
-     * A client for evaluating Flagsmith feature flags.
+     * Creates a new {@link Flagsmith} client.
      *
-     * Flags are evaluated remotely by the Flagsmith API over HTTP by default.
-     * To evaluate flags locally, use {@link enableLocalEvaluation}.
-     *
-     * @example
-     * import { Flagsmith, Flags, DefaultFlag } from 'flagsmith-nodejs'
-     *
-     * const flagsmith = new Flagsmith({
-     *   environmentKey: '<your API key>',
-     *   defaultFlagHandler: (flagKey: string) => { new DefaultFlag(...) },
-     * });
-     *
-     * // Fetch the current environment flags
-     * const environmentFlags: Flags = flagsmith.getEnvironmentFlags()
-     * const isFooEnabled: boolean = environmentFlags.isFeatureEnabled('foo')
-     *
-     * // Evaluate flags for any identity
-     * const identityFlags: Flags = flagsmith.getIdentityFlags('my_user_123', {'vip': true})
-     * const bannerVariation = identityFlags.getFeatureValue('banner_flag')
-    */
-    constructor(data: FlagsmithConfig = {}) {
+     * If using local evaluation, the environment will be fetched lazily when needed by any method. Polling the
+     * environment for updates will start after {@link environmentRefreshIntervalSeconds} once the client is created.
+     * @param data The {@link FlagsmithConfig} options for this client.
+     */
+    constructor(data: FlagsmithConfig) {
         this.agent = data.agent;
         this.customFetch = data.fetch ?? fetch;
         this.environmentKey = data.environmentKey;
