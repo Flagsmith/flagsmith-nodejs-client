@@ -361,7 +361,7 @@ test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
 test('getIdentityFlags succeeds if initial fetch failed then succeeded', async () => {
     const defaultFlagHandler = vi.fn(() => new DefaultFlag('mock-default-value', true));
 
-    fetch.mockRejectedValueOnce(new Error('Initial API error'));
+    fetch.mockRejectedValue(new Error('Initial API error'));
     const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
