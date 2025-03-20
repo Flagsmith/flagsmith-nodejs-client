@@ -218,7 +218,7 @@ test('getIdentityFlags fails if API call failed and no default flag handler was 
   const flg = flagsmith({
     fetch: badFetch,
   })
-  expect(flg.getIdentityFlags('user'))
+  await expect(flg.getIdentityFlags('user'))
       .rejects
       .toThrow('getIdentityFlags failed and no default flag handler was provided')
 })
