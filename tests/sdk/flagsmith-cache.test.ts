@@ -61,7 +61,7 @@ test('test_get_environment_flags_uses_local_environment_when_available', async (
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
-  const flg = flagsmith({ cache, enableLocalEvaluation: true });
+  const flg = flagsmith({ cache, environmentKey: 'ser.key', enableLocalEvaluation: true });
   const model = environmentModel(JSON.parse(environmentJSON));
   const getEnvironment = vi.spyOn(flg, 'getEnvironment')
   getEnvironment.mockResolvedValue(model)

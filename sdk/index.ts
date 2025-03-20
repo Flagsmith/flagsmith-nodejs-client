@@ -142,9 +142,7 @@ export class Flagsmith {
 
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
-                    console.error(
-                        'In order to use local evaluation, please generate a server key in the environment settings page.'
-                    );
+                    throw new Error('Using local evaluation requires a server-side environment key');
                 }
                 if (this.environmentRefreshIntervalSeconds > 0){
                     this.environmentDataPollingManager = new EnvironmentDataPollingManager(

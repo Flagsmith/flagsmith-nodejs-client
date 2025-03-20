@@ -31,12 +31,12 @@ test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
 
 test('test_flagsmith_local_evaluation_key_required', () => {
     fetch.mockResolvedValue(new Response(environmentJSON));
-    console.error = vi.fn();
-    new Flagsmith({
-        environmentKey: 'bad.key',
-        enableLocalEvaluation: true
-    });
-    expect(console.error).toBeCalled();
+    expect(() => {
+        new Flagsmith({
+            environmentKey: 'bad.key',
+            enableLocalEvaluation: true
+        });
+    }).toThrow('Using local evaluation requires a server-side environment key')
 });
 
 test('test_update_environment_sets_environment', async () => {
