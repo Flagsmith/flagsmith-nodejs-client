@@ -257,7 +257,7 @@ export class Flagsmith {
 
         traits = traits || {};
         const environment = await this.getEnvironment();
-        const identityModel = await this.getIdentityModel(
+        const identityModel = this.getIdentityModel(
             environment,
             identifier,
             Object.keys(traits || {}).map(key => ({
@@ -399,7 +399,7 @@ export class Flagsmith {
         identifier: string,
         traits: { [key: string]: any }
     ): Promise<Flags> {
-        const identityModel = await this.getIdentityModel(
+        const identityModel = this.getIdentityModel(
             environment,
             identifier,
             Object.keys(traits).map(key => ({
@@ -476,25 +476,19 @@ export class Flagsmith {
         return flags;
     }
 
-    private async getIdentityModel(
+    private getIdentityModel(
         environment: EnvironmentModel,
         identifier: string,
         traits: { key: string; value: any }[]
     ) {
-        return this.getEnvironment()
-            .then(environment => {
-                const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
-                let identityWithOverrides =
-                    this.identitiesWithOverridesByIdentifier?.get(identifier);
-                if (identityWithOverrides) {
-                    identityWithOverrides.updateTraits(traitModels);
-                    return identityWithOverrides;
-                }
-                return new IdentityModel('0', traitModels, [], environment.apiKey, identifier);
-            })
-            .catch(() => {
-                return new IdentityModel('0', [], [], '', identifier);
-            });
+        const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
+        let identityWithOverrides =
+            this.identitiesWithOverridesByIdentifier?.get(identifier);
+        if (identityWithOverrides) {
+            identityWithOverrides.updateTraits(traitModels);
+            return identityWithOverrides;
+        }
+        return new IdentityModel('0', traitModels, [], environment.apiKey, identifier);
     }
 }
 
