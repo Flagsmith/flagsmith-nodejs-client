@@ -3,6 +3,7 @@ import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { Dispatcher } from 'undici-types';
 import { Logger } from 'pino';
 import { BaseOfflineHandler } from './offline_handlers.js';
+import { Flagsmith } from './index.js'
 
 export type IFlagsmithValue<T = string | number | boolean | null> = T;
 
@@ -27,6 +28,9 @@ export interface FlagsmithCache {
 
 export type Fetch = typeof fetch
 
+/**
+ * The configuration options for a {@link Flagsmith} client.
+ */
 export interface FlagsmithConfig {
     /**
      * The environment's client-side or server-side key.
