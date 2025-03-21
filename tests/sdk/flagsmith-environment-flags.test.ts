@@ -82,7 +82,7 @@ test('test_throws_when_no_default_flag_handler_after_multiple_API_errors', async
   await expect(async () => {
       const flags = await flg.getEnvironmentFlags();
       const flag = flags.getFlag('some_feature');
-  }).rejects.toThrow('Error during fetching the API response');
+  }).rejects.toThrow('getEnvironmentFlags failed and no default flag handler was provided');
 });
 
 test('test_non_200_response_raises_flagsmith_api_error', async () => {

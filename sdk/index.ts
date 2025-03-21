@@ -169,11 +169,13 @@ export class Flagsmith {
         }
         try {
             if (this.enableLocalEvaluation || this.offlineMode) {
-                const environment = await this.getEnvironment();
-                return this.getEnvironmentFlagsFromDocument(environment);
+                return await this.getEnvironmentFlagsFromDocument();
             }
-            return this.getEnvironmentFlagsFromApi();
+            return await this.getEnvironmentFlagsFromApi();
         } catch (error) {
+            if (!this.defaultFlagHandler) {
+                throw new Error('getEnvironmentFlags failed and no default flag handler was provided', { cause: error });
+            }
             this.logger.error(error, 'getEnvironmentFlags failed');
             return new Flags({
                 flags: {},
@@ -209,8 +211,7 @@ export class Flagsmith {
         traits = traits || {};
         try {
             if (this.enableLocalEvaluation || this.offlineMode) {
-                const environment = await this.getEnvironment();
-                return this.getIdentityFlagsFromDocument(environment, identifier, traits || {});
+                return await this.getIdentityFlagsFromDocument(identifier, traits || {});
             }
             return await this.getIdentityFlagsFromApi(identifier, traits, transient);
         } catch (error) {
@@ -376,7 +377,8 @@ export class Flagsmith {
         return buildEnvironmentModel(environment_data);
     }
 
-    private async getEnvironmentFlagsFromDocument(environment: EnvironmentModel): Promise<Flags> {
+    private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
+        const environment = await this.getEnvironment();
         const flags = Flags.fromFeatureStateModels({
             featureStates: getEnvironmentFeatureStates(environment),
             analyticsProcessor: this.analyticsProcessor,
@@ -389,10 +391,10 @@ export class Flagsmith {
     }
 
     private async getIdentityFlagsFromDocument(
-        environment: EnvironmentModel,
         identifier: string,
         traits: { [key: string]: any }
     ): Promise<Flags> {
+        const environment = await this.getEnvironment();
         const identityModel = this.getIdentityModel(
             environment,
             identifier,
@@ -422,31 +424,16 @@ export class Flagsmith {
         if (!this.environmentFlagsUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
-        try {
-            const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
-            const flags = Flags.fromAPIFlags({
-                apiFlags: apiFlags,
-                analyticsProcessor: this.analyticsProcessor,
-                defaultFlagHandler: this.defaultFlagHandler
-            });
-            if (!!this.cache) {
-                await this.cache.set('flags', flags);
-            }
-            return flags;
-        } catch (e) {
-            if (this.offlineHandler) {
-                const environment = this.offlineHandler.getEnvironment();
-                return this.getEnvironmentFlagsFromDocument(environment);
-            }
-            if (this.defaultFlagHandler) {
-                return new Flags({
-                    flags: {},
-                    defaultFlagHandler: this.defaultFlagHandler
-                });
-            }
-
-            throw e;
+        const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
+        const flags = Flags.fromAPIFlags({
+            apiFlags: apiFlags,
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler
+        });
+        if (!!this.cache) {
+            await this.cache.set('flags', flags);
         }
+        return flags;
     }
 
     private async getIdentityFlagsFromApi(
