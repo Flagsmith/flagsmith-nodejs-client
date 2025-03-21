@@ -3,10 +3,6 @@ import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
 import { delay } from '../../sdk/utils.js';
 vi.mock('../../sdk');
 
-beforeEach(() => {
-    vi.clearAllMocks()
-});
-
 test('test_polling_manager_correctly_stops_if_never_started', async () => {
     const flagsmith = new Flagsmith({
         environmentKey: 'key'

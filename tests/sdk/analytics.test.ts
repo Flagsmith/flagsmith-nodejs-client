@@ -1,9 +1,5 @@
 import {analyticsProcessor, fetch} from './utils.js';
 
-afterEach(() => {
-    vi.resetAllMocks();
-});
-
 test('test_analytics_processor_track_feature_updates_analytics_data', () => {
     const aP = analyticsProcessor();
     aP.trackFeature("myFeature");

@@ -4,10 +4,6 @@ import { DefaultFlag } from '../../sdk/models.js';
 
 vi.mock('../../sdk/polling_manager');
 
-beforeEach(() => {
-    vi.clearAllMocks();
-});
-
 test('test_get_environment_flags_calls_api_when_no_local_environment', async () => {
   const flg = flagsmith();
   const allFlags = await (await flg.getEnvironmentFlags()).allFlags();

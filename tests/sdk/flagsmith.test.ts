@@ -15,10 +15,6 @@ import { BaseOfflineHandler } from '../../sdk/offline_handlers.js';
 import { Agent } from 'undici';
 
 vi.mock('../../sdk/polling_manager');
-beforeEach(() => {
-    vi.clearAllMocks();
-});
-
 test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
     new Flagsmith({
         environmentKey: 'ser.key',

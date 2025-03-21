@@ -12,11 +12,6 @@ import { DefaultFlag } from '../../sdk/models.js';
 
 vi.mock('../../sdk/polling_manager');
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-
 test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', async () => {
   const identifier = 'identifier';
 

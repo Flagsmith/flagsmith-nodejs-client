@@ -1,9 +1,5 @@
 import { fetch, environmentJSON, environmentModel, flagsJSON, flagsmith, identitiesJSON, TestCache } from './utils.js';
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
 test('test_empty_cache_not_read_but_populated', async () => {
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
