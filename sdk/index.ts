@@ -31,7 +31,7 @@ const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
  * A client for evaluating Flagsmith feature flags.
  *
  * Flags are evaluated remotely by the Flagsmith API over HTTP by default.
- * To evaluate flags locally, create the client using {@link enableLocalEvaluation} and a server-side SDK key.
+ * To evaluate flags locally, create the client using {@link FlagsmithConfig.enableLocalEvaluation} and a server-side SDK key.
  *
  * @example
  * import { Flagsmith, Flags, DefaultFlag } from 'flagsmith-nodejs'
