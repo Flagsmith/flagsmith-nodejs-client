@@ -18,7 +18,6 @@ beforeEach(() => {
 
 
 test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON));
   const identifier = 'identifier';
 
   const flg = flagsmith();
@@ -31,7 +30,6 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', as
 });
 
 test('test_get_identity_flags_uses_environment_when_local_environment_no_traits', async () => {
-  fetch.mockResolvedValue(new Response(environmentJSON))
   const identifier = 'identifier';
 
   const flg = flagsmith({
@@ -48,7 +46,6 @@ test('test_get_identity_flags_uses_environment_when_local_environment_no_traits'
 });
 
 test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON))
   const identifier = 'identifier';
   const traits = { some_trait: 'some_value' };
   const flg = flagsmith();
@@ -61,8 +58,6 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', 
 });
 
 test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON))
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -140,7 +135,6 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
   const flg = flagsmith({
       environmentKey: 'ser.key',
       enableLocalEvaluation: true,
-
   });
 
   const identityFlags = (await flg.getIdentityFlags(identifier))

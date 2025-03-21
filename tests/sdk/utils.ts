@@ -19,15 +19,24 @@ export class TestCache implements FlagsmithCache {
     }
 }
 
-export const fetch = vi.fn((_, options) => {
+export const fetch = vi.fn((url: string, options?: RequestInit) => {
     const headers = options?.headers as Record<string, string>;
     if (!headers) throw new Error('missing request headers')
     const env = headers['X-Environment-Key'];
-    if (!env) return Promise.resolve(new Response("missing x-environment-key header", { status: 404 }))
+    if (!env) return Promise.resolve(new Response('missing x-environment-key header', { status: 404 }));
     if (env.startsWith('ser.')) {
-        return Promise.resolve(new Response(environmentJSON, { status: 200 }))
+        if (url.includes('/environment-document')) {
+            return Promise.resolve(new Response(environmentJSON, { status: 200 }))
+        }
+        return Promise.resolve(new Response('environment-document called without a server-side key', { status: 401 }))
     }
-    return Promise.resolve(new Response(identitiesJSON, { status: 200 }))
+    if (url.includes("/flags")) {
+        return Promise.resolve(new Response(flagsJSON, { status: 200 }))
+    }
+    if (url.includes("/identities")) {
+        return Promise.resolve(new Response(identitiesJSON, { status: 200 }))
+    }
+    return Promise.resolve(new Response('unknown url ' + url, { status: 404 }))
 });
 
 export const badFetch: Fetch = () => { throw new Error('fetch failed')}
@@ -36,7 +45,7 @@ export function analyticsProcessor() {
     return new AnalyticsProcessor({
         environmentKey: 'test-key',
         analyticsUrl: 'http://testUrl/analytics/flags/',
-        fetch,
+        fetch: (url, options) => fetch(url.toString(), options),
     });
 }
 
@@ -49,7 +58,7 @@ export function flagsmith(params: FlagsmithConfig = {}) {
         environmentKey: apiKey(),
         environmentRefreshIntervalSeconds: 0,
         requestRetryDelayMilliseconds: 0,
-        fetch,
+        fetch: (url, options) => fetch(url.toString(), options),
         ...params,
     });
 }

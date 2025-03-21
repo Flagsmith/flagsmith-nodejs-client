@@ -5,8 +5,6 @@ beforeEach(() => {
 });
 
 test('test_empty_cache_not_read_but_populated', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
@@ -23,8 +21,6 @@ test('test_empty_cache_not_read_but_populated', async () => {
 });
 
 test('test_api_not_called_when_cache_present', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
@@ -56,8 +52,6 @@ test('test_api_called_twice_when_no_cache', async () => {
 });
 
 test('test_get_environment_flags_uses_local_environment_when_available', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
@@ -77,8 +71,6 @@ test('test_get_environment_flags_uses_local_environment_when_available', async (
 });
 
 test('test_cache_used_for_identity_flags', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON));
-
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 
@@ -100,8 +92,6 @@ test('test_cache_used_for_identity_flags', async () => {
 });
 
 test('test_cache_used_for_identity_flags_local_evaluation', async () => {
-  fetch.mockResolvedValue(new Response(environmentJSON));
-
   const cache = new TestCache();
   const set = vi.spyOn(cache, 'set');
 

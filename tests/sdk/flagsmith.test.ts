@@ -3,7 +3,6 @@ import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
 import {
     environmentJSON,
     environmentModel,
-    flagsJSON,
     flagsmith,
     fetch,
     offlineEnvironmentJSON,
@@ -21,7 +20,6 @@ beforeEach(() => {
 });
 
 test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
@@ -30,7 +28,6 @@ test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
 });
 
 test('test_flagsmith_local_evaluation_key_required', () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     expect(() => {
         new Flagsmith({
             environmentKey: 'bad.key',
@@ -40,8 +37,9 @@ test('test_flagsmith_local_evaluation_key_required', () => {
 });
 
 test('test_update_environment_sets_environment', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
-    const flg = flagsmith();
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+    });
     const model = environmentModel(JSON.parse(environmentJSON));
     expect(await flg.getEnvironment()).toStrictEqual(model);
 });
@@ -49,7 +47,7 @@ test('test_update_environment_sets_environment', async () => {
 test('test_set_agent_options', async () => {
     const agent = new Agent({})
 
-    fetch.mockImplementation((url, options) => {
+    fetch.mockImplementationOnce((url, options) => {
         //@ts-ignore I give up
         if (options.dispatcher !== agent) {
             throw new Error("Agent has not been set on retry fetch")
@@ -65,7 +63,6 @@ test('test_set_agent_options', async () => {
 });
 
 test('test_get_identity_segments', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
@@ -78,7 +75,6 @@ test('test_get_identity_segments', async () => {
 
 
 test('test_get_identity_segments_empty_without_local_eval', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     const flg = new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: false
@@ -88,8 +84,6 @@ test('test_get_identity_segments_empty_without_local_eval', async () => {
 });
 
 test('test_update_environment_uses_req_when_inited', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
-
     const flg = flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
@@ -103,7 +97,6 @@ test('test_update_environment_uses_req_when_inited', async () => {
 });
 
 test('test_isFeatureEnabled_environment', async () => {
-    fetch.mockResolvedValue(new Response(environmentJSON));
     const defaultFlag = new DefaultFlag('some-default-value', true);
 
     const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -121,9 +114,7 @@ test('test_isFeatureEnabled_environment', async () => {
 });
 
 test('test_fetch_recovers_after_single_API_error', async () => {
-    fetch
-        .mockRejectedValue('Error during fetching the API response')
-        .mockResolvedValue(new Response(flagsJSON));
+    fetch.mockRejectedValueOnce('Error during fetching the API response')
     const flg = flagsmith({
         environmentKey: 'key',
     });
@@ -157,8 +148,9 @@ test.each([
 
 test('default flag handler used when timeout occurs', async () => {
     fetch.mockImplementation(async (...args) => {
-        await sleep(10000)
-        return fetch(...args)
+        const forever = new Promise(() => {})
+        await forever
+        throw new Error('waited forever')
     });
 
     const defaultFlag = new DefaultFlag('some-default-value', true);
