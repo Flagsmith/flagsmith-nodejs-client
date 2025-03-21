@@ -1,5 +1,5 @@
 import { Dispatcher } from 'undici-types';
-import { FeatureStateModel, getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine/index.js';
+import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine/index.js';
 import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
 import { IdentityModel } from '../flagsmith-engine/index.js';
@@ -7,7 +7,7 @@ import { TraitModel } from '../flagsmith-engine/index.js';
 
 import {ANALYTICS_ENDPOINT, AnalyticsProcessor} from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
-import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
+import { FlagsmithAPIError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
