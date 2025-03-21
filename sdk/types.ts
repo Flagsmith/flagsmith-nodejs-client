@@ -37,7 +37,7 @@ export interface FlagsmithConfig {
      */
     environmentKey?: string;
     /**
-     * The Flagsmith API URL. Set this if you are not using Flagsmith's public SaaS service, i.e. https://app.flagsmith.com.
+     * The Flagsmith API URL. Set this if you are not using Flagsmith's public service, i.e. https://app.flagsmith.com.
      *
      * @default https://edge.api.flagsmith.com/api/v1/
      */
