@@ -215,7 +215,7 @@ export class Flagsmith {
             return await this.getIdentityFlagsFromApi(identifier, traits, transient);
         } catch (error) {
             if (!this.defaultFlagHandler) {
-                throw new Error('getIdentityFlags failed and no default flag handler was provided')
+                throw new Error('getIdentityFlags failed and no default flag handler was provided', { cause: error })
             }
             this.logger.error(error, 'getIdentityFlags failed');
             return new Flags({
