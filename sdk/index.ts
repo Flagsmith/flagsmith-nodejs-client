@@ -47,7 +47,7 @@ const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
  *
  * // Evaluate flags for any identity
  * const identityFlags: Flags = flagsmith.getIdentityFlags('my_user_123', {'vip': true})
- * const bannerVariation = identityFlags.getFeatureValue('banner_flag')
+ * const bannerVariation: string = identityFlags.getFeatureValue('banner_flag')
  *
  * @see FlagsmithConfig
 */
