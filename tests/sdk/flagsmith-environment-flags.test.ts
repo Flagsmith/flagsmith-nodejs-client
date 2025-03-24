@@ -4,13 +4,7 @@ import { DefaultFlag } from '../../sdk/models.js';
 
 vi.mock('../../sdk/polling_manager');
 
-beforeEach(() => {
-    vi.clearAllMocks();
-});
-
 test('test_get_environment_flags_calls_api_when_no_local_environment', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const flg = flagsmith();
   const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
 
@@ -18,20 +12,6 @@ test('test_get_environment_flags_calls_api_when_no_local_environment', async () 
   expect(allFlags[0].enabled).toBe(true);
   expect(allFlags[0].value).toBe('some-value');
   expect(allFlags[0].featureName).toBe('some_feature');
-});
-
-test('test_get_environment_flags_uses_local_environment_when_available', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
-  const flg = flagsmith();
-  const model = environmentModel(JSON.parse(environmentJSON));
-  flg.environment = model;
-
-  const allFlags = await (await flg.getEnvironmentFlags()).allFlags();
-  expect(fetch).toBeCalledTimes(0);
-  expect(allFlags[0].enabled).toBe(model.featureStates[0].enabled);
-  expect(allFlags[0].value).toBe(model.featureStates[0].getValue());
-  expect(allFlags[0].featureName).toBe(model.featureStates[0].feature.name);
 });
 
 test('test_default_flag_is_used_when_no_environment_flags_returned', async () => {
@@ -57,8 +37,6 @@ test('test_default_flag_is_used_when_no_environment_flags_returned', async () =>
 });
 
 test('test_analytics_processor_tracks_flags', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -78,8 +56,6 @@ test('test_analytics_processor_tracks_flags', async () => {
 });
 
 test('test_getFeatureValue', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -106,7 +82,7 @@ test('test_throws_when_no_default_flag_handler_after_multiple_API_errors', async
   await expect(async () => {
       const flags = await flg.getEnvironmentFlags();
       const flag = flags.getFlag('some_feature');
-  }).rejects.toThrow('Error during fetching the API response');
+  }).rejects.toThrow('getEnvironmentFlags failed and no default flag handler was provided');
 });
 
 test('test_non_200_response_raises_flagsmith_api_error', async () => {
@@ -122,8 +98,6 @@ test('test_non_200_response_raises_flagsmith_api_error', async () => {
   await expect(flg.getEnvironmentFlags()).rejects.toThrow();
 });
 test('test_default_flag_is_not_used_when_environment_flags_returned', async () => {
-  fetch.mockResolvedValue(new Response(flagsJSON));
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -161,8 +135,6 @@ test('test_default_flag_is_used_when_bad_api_response_happens', async () => {
 });
 
 test('test_local_evaluation', async () => {
-  fetch.mockResolvedValue(new Response(environmentJSON));
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;

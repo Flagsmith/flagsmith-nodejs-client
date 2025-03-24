@@ -1,6 +1,6 @@
 import { pino, Logger } from 'pino';
 import { Fetch } from "./types.js";
-import { Flags } from "./models.js";
+import { FlagsmithConfig } from "./types.js";
 
 export const ANALYTICS_ENDPOINT = './analytics/flags/';
 
@@ -21,17 +21,17 @@ export interface AnalyticsProcessorOptions {
     logger?: Logger;
     /** Custom {@link fetch} implementation to use for API requests. **/
     fetch?: Fetch
-    
+
     /** @deprecated Use {@link analyticsUrl} instead. **/
     baseApiUrl?: string;
 }
 
 /**
  * Tracks how often individual features are evaluated whenever {@link trackFeature} is called.
- * 
+ *
  * Analytics data is posted after {@link trackFeature} is called and at least {@link ANALYTICS_TIMER} seconds have
  * passed since the previous analytics API request was made (if any), or by calling {@link flush}.
- * 
+ *
  * Data will stay in memory indefinitely until it can be successfully posted to the API.
  * @see https://docs.flagsmith.com/advanced-use/flag-analytics.
  */
@@ -89,7 +89,7 @@ export class AnalyticsProcessor {
     /**
      * Track a single evaluation event for a feature.
      *
-     * This method is called whenever {@link Flags.isFeatureEnabled}, {@link Flags.getFeatureValue} or {@link Flags.getFlag} are called.
+     * @see FlagsmithConfig.enableAnalytics
      */
     trackFeature(featureName: string) {
         this.analyticsData[featureName] = (this.analyticsData[featureName] || 0) + 1;

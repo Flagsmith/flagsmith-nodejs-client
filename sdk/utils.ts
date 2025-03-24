@@ -46,25 +46,59 @@ export const retryFetch = (
     fetchOptions: RequestInit & { dispatcher?: Dispatcher },
     retries: number = 3,
     timeoutMs: number = 10, // set an overall timeout for this function
+    retryDelayMs: number = 1000,
     customFetch: Fetch,
 ): Promise<Response> => {
-    return new Promise((resolve, reject) => {
-        const retryWrapper = (n: number) => {
-            customFetch(url, {
+    const retryWrapper = async (n: number): Promise<Response> => {
+        try {
+            return await customFetch(url, {
                 ...fetchOptions,
                 signal: AbortSignal.timeout(timeoutMs)
-            })
-            .then(res => resolve(res))
-            .catch(async err => {
-                if (n > 0) {
-                    await delay(1000);
-                    retryWrapper(--n);
-                } else {
-                    reject(err);
-                }
             });
-        };
-
-        retryWrapper(retries);
-    });
+        } catch (e) {
+            if (n > 0) {
+                await delay(retryDelayMs);
+                return await retryWrapper(n - 1);
+            } else {
+                throw e;
+            }
+        }
+    };
+    return retryWrapper(retries);
 };
+
+/**
+ * A deferred promise can be resolved or rejected outside its creation scope.
+ *
+ * @template T The type of the value that the deferred promise will resolve to.
+ *
+ * @example
+ * const deferred = new Deferred<string>()
+ *
+ * // Pass the promise somewhere
+ * performAsyncOperation(deferred.promise)
+ *
+ * // Resolve it when ready from anywhere
+ * deferred.resolve("Operation completed")
+ * deferred.failed("Error")
+ */
+export class Deferred<T> {
+    public readonly promise: Promise<T>;
+    private resolvePromise!: (value: T | PromiseLike<T>) => void;
+    private rejectPromise!: (reason?: unknown) => void;
+
+    constructor(initial?: T) {
+        this.promise = new Promise<T>((resolve, reject) => {
+            this.resolvePromise = resolve;
+            this.rejectPromise = reject;
+        });
+    }
+
+    public resolve(value: T | PromiseLike<T>): void {
+        this.resolvePromise(value);
+    }
+
+    public reject(reason?: unknown): void {
+        this.rejectPromise(reason);
+    }
+}

@@ -7,11 +7,11 @@ import { TraitModel } from '../flagsmith-engine/index.js';
 
 import {ANALYTICS_ENDPOINT, AnalyticsProcessor} from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
-import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
+import { FlagsmithAPIError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
-import { generateIdentitiesData, retryFetch } from './utils.js';
+import { Deferred, generateIdentitiesData, retryFetch } from './utils.js';
 import { SegmentModel } from '../flagsmith-engine/index.js';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js';
 import { Fetch, FlagsmithCache, FlagsmithConfig, FlagsmithTraitValue, ITraitConfig } from './types.js';
@@ -27,6 +27,30 @@ export { FlagsmithCache, FlagsmithConfig } from './types.js';
 const DEFAULT_API_URL = 'https://edge.api.flagsmith.com/api/v1/';
 const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 
+/**
+ * A client for evaluating Flagsmith feature flags.
+ *
+ * Flags are evaluated remotely by the Flagsmith API over HTTP by default.
+ * To evaluate flags locally, create the client using {@link FlagsmithConfig.enableLocalEvaluation} and a server-side SDK key.
+ *
+ * @example
+ * import { Flagsmith, Flags, DefaultFlag } from 'flagsmith-nodejs'
+ *
+ * const flagsmith = new Flagsmith({
+ *   environmentKey: 'your_sdk_key',
+ *   defaultFlagHandler: (flagKey: string) => { new DefaultFlag(...) },
+ * });
+ *
+ * // Fetch the current environment flags
+ * const environmentFlags: Flags = flagsmith.getEnvironmentFlags()
+ * const isFooEnabled: boolean = environmentFlags.isFeatureEnabled('foo')
+ *
+ * // Evaluate flags for any identity
+ * const identityFlags: Flags = flagsmith.getIdentityFlags('my_user_123', {'vip': true})
+ * const bannerVariation: string = identityFlags.getFeatureValue('banner_flag')
+ *
+ * @see FlagsmithConfig
+*/
 export class Flagsmith {
     environmentKey?: string = undefined;
     apiUrl?: string = undefined;
@@ -45,66 +69,35 @@ export class Flagsmith {
     environmentUrl?: string;
 
     environmentDataPollingManager?: EnvironmentDataPollingManager;
-    environment!: EnvironmentModel;
+    private environment?: EnvironmentModel;
     offlineMode: boolean = false;
     offlineHandler?: BaseOfflineHandler = undefined;
 
     identitiesWithOverridesByIdentifier?: Map<string, IdentityModel>;
 
     private cache?: FlagsmithCache;
-    private onEnvironmentChange?: (error: Error | null, result: EnvironmentModel) => void;
+    private onEnvironmentChange: (error: Error | null, result?: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
     private logger: Logger;
     private customFetch: Fetch;
-    /**
-     * A Flagsmith client.
-     *
-     * Provides an interface for interacting with the Flagsmith http API.
-     * Basic Usage::
-     *
-     * import flagsmith from Flagsmith
-     * const flagsmith = new Flagsmith({environmentKey: '<your API key>'});
-     * const environmentFlags = flagsmith.getEnvironmentFlags();
-     * const featureEnabled = environmentFlags.isFeatureEnabled('foo');
-     * const identityFlags = flagsmith.getIdentityFlags('identifier', {'foo': 'bar'});
-     * const featureEnabledForIdentity = identityFlags.isFeatureEnabled("foo")
-     *
-     *  @param {string} data.environmentKey: The environment key obtained from Flagsmith interface
-     *      Required unless offlineMode is True.
-        @param {string} data.apiUrl: Override the URL of the Flagsmith API to communicate with
-        @param  data.customHeaders: Additional headers to add to requests made to the
-            Flagsmith API
-        @param {number} data.requestTimeoutSeconds: Number of seconds to wait for a request to
-            complete before terminating the request
-        @param {boolean} data.enableLocalEvaluation: Enables local evaluation of flags
-        @param {number} data.environmentRefreshIntervalSeconds: If using local evaluation,
-            specify the interval period between refreshes of local environment data
-        @param {number} data.retries: a urllib3.Retry object to use on all http requests to the
-            Flagsmith API
-        @param {boolean} data.enableAnalytics: if enabled, sends additional requests to the Flagsmith
-            API to power flag analytics charts
-        @param data.defaultFlagHandler: callable which will be used in the case where
-            flags cannot be retrieved from the API or a non-existent feature is
-            requested
-        @param data.logger: an instance of the pino Logger class to use for logging
-        @param {boolean} data.offlineMode: sets the client into offline mode. Relies on offlineHandler for
-            evaluating flags.
-        @param {BaseOfflineHandler} data.offlineHandler: provide a handler for offline logic. Used to get environment
-            document from another source when in offlineMode. Works in place of
-            defaultFlagHandler if offlineMode is not set and using remote evaluation.
-    */
-    constructor(data: FlagsmithConfig = {}) {
-        // if (!data.offlineMode && !data.environmentKey) {
-        //     throw new Error('ValueError: environmentKey is required.');
-        // }
+    private readonly requestRetryDelayMilliseconds: number;
 
+    /**
+     * Creates a new {@link Flagsmith} client.
+     *
+     * If using local evaluation, the environment will be fetched lazily when needed by any method. Polling the
+     * environment for updates will start after {@link environmentRefreshIntervalSeconds} once the client is created.
+     * @param data The {@link FlagsmithConfig} options for this client.
+     */
+    constructor(data: FlagsmithConfig) {
         this.agent = data.agent;
         this.customFetch = data.fetch ?? fetch;
         this.environmentKey = data.environmentKey;
-        this.apiUrl = data.apiUrl || this.apiUrl;
+        this.apiUrl = data.apiUrl || DEFAULT_API_URL;
         this.customHeaders = data.customHeaders;
         this.requestTimeoutMs =
             1000 * (data.requestTimeoutSeconds ?? DEFAULT_REQUEST_TIMEOUT_SECONDS);
+        this.requestRetryDelayMilliseconds = data.requestRetryDelayMilliseconds ?? 1000;
         this.enableLocalEvaluation = data.enableLocalEvaluation;
         this.environmentRefreshIntervalSeconds =
             data.environmentRefreshIntervalSeconds || this.environmentRefreshIntervalSeconds;
@@ -112,7 +105,7 @@ export class Flagsmith {
         this.enableAnalytics = data.enableAnalytics || false;
         this.defaultFlagHandler = data.defaultFlagHandler;
 
-        this.onEnvironmentChange = data.onEnvironmentChange;
+        this.onEnvironmentChange = (error, result) => data.onEnvironmentChange?.(error, result);
         this.logger = data.logger || pino();
         this.offlineMode = data.offlineMode || false;
         this.offlineHandler = data.offlineHandler;
@@ -122,10 +115,6 @@ export class Flagsmith {
             throw new Error('ValueError: offlineHandler must be provided to use offline mode.');
         } else if (this.defaultFlagHandler && this.offlineHandler) {
             throw new Error('ValueError: Cannot use both defaultFlagHandler and offlineHandler.');
-        }
-
-        if (this.offlineHandler) {
-            this.environment = this.offlineHandler.getEnvironment();
         }
 
         if (!!data.cache) {
@@ -146,16 +135,16 @@ export class Flagsmith {
 
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
-                    console.error(
-                        'In order to use local evaluation, please generate a server key in the environment settings page.'
-                    );
+                    throw new Error('Using local evaluation requires a server-side environment key');
                 }
-                this.environmentDataPollingManager = new EnvironmentDataPollingManager(
-                    this,
-                    this.environmentRefreshIntervalSeconds
-                );
-                this.environmentDataPollingManager.start();
-                this.updateEnvironment();
+                if (this.environmentRefreshIntervalSeconds > 0){
+                    this.environmentDataPollingManager = new EnvironmentDataPollingManager(
+                        this,
+                        this.environmentRefreshIntervalSeconds,
+                        this.logger,
+                    );
+                    this.environmentDataPollingManager.start();
+                }
             }
 
             if (data.enableAnalytics) {
@@ -178,18 +167,21 @@ export class Flagsmith {
         if (!!cachedItem) {
             return cachedItem;
         }
-        if (this.enableLocalEvaluation && !this.offlineMode) {
-            return new Promise((resolve, reject) =>
-                this.environmentPromise!.then(() => {
-                    resolve(this.getEnvironmentFlagsFromDocument());
-                }).catch(e => reject(e))
-            );
+        try {
+            if (this.enableLocalEvaluation || this.offlineMode) {
+                return await this.getEnvironmentFlagsFromDocument();
+            }
+            return await this.getEnvironmentFlagsFromApi();
+        } catch (error) {
+            if (!this.defaultFlagHandler) {
+                throw new Error('getEnvironmentFlags failed and no default flag handler was provided', { cause: error });
+            }
+            this.logger.error(error, 'getEnvironmentFlags failed');
+            return new Flags({
+                flags: {},
+                defaultFlagHandler: this.defaultFlagHandler
+            });
         }
-        if (this.environment) {
-            return this.getEnvironmentFlagsFromDocument();
-        }
-
-        return this.getEnvironmentFlagsFromApi();
     }
 
     /**
@@ -217,18 +209,21 @@ export class Flagsmith {
             return cachedItem;
         }
         traits = traits || {};
-        if (this.enableLocalEvaluation) {
-            return new Promise((resolve, reject) =>
-                this.environmentPromise!.then(() => {
-                    resolve(this.getIdentityFlagsFromDocument(identifier, traits || {}));
-                }).catch(e => reject(e))
-            );
+        try {
+            if (this.enableLocalEvaluation || this.offlineMode) {
+                return await this.getIdentityFlagsFromDocument(identifier, traits || {});
+            }
+            return await this.getIdentityFlagsFromApi(identifier, traits, transient);
+        } catch (error) {
+            if (!this.defaultFlagHandler) {
+                throw new Error('getIdentityFlags failed and no default flag handler was provided', { cause: error })
+            }
+            this.logger.error(error, 'getIdentityFlags failed');
+            return new Flags({
+                flags: {},
+                defaultFlagHandler: this.defaultFlagHandler
+            });
         }
-        if (this.offlineMode) {
-            return this.getIdentityFlagsFromDocument(identifier, traits || {});
-        }
-
-        return this.getIdentityFlagsFromApi(identifier, traits, transient);
     }
 
     /**
@@ -242,66 +237,69 @@ export class Flagsmith {
             Flagsmith, e.g. {"num_orders": 10}
      * @returns Segments that the given identity belongs to.
      */
-    getIdentitySegments(
+    async getIdentitySegments(
         identifier: string,
         traits?: { [key: string]: any }
     ): Promise<SegmentModel[]> {
         if (!identifier) {
             throw new Error('`identifier` argument is missing or invalid.');
         }
+        if (!this.enableLocalEvaluation) {
+            this.logger.error('This function is only permitted with local evaluation.');
+            return Promise.resolve([]);
+        }
 
         traits = traits || {};
-        if (this.enableLocalEvaluation) {
-            return new Promise((resolve, reject) => {
-                return this.environmentPromise!.then(() => {
-                    const identityModel = this.getIdentityModel(
-                        identifier,
-                        Object.keys(traits || {}).map(key => ({
-                            key,
-                            value: traits?.[key]
-                        }))
-                    );
+        const environment = await this.getEnvironment();
+        const identityModel = this.getIdentityModel(
+            environment,
+            identifier,
+            Object.keys(traits || {}).map(key => ({
+                key,
+                value: traits?.[key]
+            }))
+        );
 
-                    const segments = getIdentitySegments(this.environment, identityModel);
-                    return resolve(segments);
-                }).catch(e => reject(e));
-            });
+        return getIdentitySegments(environment, identityModel);
+    }
+
+    private async fetchEnvironment(): Promise<EnvironmentModel> {
+        const deferred = new Deferred<EnvironmentModel>();
+        this.environmentPromise = deferred.promise;
+        try {
+            const environment = await this.getEnvironmentFromApi();
+            this.environment = environment;
+            if (environment.identityOverrides?.length) {
+                this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>(
+                    environment.identityOverrides.map(identity => [identity.identifier, identity])
+                );
+            }
+            deferred.resolve(environment);
+            return deferred.promise;
+        } catch (error) {
+            deferred.reject(error);
+            return deferred.promise;
+        } finally {
+            this.environmentPromise = undefined;
         }
-        console.error('This function is only permitted with local evaluation.');
-        return Promise.resolve([]);
     }
 
     /**
-     * Updates the environment state for local flag evaluation.
-     * Sets a local promise to prevent race conditions in getIdentityFlags / getIdentitySegments.
-     * You only need to call this if you wish to bypass environmentRefreshIntervalSeconds.
+     * Fetch the latest environment state from the Flagsmith API to use for local flag evaluation.
+     *
+     * If the environment is currently being fetched, calling this method will not cause additional fetches.
      */
-    async updateEnvironment() {
+    async updateEnvironment(): Promise<void> {
         try {
-            const request = this.getEnvironmentFromApi();
-            if (!this.environmentPromise) {
-                this.environmentPromise = request.then(res => {
-                    this.environment = res;
-                });
-                await this.environmentPromise;
-            } else {
-                this.environment = await request;
+            if (this.environmentPromise) {
+                await this.environmentPromise
+                return
             }
-            if (this.environment.identityOverrides?.length) {
-                this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>(
-                    this.environment.identityOverrides.map(identity => [
-                        identity.identifier,
-                        identity
-                    ])
-                );
-            }
-            if (this.onEnvironmentChange) {
-                this.onEnvironmentChange(null, this.environment);
-            }
+            const environment = await this.fetchEnvironment();
+            this.onEnvironmentChange(null, environment);
         } catch (e) {
-            if (this.onEnvironmentChange) {
-                this.onEnvironmentChange(e as Error, this.environment);
-            }
+            this.logger.error(e, 'updateEnvironment failed');
+            this.onEnvironmentChange(e as Error);
         }
     }
 
@@ -335,6 +333,7 @@ export class Flagsmith {
             },
             this.retries,
             this.requestTimeoutMs,
+            this.requestRetryDelayMilliseconds,
             this.customFetch,
         );
 
@@ -350,7 +349,25 @@ export class Flagsmith {
     /**
      * This promise ensures that the environment is retrieved before attempting to locally evaluate.
      */
-    private environmentPromise: Promise<any> | undefined;
+    private environmentPromise?: Promise<EnvironmentModel>;
+
+    /**
+     * Returns the current environment, fetching it from the API if needed.
+     *
+     * Calling this method concurrently while the environment is being fetched will not cause additional requests.
+     */
+    async getEnvironment(): Promise<EnvironmentModel> {
+        if (this.offlineHandler) {
+            return this.offlineHandler.getEnvironment();
+        }
+        if (this.environment) {
+            return this.environment;
+        }
+        if (!this.environmentPromise) {
+            this.environmentPromise = this.fetchEnvironment();
+        }
+        return this.environmentPromise;
+    }
 
     private async getEnvironmentFromApi() {
         if (!this.environmentUrl) {
@@ -361,8 +378,9 @@ export class Flagsmith {
     }
 
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
+        const environment = await this.getEnvironment();
         const flags = Flags.fromFeatureStateModels({
-            featureStates: getEnvironmentFeatureStates(this.environment),
+            featureStates: getEnvironmentFeatureStates(environment),
             analyticsProcessor: this.analyticsProcessor,
             defaultFlagHandler: this.defaultFlagHandler
         });
@@ -376,7 +394,9 @@ export class Flagsmith {
         identifier: string,
         traits: { [key: string]: any }
     ): Promise<Flags> {
+        const environment = await this.getEnvironment();
         const identityModel = this.getIdentityModel(
+            environment,
             identifier,
             Object.keys(traits).map(key => ({
                 key,
@@ -384,7 +404,7 @@ export class Flagsmith {
             }))
         );
 
-        const featureStates = getIdentityFeatureStates(this.environment, identityModel);
+        const featureStates = getIdentityFeatureStates(environment, identityModel);
 
         const flags = Flags.fromFeatureStateModels({
             featureStates: featureStates,
@@ -404,30 +424,16 @@ export class Flagsmith {
         if (!this.environmentFlagsUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
-        try {
-            const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
-            const flags = Flags.fromAPIFlags({
-                apiFlags: apiFlags,
-                analyticsProcessor: this.analyticsProcessor,
-                defaultFlagHandler: this.defaultFlagHandler
-            });
-            if (!!this.cache) {
-                await this.cache.set('flags', flags);
-            }
-            return flags;
-        } catch (e) {
-            if (this.offlineHandler) {
-                return this.getEnvironmentFlagsFromDocument();
-            }
-            if (this.defaultFlagHandler) {
-                return new Flags({
-                    flags: {},
-                    defaultFlagHandler: this.defaultFlagHandler
-                });
-            }
-
-            throw e;
+        const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
+        const flags = Flags.fromAPIFlags({
+            apiFlags: apiFlags,
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler
+        });
+        if (!!this.cache) {
+            await this.cache.set('flags', flags);
         }
+        return flags;
     }
 
     private async getIdentityFlagsFromApi(
@@ -438,41 +444,32 @@ export class Flagsmith {
         if (!this.identitiesUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
-        try {
-            const data = generateIdentitiesData(identifier, traits, transient);
-            const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
-            const flags = Flags.fromAPIFlags({
-                apiFlags: jsonResponse['flags'],
-                analyticsProcessor: this.analyticsProcessor,
-                defaultFlagHandler: this.defaultFlagHandler
-            });
-            if (!!this.cache) {
-                await this.cache.set(`flags-${identifier}`, flags);
-            }
-            return flags;
-        } catch (e) {
-            if (this.offlineHandler) {
-                return this.getIdentityFlagsFromDocument(identifier, traits);
-            }
-            if (this.defaultFlagHandler) {
-                return new Flags({
-                    flags: {},
-                    defaultFlagHandler: this.defaultFlagHandler
-                });
-            }
-
-            throw e;
+        const data = generateIdentitiesData(identifier, traits, transient);
+        const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
+        const flags = Flags.fromAPIFlags({
+            apiFlags: jsonResponse['flags'],
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler
+        });
+        if (!!this.cache) {
+            await this.cache.set(`flags-${identifier}`, flags);
         }
+        return flags;
     }
 
-    private getIdentityModel(identifier: string, traits: { key: string; value: any }[]) {
+    private getIdentityModel(
+        environment: EnvironmentModel,
+        identifier: string,
+        traits: { key: string; value: any }[]
+    ) {
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
-        let identityWithOverrides = this.identitiesWithOverridesByIdentifier?.get(identifier);
+        let identityWithOverrides =
+            this.identitiesWithOverridesByIdentifier?.get(identifier);
         if (identityWithOverrides) {
             identityWithOverrides.updateTraits(traitModels);
             return identityWithOverrides;
         }
-        return new IdentityModel('0', traitModels, [], this.environment.apiKey, identifier);
+        return new IdentityModel('0', traitModels, [], environment.apiKey, identifier);
     }
 }
 

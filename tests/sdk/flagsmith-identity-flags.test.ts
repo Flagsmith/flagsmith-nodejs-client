@@ -1,16 +1,18 @@
 import Flagsmith from '../../sdk/index.js';
-import { fetch, environmentJSON, flagsmith, identitiesJSON, identityWithTransientTraitsJSON, transientIdentityJSON } from './utils.js';
+import {
+  fetch,
+  environmentJSON,
+  flagsmith,
+  identitiesJSON,
+  identityWithTransientTraitsJSON,
+  transientIdentityJSON,
+  badFetch
+} from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
 
 vi.mock('../../sdk/polling_manager');
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-
 test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON));
   const identifier = 'identifier';
 
   const flg = flagsmith();
@@ -23,7 +25,6 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_no_traits', as
 });
 
 test('test_get_identity_flags_uses_environment_when_local_environment_no_traits', async () => {
-  fetch.mockResolvedValue(new Response(environmentJSON))
   const identifier = 'identifier';
 
   const flg = flagsmith({
@@ -40,7 +41,6 @@ test('test_get_identity_flags_uses_environment_when_local_environment_no_traits'
 });
 
 test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON))
   const identifier = 'identifier';
   const traits = { some_trait: 'some_value' };
   const flg = flagsmith();
@@ -53,8 +53,6 @@ test('test_get_identity_flags_calls_api_when_no_local_environment_with_traits', 
 });
 
 test('test_default_flag_is_not_used_when_identity_flags_returned', async () => {
-  fetch.mockResolvedValue(new Response(identitiesJSON))
-
   const defaultFlag = new DefaultFlag('some-default-value', true);
 
   const defaultFlagHandler = (featureName: string) => defaultFlag;
@@ -125,7 +123,6 @@ test('test_default_flag_is_used_when_no_identity_flags_returned_and_no_custom_de
   expect(flag.enabled).toBe(false);
 });
 
-
 test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled', async () => {
   fetch.mockResolvedValue(new Response(environmentJSON));
   const identifier = 'identifier';
@@ -133,7 +130,6 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
   const flg = flagsmith({
       environmentKey: 'ser.key',
       enableLocalEvaluation: true,
-
   });
 
   const identityFlags = (await flg.getIdentityFlags(identifier))
@@ -170,10 +166,10 @@ test('test_transient_identity', async () => {
 test('test_identity_with_transient_traits', async () => {
   fetch.mockResolvedValue(new Response(identityWithTransientTraitsJSON));
   const identifier = 'transient_trait_identifier';
-  const traits = { 
+  const traits = {
     some_trait: 'some_value',
     another_trait: {value: 'another_value', transient: true},
-    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false} 
+    explicitly_non_transient_trait: {value: 'non_transient_value', transient: false}
   }
   const traitsInRequest = [
     {
@@ -206,3 +202,12 @@ test('test_identity_with_transient_traits', async () => {
   expect(identityFlags[0].value).toBe('some-identity-with-transient-trait-value');
   expect(identityFlags[0].featureName).toBe('some_feature');
 });
+
+test('getIdentityFlags fails if API call failed and no default flag handler was provided', async () => {
+  const flg = flagsmith({
+    fetch: badFetch,
+  })
+  await expect(flg.getIdentityFlags('user'))
+      .rejects
+      .toThrow('getIdentityFlags failed and no default flag handler was provided')
+})
