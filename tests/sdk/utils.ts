@@ -24,8 +24,8 @@ export const fetch = vi.fn((url: string, options?: RequestInit) => {
     if (!headers) throw new Error('missing request headers')
     const env = headers['X-Environment-Key'];
     if (!env) return Promise.resolve(new Response('missing x-environment-key header', { status: 404 }));
-    if (env.startsWith('ser.')) {
-        if (url.includes('/environment-document')) {
+    if (url.includes('/environment-document')) {
+        if (env.startsWith('ser.')) {
             return Promise.resolve(new Response(environmentJSON, { status: 200 }))
         }
         return Promise.resolve(new Response('environment-document called without a server-side key', { status: 401 }))
