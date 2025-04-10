@@ -1,16 +1,14 @@
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
 
+type FlagValue = string | number | boolean | undefined;
+
 export class BaseFlag {
     enabled: boolean;
-    value: string | number | boolean | undefined;
+    value: FlagValue;
     isDefault: boolean;
 
-    constructor(
-        value: string | number | boolean | undefined,
-        enabled: boolean,
-        isDefault: boolean
-    ) {
+    constructor(value: FlagValue, enabled: boolean, isDefault: boolean) {
         this.value = value;
         this.enabled = enabled;
         this.isDefault = isDefault;
@@ -18,7 +16,7 @@ export class BaseFlag {
 }
 
 export class DefaultFlag extends BaseFlag {
-    constructor(value: string | number | boolean | undefined, enabled: boolean) {
+    constructor(value: FlagValue, enabled: boolean) {
         super(value, enabled, true);
     }
 }
@@ -28,7 +26,7 @@ export class Flag extends BaseFlag {
     featureName: string;
 
     constructor(params: {
-        value: string | number | boolean | undefined;
+        value: FlagValue;
         enabled: boolean;
         isDefault?: boolean;
         featureId: number;
@@ -82,7 +80,7 @@ export class Flags {
         defaultFlagHandler?: (f: string) => DefaultFlag;
         identityID?: string | number;
     }): Flags {
-        const flags: { [key: string]: any } = {};
+        const flags: { [key: string]: Flag } = {};
         for (const fs of data.featureStates) {
             flags[fs.feature.name] = Flag.fromFeatureStateModel(fs, data.identityID);
         }
@@ -98,7 +96,7 @@ export class Flags {
         analyticsProcessor?: AnalyticsProcessor;
         defaultFlagHandler?: (v: string) => DefaultFlag;
     }): Flags {
-        const flags: { [key: string]: any } = {};
+        const flags: { [key: string]: Flag } = {};
 
         for (const flagData of data.apiFlags) {
             flags[flagData['feature']['name']] = Flag.fromAPIFlag(flagData);
@@ -124,7 +122,6 @@ export class Flags {
             }
 
             return { enabled: false, isDefault: true, value: undefined };
-
         }
 
         if (this.analyticsProcessor && flag.featureId) {
@@ -134,7 +131,7 @@ export class Flags {
         return flag;
     }
 
-    getFeatureValue(featureName: string): any {
+    getFeatureValue(featureName: string): FlagValue {
         return this.getFlag(featureName).value;
     }
 
