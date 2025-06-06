@@ -1,6 +1,6 @@
-import {BinaryLike, createHash} from "node:crypto";
+import { BinaryLike, createHash } from 'node:crypto';
 
-const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex')
+const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
 const makeRepeated = (arr: Array<any>, repeats: number) =>
     Array.from({ length: repeats }, () => arr).flat();
@@ -18,7 +18,7 @@ export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations =
     let toHash = makeRepeated(objectIds, iterations).join(',');
     const hashedValue = md5(toHash);
     const hashedInt = BigInt('0x' + hashedValue);
-    const value = (Number((hashedInt % 9999n)) / 9998.0) * 100;
+    const value = (Number(hashedInt % 9999n) / 9998.0) * 100;
 
     // we ignore this for it's nearly impossible use case to catch
     /* istanbul ignore next */

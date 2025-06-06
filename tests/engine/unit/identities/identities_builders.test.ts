@@ -47,7 +47,7 @@ test('test_build_identity_model_from_dictionary_uses_identity_feature_list_for_i
         id: 1,
         identifier: 'test-identity',
         environment_api_key: 'api-key',
-        created_date: '2021-08-22T06:25:23.406995Z',
+        created_date: '2021-08-22T06:25:23.406995Z'
     };
 
     const identityModel = buildIdentityModel(identity_dict);

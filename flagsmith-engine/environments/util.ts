@@ -15,8 +15,8 @@ export function buildEnvironmentModel(environmentJSON: any) {
     );
     environmentModel.featureStates = featureStates;
     if (!!environmentJSON.identity_overrides) {
-        environmentModel.identityOverrides = environmentJSON.identity_overrides.map((identityData: any) =>
-            buildIdentityModel(identityData)
+        environmentModel.identityOverrides = environmentJSON.identity_overrides.map(
+            (identityData: any) => buildIdentityModel(identityData)
         );
     }
     return environmentModel;

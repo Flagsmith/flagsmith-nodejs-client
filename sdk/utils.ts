@@ -1,5 +1,5 @@
-import {Fetch, FlagsmithTraitValue, ITraitConfig} from './types.js';
-import {Dispatcher} from "undici-types";
+import { Fetch, FlagsmithTraitValue, ITraitConfig } from './types.js';
+import { Dispatcher } from 'undici-types';
 
 type Traits = { [key: string]: ITraitConfig | FlagsmithTraitValue };
 
@@ -15,12 +15,12 @@ export function generateIdentitiesData(identifier: string, traits: Traits, trans
             return {
                 trait_key: key,
                 trait_value: value?.value,
-                transient: value?.transient,
+                transient: value?.transient
             };
         } else {
             return {
                 trait_key: key,
-                trait_value: value,
+                trait_value: value
             };
         }
     });
@@ -47,7 +47,7 @@ export const retryFetch = (
     retries: number = 3,
     timeoutMs: number = 10, // set an overall timeout for this function
     retryDelayMs: number = 1000,
-    customFetch: Fetch,
+    customFetch: Fetch
 ): Promise<Response> => {
     const retryWrapper = async (n: number): Promise<Response> => {
         try {
