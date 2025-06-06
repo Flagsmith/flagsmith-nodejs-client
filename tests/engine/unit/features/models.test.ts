@@ -66,11 +66,11 @@ test('test_feature_state_get_value_mv_values', () => {
         const mvFeatureState = new FeatureStateModel(myFeature, true, 1);
         mvFeatureState.multivariateFeatureStateValues = [
             mvFeatureStateValue1,
-            mvFeatureStateValue2,
+            mvFeatureStateValue2
         ];
 
         mvFeatureState.setValue(mvFeatureControlValue);
 
-        expect(mvFeatureState.getValue("test")).toBe(mvFeatureValue2);
+        expect(mvFeatureState.getValue('test')).toBe(mvFeatureValue2);
     }
 });

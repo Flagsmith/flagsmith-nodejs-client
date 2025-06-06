@@ -1,29 +1,24 @@
 export {
-  AnalyticsProcessor,
-  AnalyticsProcessorOptions,
-  FlagsmithAPIError,
-  FlagsmithClientError,
-  EnvironmentDataPollingManager,
-  FlagsmithCache,
-  DefaultFlag,
-  Flags,
-  Flagsmith,
+    AnalyticsProcessor,
+    AnalyticsProcessorOptions,
+    FlagsmithAPIError,
+    FlagsmithClientError,
+    EnvironmentDataPollingManager,
+    FlagsmithCache,
+    DefaultFlag,
+    Flags,
+    Flagsmith
 } from './sdk/index.js';
 
-export {
-  BaseOfflineHandler,
-  LocalFileHandler,
-} from './sdk/offline_handlers.js';
+export { BaseOfflineHandler, LocalFileHandler } from './sdk/offline_handlers.js';
+
+export { FlagsmithConfig } from './sdk/types.js';
 
 export {
-  FlagsmithConfig
-} from './sdk/types.js'
-
-export {
-  EnvironmentModel,
-  FeatureStateModel,
-  IdentityModel,
-  TraitModel,
-  SegmentModel,
-  OrganisationModel
+    EnvironmentModel,
+    FeatureStateModel,
+    IdentityModel,
+    TraitModel,
+    SegmentModel,
+    OrganisationModel
 } from './flagsmith-engine/index.js';

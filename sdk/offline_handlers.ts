@@ -3,7 +3,7 @@ import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js'
 import { EnvironmentModel } from '../flagsmith-engine/environments/models.js';
 
 export class BaseOfflineHandler {
-    getEnvironment() : EnvironmentModel {
+    getEnvironment(): EnvironmentModel {
         throw new Error('Not implemented');
     }
 }

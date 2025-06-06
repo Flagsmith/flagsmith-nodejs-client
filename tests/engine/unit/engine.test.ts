@@ -73,11 +73,7 @@ test('test_identity_get_all_feature_states_with_traits_hideDisabledFlags', () =>
     const env = environmentWithSegmentOverride();
     env.project.hideDisabledFlags = true;
 
-    const featureStates = getIdentityFeatureStates(
-        env,
-        identityInSegment(),
-        [trait_models]
-    );
+    const featureStates = getIdentityFeatureStates(env, identityInSegment(), [trait_models]);
     expect(featureStates.length).toBe(0);
 });
 

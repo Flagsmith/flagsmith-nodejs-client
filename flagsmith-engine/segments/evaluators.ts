@@ -67,11 +67,10 @@ export function traitsMatchSegmentCondition(
     }
     const traits = identityTraits.filter(t => t.traitKey === condition.property_);
     const trait = traits.length > 0 ? traits[0] : undefined;
-    if (condition.operator === IS_SET ) {
+    if (condition.operator === IS_SET) {
         return !!trait;
-    } else if (condition.operator === IS_NOT_SET){
+    } else if (condition.operator === IS_NOT_SET) {
         return trait == undefined;
     }
     return trait ? condition.matchesTraitValue(trait.traitValue) : false;
-
 }
