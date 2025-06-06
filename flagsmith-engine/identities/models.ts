@@ -19,7 +19,7 @@ export class IdentityModel {
         environmentApiKey: string,
         identifier: string,
         identityUuid?: string,
-        djangoID?: number,
+        djangoID?: number
     ) {
         this.identityUuid = identityUuid || uuidv4();
         this.createdDate = Date.parse(created_date) || Date.now();

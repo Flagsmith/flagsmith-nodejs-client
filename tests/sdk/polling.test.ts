@@ -39,7 +39,6 @@ test('test_polling_manager_handles_double_start', async () => {
     expect(flagsmith.updateEnvironment).toHaveBeenCalled();
 });
 
-
 test('test_polling_manager_calls_update_environment_on_each_refresh', async () => {
     const flagsmith = new Flagsmith({
         environmentKey: 'key'

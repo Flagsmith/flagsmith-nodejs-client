@@ -3,11 +3,9 @@ import { EnvironmentModel } from '../../../flagsmith-engine/environments/models.
 import { buildEnvironmentModel } from '../../../flagsmith-engine/environments/util.js';
 import { IdentityModel } from '../../../flagsmith-engine/identities/models.js';
 import { buildIdentityModel } from '../../../flagsmith-engine/identities/util.js';
-import * as testData from '../engine-tests/engine-test-data/data/environment_n9fbf9h3v4fFgH3U3ngWhb.json'
+import * as testData from '../engine-tests/engine-test-data/data/environment_n9fbf9h3v4fFgH3U3ngWhb.json';
 
-function extractTestCases(
-    data: any
-): {
+function extractTestCases(data: any): {
     environment: EnvironmentModel;
     identity: IdentityModel;
     response: any;

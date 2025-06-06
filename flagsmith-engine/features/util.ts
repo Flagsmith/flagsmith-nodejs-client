@@ -19,23 +19,23 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
         featuresStateModelJSON.featurestate_uuid
     );
 
-    featureStateModel.featureSegment = featuresStateModelJSON.feature_segment ?
-        buildFeatureSegment(featuresStateModelJSON.feature_segment) :
-        undefined;
+    featureStateModel.featureSegment = featuresStateModelJSON.feature_segment
+        ? buildFeatureSegment(featuresStateModelJSON.feature_segment)
+        : undefined;
 
     const multivariateFeatureStateValues = featuresStateModelJSON.multivariate_feature_state_values
         ? featuresStateModelJSON.multivariate_feature_state_values.map((fsv: any) => {
-            const featureOption = new MultivariateFeatureOptionModel(
-                fsv.multivariate_feature_option.value,
-                fsv.multivariate_feature_option.id
-            );
-            return new MultivariateFeatureStateValueModel(
-                featureOption,
-                fsv.percentage_allocation,
-                fsv.id,
-                fsv.mv_fs_value_uuid
-            );
-        })
+              const featureOption = new MultivariateFeatureOptionModel(
+                  fsv.multivariate_feature_option.value,
+                  fsv.multivariate_feature_option.id
+              );
+              return new MultivariateFeatureStateValueModel(
+                  featureOption,
+                  fsv.percentage_allocation,
+                  fsv.id,
+                  fsv.mv_fs_value_uuid
+              );
+          })
         : [];
 
     featureStateModel.multivariateFeatureStateValues = multivariateFeatureStateValues;
