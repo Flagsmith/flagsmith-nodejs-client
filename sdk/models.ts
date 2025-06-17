@@ -28,7 +28,7 @@ export class BaseFlag {
 }
 
 /**
- * A {@BaseFlag} returned by a default flag handler when flag evaluation fails.
+ * A {@link BaseFlag} returned by a default flag handler when flag evaluation fails.
  * @see FlagsmithConfig#defaultFlagHandler
  */
 export class DefaultFlag extends BaseFlag {
