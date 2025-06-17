@@ -7,7 +7,7 @@ import { SegmentModel } from './segments/models.js';
 import { FeatureStateNotFound } from './utils/errors.js';
 
 export { EnvironmentModel } from './environments/models.js';
-export { FeatureStateModel } from './features/models.js';
+export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
