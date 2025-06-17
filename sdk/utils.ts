@@ -1,11 +1,11 @@
-import {Fetch, FlagsmithTraitValue, ITraitConfig} from './types.js';
+import {Fetch, FlagsmithTraitValue, TraitConfig} from './types.js';
 import {Dispatcher} from "undici-types";
 
-type Traits = { [key: string]: ITraitConfig | FlagsmithTraitValue };
+type Traits = { [key: string]: TraitConfig | FlagsmithTraitValue };
 
 export function isTraitConfig(
-    traitValue: ITraitConfig | FlagsmithTraitValue
-): traitValue is ITraitConfig {
+    traitValue: TraitConfig | FlagsmithTraitValue
+): traitValue is TraitConfig {
     return !!traitValue && typeof traitValue == 'object' && traitValue.value !== undefined;
 }
 

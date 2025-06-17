@@ -5,6 +5,7 @@ export {
   FlagsmithClientError,
   EnvironmentDataPollingManager,
   FlagsmithCache,
+  BaseFlag,
   DefaultFlag,
   Flags,
   Flagsmith,
@@ -16,8 +17,10 @@ export {
 } from './sdk/offline_handlers.js';
 
 export {
-  FlagsmithConfig
-} from './sdk/types.js'
+  FlagsmithConfig,
+  FlagsmithValue,
+  TraitConfig,
+} from './sdk/types.js';
 
 export {
   EnvironmentModel,
