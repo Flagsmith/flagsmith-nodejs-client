@@ -1,6 +1,8 @@
-import { removeSemverSuffix } from "../segments/util.js";
+import { removeSemverSuffix } from '../segments/util.js';
 
-export function getCastingFunction(traitType: 'boolean' | 'string' | 'number' | 'semver' | any): CallableFunction {
+export function getCastingFunction(
+    traitType: 'boolean' | 'string' | 'number' | 'semver' | any
+): CallableFunction {
     switch (traitType) {
         case 'boolean':
             return (x: any) => !['False', 'false'].includes(x);

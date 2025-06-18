@@ -1,11 +1,14 @@
 import { Dispatcher } from 'undici-types';
-import { getEnvironmentFeatureStates, getIdentityFeatureStates } from '../flagsmith-engine/index.js';
+import {
+    getEnvironmentFeatureStates,
+    getIdentityFeatureStates
+} from '../flagsmith-engine/index.js';
 import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
 import { IdentityModel } from '../flagsmith-engine/index.js';
 import { TraitModel } from '../flagsmith-engine/index.js';
 
-import {ANALYTICS_ENDPOINT, AnalyticsProcessor} from './analytics.js';
+import { ANALYTICS_ENDPOINT, AnalyticsProcessor } from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
 import { FlagsmithAPIError } from './errors.js';
 
@@ -14,7 +17,13 @@ import { EnvironmentDataPollingManager } from './polling_manager.js';
 import { Deferred, generateIdentitiesData, retryFetch } from './utils.js';
 import { SegmentModel } from '../flagsmith-engine/index.js';
 import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js';
-import { Fetch, FlagsmithCache, FlagsmithConfig, FlagsmithTraitValue, ITraitConfig } from './types.js';
+import {
+    Fetch,
+    FlagsmithCache,
+    FlagsmithConfig,
+    FlagsmithTraitValue,
+    ITraitConfig
+} from './types.js';
 import { pino, Logger } from 'pino';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
@@ -50,7 +59,7 @@ const DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
  * const bannerVariation: string = identityFlags.getFeatureValue('banner_flag')
  *
  * @see FlagsmithConfig
-*/
+ */
 export class Flagsmith {
     environmentKey?: string = undefined;
     apiUrl?: string = undefined;
@@ -128,20 +137,23 @@ export class Flagsmith {
 
             const apiUrl = data.apiUrl || DEFAULT_API_URL;
             this.apiUrl = apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`;
-            this.analyticsUrl = this.analyticsUrl || new URL(ANALYTICS_ENDPOINT, new Request(this.apiUrl).url).href
+            this.analyticsUrl =
+                this.analyticsUrl || new URL(ANALYTICS_ENDPOINT, new Request(this.apiUrl).url).href;
             this.environmentFlagsUrl = `${this.apiUrl}flags/`;
             this.identitiesUrl = `${this.apiUrl}identities/`;
             this.environmentUrl = `${this.apiUrl}environment-document/`;
 
             if (this.enableLocalEvaluation) {
                 if (!this.environmentKey.startsWith('ser.')) {
-                    throw new Error('Using local evaluation requires a server-side environment key');
+                    throw new Error(
+                        'Using local evaluation requires a server-side environment key'
+                    );
                 }
-                if (this.environmentRefreshIntervalSeconds > 0){
+                if (this.environmentRefreshIntervalSeconds > 0) {
                     this.environmentDataPollingManager = new EnvironmentDataPollingManager(
                         this,
                         this.environmentRefreshIntervalSeconds,
-                        this.logger,
+                        this.logger
                     );
                     this.environmentDataPollingManager.start();
                 }
@@ -152,8 +164,8 @@ export class Flagsmith {
                     environmentKey: this.environmentKey,
                     analyticsUrl: this.analyticsUrl,
                     requestTimeoutMs: this.requestTimeoutMs,
-                    logger: this.logger,
-                })
+                    logger: this.logger
+                });
             }
         }
     }
@@ -174,7 +186,10 @@ export class Flagsmith {
             return await this.getEnvironmentFlagsFromApi();
         } catch (error) {
             if (!this.defaultFlagHandler) {
-                throw new Error('getEnvironmentFlags failed and no default flag handler was provided', { cause: error });
+                throw new Error(
+                    'getEnvironmentFlags failed and no default flag handler was provided',
+                    { cause: error }
+                );
             }
             this.logger.error(error, 'getEnvironmentFlags failed');
             return new Flags({
@@ -216,7 +231,10 @@ export class Flagsmith {
             return await this.getIdentityFlagsFromApi(identifier, traits, transient);
         } catch (error) {
             if (!this.defaultFlagHandler) {
-                throw new Error('getIdentityFlags failed and no default flag handler was provided', { cause: error })
+                throw new Error(
+                    'getIdentityFlags failed and no default flag handler was provided',
+                    { cause: error }
+                );
             }
             this.logger.error(error, 'getIdentityFlags failed');
             return new Flags({
@@ -292,8 +310,8 @@ export class Flagsmith {
     async updateEnvironment(): Promise<void> {
         try {
             if (this.environmentPromise) {
-                await this.environmentPromise
-                return
+                await this.environmentPromise;
+                return;
             }
             const environment = await this.fetchEnvironment();
             this.onEnvironmentChange(null, environment);
@@ -334,7 +352,7 @@ export class Flagsmith {
             this.retries,
             this.requestTimeoutMs,
             this.requestRetryDelayMilliseconds,
-            this.customFetch,
+            this.customFetch
         );
 
         if (data.status !== 200) {
@@ -463,8 +481,7 @@ export class Flagsmith {
         traits: { key: string; value: any }[]
     ) {
         const traitModels = traits.map(trait => new TraitModel(trait.key, trait.value));
-        let identityWithOverrides =
-            this.identitiesWithOverridesByIdentifier?.get(identifier);
+        let identityWithOverrides = this.identitiesWithOverridesByIdentifier?.get(identifier);
         if (identityWithOverrides) {
             identityWithOverrides.updateTraits(traitModels);
             return identityWithOverrides;

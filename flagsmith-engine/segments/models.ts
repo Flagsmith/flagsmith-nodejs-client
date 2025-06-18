@@ -27,21 +27,25 @@ export const matchingFunctions = {
         thisValue >= otherValue,
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
     [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
-        !!otherValue && otherValue.includes(thisValue),
+        !!otherValue && otherValue.includes(thisValue)
 };
 
 export const semverMatchingFunction = {
     ...matchingFunctions,
-    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) => semver.eq(thisValue, otherValue),
-    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) => semver.gt(otherValue, thisValue),
+    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) =>
+        semver.eq(thisValue, otherValue),
+    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) =>
+        semver.gt(otherValue, thisValue),
     [CONDITION_OPERATORS.GREATER_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
         semver.gte(otherValue, thisValue),
-    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) => semver.gt(thisValue, otherValue),
+    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) =>
+        semver.gt(thisValue, otherValue),
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
-        semver.gte(thisValue, otherValue),
-}
+        semver.gte(thisValue, otherValue)
+};
 
-export const getMatchingFunctions = (semver: boolean) => (semver ? semverMatchingFunction : matchingFunctions);
+export const getMatchingFunctions = (semver: boolean) =>
+    semver ? semverMatchingFunction : matchingFunctions;
 
 export class SegmentConditionModel {
     EXCEPTION_OPERATOR_METHODS: { [key: string]: string } = {
@@ -55,7 +59,11 @@ export class SegmentConditionModel {
     value: string | null | undefined;
     property_: string | null | undefined;
 
-    constructor(operator: string, value?: string | null | undefined, property?: string | null | undefined) {
+    constructor(
+        operator: string,
+        value?: string | null | undefined,
+        property?: string | null | undefined
+    ) {
         this.operator = operator;
         this.value = value;
         this.property_ = property;
@@ -64,24 +72,26 @@ export class SegmentConditionModel {
     matchesTraitValue(traitValue: any) {
         const evaluators: { [key: string]: CallableFunction } = {
             evaluateNotContains: (traitValue: any) => {
-                return typeof traitValue == "string" &&
+                return (
+                    typeof traitValue == 'string' &&
                     !!this.value &&
-                    !traitValue.includes(this.value?.toString());
+                    !traitValue.includes(this.value?.toString())
+                );
             },
             evaluateRegex: (traitValue: any) => {
                 return !!this.value && !!traitValue?.toString().match(new RegExp(this.value));
             },
             evaluateModulo: (traitValue: any) => {
                 if (isNaN(parseFloat(traitValue)) || !this.value) {
-                    return false
+                    return false;
                 }
-                const parts = (this.value).split("|");
+                const parts = this.value.split('|');
                 const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
-                return traitValue % divisor === reminder
+                return traitValue % divisor === reminder;
             },
             evaluateIn: (traitValue: any) => {
-                return this.value?.split(',').includes(traitValue.toString())
-            },
+                return this.value?.split(',').includes(traitValue.toString());
+            }
         };
 
         // TODO: move this logic to the evaluator module

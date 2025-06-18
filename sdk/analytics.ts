@@ -1,13 +1,13 @@
 import { pino, Logger } from 'pino';
-import { Fetch } from "./types.js";
-import { FlagsmithConfig } from "./types.js";
+import { Fetch } from './types.js';
+import { FlagsmithConfig } from './types.js';
 
 export const ANALYTICS_ENDPOINT = './analytics/flags/';
 
 /** Duration in seconds to wait before trying to flush collected data after {@link trackFeature} is called. **/
 const ANALYTICS_TIMER = 10;
 
-const DEFAULT_REQUEST_TIMEOUT_MS = 3000
+const DEFAULT_REQUEST_TIMEOUT_MS = 3000;
 
 export interface AnalyticsProcessorOptions {
     /** URL of the Flagsmith analytics events API endpoint
@@ -20,7 +20,7 @@ export interface AnalyticsProcessorOptions {
     requestTimeoutMs?: number;
     logger?: Logger;
     /** Custom {@link fetch} implementation to use for API requests. **/
-    fetch?: Fetch
+    fetch?: Fetch;
 
     /** @deprecated Use {@link analyticsUrl} instead. **/
     baseApiUrl?: string;
@@ -76,7 +76,9 @@ export class AnalyticsProcessor {
         } catch (error) {
             // We don't want failing to write analytics to cause any exceptions in the main
             // thread so we just swallow them here.
-            this.logger.warn('Failed to post analytics to Flagsmith API. Not clearing data, will retry.')
+            this.logger.warn(
+                'Failed to post analytics to Flagsmith API. Not clearing data, will retry.'
+            );
             return;
         } finally {
             this.currentFlush = undefined;
