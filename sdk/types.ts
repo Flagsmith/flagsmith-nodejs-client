@@ -5,7 +5,10 @@ import { Logger } from 'pino';
 import { BaseOfflineHandler } from './offline_handlers.js';
 import { Flagsmith } from './index.js';
 
-export type IFlagsmithValue<T = string | number | boolean | null> = T;
+/**
+ * A concrete type for the possible values of a feature.
+ */
+export type FlagsmithValue<T = string | number | boolean | null> = T;
 
 /**
  * Stores and retrieves {@link Flags} from a cache.
@@ -95,7 +98,7 @@ export interface FlagsmithConfig {
      * const defaultHandler = () => new DefaultFlag(undefined, false)
      *
      * // Enable only VIP flags by default
-     * const vipDefaultHandler = (key: string) => new Default(undefined, key.startsWith('vip_'))
+     * const vipDefaultHandler = (key: string) => new DefaultFlag(undefined, key.startsWith('vip_'))
      */
     defaultFlagHandler?: (flagKey: string) => DefaultFlag;
     cache?: FlagsmithCache;
@@ -116,9 +119,16 @@ export interface FlagsmithConfig {
     offlineHandler?: BaseOfflineHandler;
 }
 
-export interface ITraitConfig {
+/**
+ * Represents the configuration for a trait in Flagsmith.
+ *
+ * @property value The {@link FlagsmithTraitValue} for this trait.
+ * @property [transient] Indicates whether the trait should be persisted when used in a remote flag evaluation context.
+ * Defaults to false.
+ */
+export interface TraitConfig {
     value: FlagsmithTraitValue;
     transient?: boolean;
 }
 
-export declare type FlagsmithTraitValue = IFlagsmithValue;
+export declare type FlagsmithTraitValue = FlagsmithValue;

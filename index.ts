@@ -5,6 +5,7 @@ export {
     FlagsmithClientError,
     EnvironmentDataPollingManager,
     FlagsmithCache,
+    BaseFlag,
     DefaultFlag,
     Flags,
     Flagsmith
@@ -12,7 +13,7 @@ export {
 
 export { BaseOfflineHandler, LocalFileHandler } from './sdk/offline_handlers.js';
 
-export { FlagsmithConfig } from './sdk/types.js';
+export { FlagsmithConfig, FlagsmithValue, TraitConfig } from './sdk/types.js';
 
 export {
     EnvironmentModel,

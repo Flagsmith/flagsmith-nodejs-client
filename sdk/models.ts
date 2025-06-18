@@ -3,9 +3,21 @@ import { AnalyticsProcessor } from './analytics.js';
 
 type FlagValue = string | number | boolean | undefined;
 
+/**
+ * A Flagsmith feature. It has an enabled/disabled state, and an optional {@link FlagValue}.
+ */
 export class BaseFlag {
+    /**
+     * Indicates whether this feature is enabled.
+     */
     enabled: boolean;
+    /**
+     * An optional {@link FlagValue} for this feature.
+     */
     value: FlagValue;
+    /**
+     * If true, the state for this feature was determined by a default flag handler. See {@link DefaultFlag}.
+     */
     isDefault: boolean;
 
     constructor(value: FlagValue, enabled: boolean, isDefault: boolean) {
@@ -15,14 +27,27 @@ export class BaseFlag {
     }
 }
 
+/**
+ * A {@link BaseFlag} returned by a default flag handler when flag evaluation fails.
+ * @see FlagsmithConfig#defaultFlagHandler
+ */
 export class DefaultFlag extends BaseFlag {
     constructor(value: FlagValue, enabled: boolean) {
         super(value, enabled, true);
     }
 }
 
+/**
+ * A Flagsmith feature retrieved from a successful flag evaluation.
+ */
 export class Flag extends BaseFlag {
+    /**
+     * An identifier for this feature, unique in a single Flagsmith installation.
+     */
     featureId: number;
+    /**
+     * The programmatic name for this feature, unique per Flagsmith project.
+     */
     featureName: string;
 
     constructor(params: {

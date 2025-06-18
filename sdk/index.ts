@@ -22,14 +22,14 @@ import {
     FlagsmithCache,
     FlagsmithConfig,
     FlagsmithTraitValue,
-    ITraitConfig
+    TraitConfig
 } from './types.js';
 import { pino, Logger } from 'pino';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
-export { DefaultFlag, Flags } from './models.js';
+export { BaseFlag, DefaultFlag, Flags } from './models.js';
 export { EnvironmentDataPollingManager } from './polling_manager.js';
 export { FlagsmithCache, FlagsmithConfig } from './types.js';
 
@@ -206,13 +206,13 @@ export class Flagsmith {
      *
      * @param  {string} identifier a unique identifier for the identity in the current
             environment, e.g. email address, username, uuid
-     * @param  {{[key:string]:any | ITraitConfig}} traits? a dictionary of traits to add / update on the identity in
+     * @param  {{[key:string]:any | TraitConfig}} traits? a dictionary of traits to add / update on the identity in
             Flagsmith, e.g. {"num_orders": 10} or {age: {value: 30, transient: true}}
      * @returns Flags object holding all the flags for the given identity.
      */
     async getIdentityFlags(
         identifier: string,
-        traits?: { [key: string]: FlagsmithTraitValue | ITraitConfig },
+        traits?: { [key: string]: FlagsmithTraitValue | TraitConfig },
         transient: boolean = false
     ): Promise<Flags> {
         if (!identifier) {
@@ -456,7 +456,7 @@ export class Flagsmith {
 
     private async getIdentityFlagsFromApi(
         identifier: string,
-        traits: { [key: string]: FlagsmithTraitValue | ITraitConfig },
+        traits: { [key: string]: FlagsmithTraitValue | TraitConfig },
         transient: boolean = false
     ) {
         if (!this.identitiesUrl) {
