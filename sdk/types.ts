@@ -3,13 +3,12 @@ import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { Dispatcher } from 'undici-types';
 import { Logger } from 'pino';
 import { BaseOfflineHandler } from './offline_handlers.js';
-import { Flagsmith } from './index.js'
+import { Flagsmith } from './index.js';
 
 /**
  * A concrete type for the possible values of a feature.
  */
 export type FlagsmithValue<T = string | number | boolean | null> = T;
-
 
 /**
  * Stores and retrieves {@link Flags} from a cache.
@@ -29,7 +28,7 @@ export interface FlagsmithCache {
     set(key: string, value: Flags): Promise<void>;
 }
 
-export type Fetch = typeof fetch
+export type Fetch = typeof fetch;
 
 /**
  * The configuration options for a {@link Flagsmith} client.
@@ -56,7 +55,7 @@ export interface FlagsmithConfig {
     /**
      * Custom headers to use in all HTTP requests.
      */
-    customHeaders?: HeadersInit
+    customHeaders?: HeadersInit;
     /**
      * The network request timeout duration, in seconds.
      *
