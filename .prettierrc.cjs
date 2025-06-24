@@ -5,5 +5,13 @@ module.exports = {
     tabWidth: 4,
     trailingComma: 'none',
     useTabs: false,
-    arrowParens: 'avoid'
+    arrowParens: 'avoid',
+    overrides: [
+        {
+            files: ['*.yml', '*.yaml'],
+            options: {
+                tabWidth: 2
+            }
+        }
+    ]
 };
