@@ -1,5 +1,3 @@
-<img width="100%" src="https://github.com/Flagsmith/flagsmith/raw/main/static-files/hero.png"/>
-
 # Flagsmith NodeJS Client
 
 [![npm version](https://badge.fury.io/js/flagsmith-nodejs.svg)](https://badge.fury.io/js/flagsmith-nodejs)
