@@ -1,6 +1,5 @@
 import {
     EvaluationContext,
-    IdentityContext,
     SegmentCondition,
     SegmentContext,
     SegmentRule
@@ -8,13 +7,9 @@ import {
 import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
-import { EvaluationResult } from '../evaluationResult/models.js';
 
-export function getIdentitySegments(context: EvaluationContext): EvaluationResult['segments'] {
-    if (!context.identity || !context.segments) {
-        return [];
-    }
-
+export function getIdentitySegments(context: EvaluationContext): SegmentContext[] {
+    if (!context.identity || !context.segments) return [];
     return Object.values(context.segments).filter(segment =>
         evaluateIdentityInSegment(segment, context)
     );

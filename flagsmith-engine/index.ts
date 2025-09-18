@@ -51,7 +51,7 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.feature_key];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
-        const reason = getTargetingMatchReason(segmentOverride, segmentOverride?.segmentName);
+        const reason = getTargetingMatchReason(segmentOverride);
         const hasOverride = !!segmentOverride;
 
         flags.push({
