@@ -3,4 +3,5 @@
 
 npm run lint
 git add ./flagsmith-engine ./sdk ./tests ./index.ts ./.github
+npm run generate-engine-types
 npm run test
