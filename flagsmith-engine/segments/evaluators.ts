@@ -1,76 +1,123 @@
-import { EnvironmentModel } from '../environments/models.js';
-import { IdentityModel } from '../identities/models.js';
-import { TraitModel } from '../identities/traits/models.js';
-import { getHashedPercentateForObjIds } from '../utils/hashing/index.js';
-import { PERCENTAGE_SPLIT, IS_SET, IS_NOT_SET } from './constants.js';
-import { SegmentConditionModel, SegmentModel, SegmentRuleModel } from './models.js';
+import { EvaluationContext, IdentityContext, SegmentContext } from '../evaluationContext/models.js';
+import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
+import { SegmentConditionModel } from './models.js';
+import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
+import { EvaluationResult } from '../evaluationResult/models.js';
 
-export function getIdentitySegments(
-    environment: EnvironmentModel,
-    identity: IdentityModel,
-    overrideTraits?: TraitModel[]
-): SegmentModel[] {
-    return environment.project.segments.filter(segment =>
-        evaluateIdentityInSegment(identity, segment, overrideTraits)
+export function getIdentitySegments(context: EvaluationContext): EvaluationResult['segments'] {
+    if (!context.identity || !context.segments) {
+        return [];
+    }
+
+    return Object.values(context.segments).filter(segment =>
+        evaluateIdentityInSegment(segment, context)
     );
 }
 
 export function evaluateIdentityInSegment(
-    identity: IdentityModel,
-    segment: SegmentModel,
-    overrideTraits?: TraitModel[]
+    segment: SegmentContext,
+    context?: EvaluationContext
 ): boolean {
-    return (
+    const result =
         segment.rules.length > 0 &&
-        segment.rules.filter(rule =>
-            traitsMatchSegmentRule(
-                overrideTraits || identity.identityTraits,
-                rule,
-                segment.id,
-                identity.djangoID || identity.compositeKey
-            )
-        ).length === segment.rules.length
-    );
-}
+        segment.rules.filter(rule => {
+            const ruleResult = traitsMatchSegmentRule(rule, segment.key, context);
+            return ruleResult;
+        }).length === segment.rules.length;
 
-function traitsMatchSegmentRule(
-    identityTraits: TraitModel[],
-    rule: SegmentRuleModel,
-    segmentId: number | string,
-    identityId: number | string
-): boolean {
-    const matchesConditions =
-        rule.conditions.length > 0
-            ? rule.matchingFunction()(
-                  rule.conditions.map(condition =>
-                      traitsMatchSegmentCondition(identityTraits, condition, segmentId, identityId)
-                  )
-              )
-            : true;
-    return (
-        matchesConditions &&
-        rule.rules.filter(rule =>
-            traitsMatchSegmentRule(identityTraits, rule, segmentId, identityId)
-        ).length === rule.rules.length
-    );
+    return result;
 }
 
 export function traitsMatchSegmentCondition(
-    identityTraits: TraitModel[],
     condition: SegmentConditionModel,
-    segmentId: number | string,
-    identityId: number | string
+    segmentKey: string,
+    context?: EvaluationContext
 ): boolean {
-    if (condition.operator == PERCENTAGE_SPLIT) {
-        var hashedPercentage = getHashedPercentateForObjIds([segmentId, identityId]);
+    const traits = context?.identity?.traits || {};
+    const identityKey = context?.identity?.key || '';
+
+    if (condition.operator === PERCENTAGE_SPLIT) {
+        const hashedPercentage = getHashedPercentageForObjIds([segmentKey, identityKey]);
         return hashedPercentage <= parseFloat(String(condition.value));
     }
-    const traits = identityTraits.filter(t => t.traitKey === condition.property_);
-    const trait = traits.length > 0 ? traits[0] : undefined;
-    if (condition.operator === IS_SET) {
-        return !!trait;
-    } else if (condition.operator === IS_NOT_SET) {
-        return trait == undefined;
+    if (!condition.property) {
+        return false;
     }
-    return trait ? condition.matchesTraitValue(trait.traitValue) : false;
+    let traitValue = traits[condition.property];
+
+    if (condition?.property?.startsWith('$.')) {
+        traitValue = getContextValue(condition.property, context);
+    } else {
+        traitValue = traits[condition.property];
+    }
+
+    if (condition.operator === IS_SET) {
+        return traitValue !== undefined && traitValue !== null;
+    } else if (condition.operator === IS_NOT_SET) {
+        return traitValue === undefined || traitValue === null;
+    }
+
+    if (traitValue !== undefined && traitValue !== null) {
+        const segmentCondition = new SegmentConditionModel(
+            condition.operator,
+            condition.value,
+            condition.property
+        );
+        return segmentCondition.matchesTraitValue(traitValue);
+    }
+
+    return false;
+}
+
+function traitsMatchSegmentRule(
+    rule: any,
+    segmentKey: string,
+    context?: EvaluationContext
+): boolean {
+    const matchesConditions =
+        rule.conditions && rule.conditions.length > 0
+            ? evaluateRuleConditions(
+                  rule.type,
+                  rule.conditions.map((condition: any) =>
+                      traitsMatchSegmentCondition(condition, segmentKey, context)
+                  )
+              )
+            : true;
+
+    const matchesSubRules =
+        rule.rules && rule.rules.length > 0
+            ? rule.rules.filter((subRule: any) =>
+                  traitsMatchSegmentRule(subRule, segmentKey, context)
+              ).length === rule.rules.length
+            : true;
+
+    return matchesConditions && matchesSubRules;
+}
+
+function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): boolean {
+    switch (ruleType) {
+        case 'ALL':
+            return conditionResults.length === 0 || conditionResults.every(result => result);
+        case 'ANY':
+            return conditionResults.length > 0 && conditionResults.some(result => result);
+        case 'NONE':
+            return conditionResults.length === 0 || conditionResults.every(result => !result);
+        default:
+            return false;
+    }
+}
+
+function getContextValue(jsonPath: string, context?: EvaluationContext): any {
+    if (!context) return undefined;
+
+    switch (jsonPath) {
+        case '$.identity.identifier':
+            return context.identity?.identifier;
+        case '$.environment.name':
+            return context.environment?.name;
+        case '$.environment.key':
+            return context.environment?.key;
+        default:
+            return undefined;
+    }
 }

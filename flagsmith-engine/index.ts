@@ -1,102 +1,80 @@
-import { EnvironmentModel } from './environments/models.js';
-import { FeatureStateModel } from './features/models.js';
-import { IdentityModel } from './identities/models.js';
-import { TraitModel } from './identities/traits/models.js';
+import { EvaluationContext, FeatureContext } from './evaluationContext/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
-import { SegmentModel } from './segments/models.js';
-import { FeatureStateNotFound } from './utils/errors.js';
-
+import { EvaluationResult, EvaluationResultFlags } from './evaluationResult/models.js';
+import { evaluateFeatureValue } from './features/util.js';
 export { EnvironmentModel } from './environments/models.js';
-export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
-export { OrganisationModel } from './organisations/models.js';
+// 1. Mappers => Env/identities/segments => EvaluationContext
+// 2. One entrypoint => getEvaluationResult
+// 3. All these must be disappear
 
-function getIdentityFeatureStatesDict(
-    environment: EnvironmentModel,
-    identity: IdentityModel,
-    overrideTraits?: TraitModel[]
-) {
-    // Get feature states from the environment
-    const featureStates: { [key: number]: FeatureStateModel } = {};
-    for (const fs of environment.featureStates) {
-        featureStates[fs.feature.id] = fs;
-    }
+type segmentOverride = {
+    feature: FeatureContext;
+    segmentName: string;
+};
 
-    // Override with any feature states defined by matching segments
-    const identitySegments: SegmentModel[] = getIdentitySegments(
-        environment,
-        identity,
-        overrideTraits
-    );
-    for (const matchingSegment of identitySegments) {
-        for (const featureState of matchingSegment.featureStates) {
-            if (featureStates[featureState.feature.id]) {
-                if (featureStates[featureState.feature.id].isHigherSegmentPriority(featureState)) {
-                    continue;
+export function getEvaluationResult(context: EvaluationContext): EvaluationResult {
+    const segments: EvaluationResult['segments'] = [];
+    const segmentOverrides: Record<string, segmentOverride> = {};
+    const DEFAULT_PRIORITY = Infinity;
+
+    if (context.identity && context.segments) {
+        const identitySegments = getIdentitySegments(context);
+
+        for (const segment of identitySegments) {
+            segments.push({ key: segment.key, name: segment.name });
+
+            if (segment.overrides) {
+                const overridesList = Array.isArray(segment.overrides) ? segment.overrides : [];
+                for (const override of overridesList) {
+                    const currentOverride = segmentOverrides[override.feature_key];
+                    if (
+                        !currentOverride ||
+                        (override.priority ?? DEFAULT_PRIORITY) <
+                            (currentOverride.feature.priority ?? DEFAULT_PRIORITY)
+                    ) {
+                        segmentOverrides[override.feature_key] = {
+                            feature: override,
+                            segmentName: segment.name
+                        };
+                    }
                 }
             }
-            featureStates[featureState.feature.id] = featureState;
         }
     }
 
-    // Override with any feature states defined directly the identity
-    for (const fs of identity.identityFeatures) {
-        if (featureStates[fs.feature.id]) {
-            featureStates[fs.feature.id] = fs;
-        }
-    }
-    return featureStates;
-}
+    const flags: EvaluationResultFlags = [];
+    for (const feature of Object.values(context.features || {})) {
+        const segmentOverride = segmentOverrides[feature.feature_key];
+        const finalFeature = segmentOverride ? segmentOverride.feature : feature;
+        const reason = getTargetingMatchReason(segmentOverride, segmentOverride?.segmentName);
+        const hasOverride = !!segmentOverride;
 
-export function getIdentityFeatureState(
-    environment: EnvironmentModel,
-    identity: IdentityModel,
-    featureName: string,
-    overrideTraits?: TraitModel[]
-): FeatureStateModel {
-    const featureStates = getIdentityFeatureStatesDict(environment, identity, overrideTraits);
-
-    const matchingFeature = Object.values(featureStates).filter(
-        f => f.feature.name === featureName
-    );
-
-    if (matchingFeature.length === 0) {
-        throw new FeatureStateNotFound('Feature State Not Found');
+        flags.push({
+            feature_key: finalFeature.feature_key,
+            name: finalFeature.name,
+            enabled: finalFeature.enabled,
+            value: hasOverride
+                ? finalFeature.value
+                : evaluateFeatureValue(finalFeature, context.identity?.key),
+            reason
+        });
     }
 
-    return matchingFeature[0];
+    // Not sure if we need this - Keeping till confirmed hidedisabledflags is remote evaluation only
+    // const filteredFlags = hideDisabledFlags ? flags.filter(flag => flag.enabled) : flags;
+
+    return { context, flags, segments };
 }
 
-export function getIdentityFeatureStates(
-    environment: EnvironmentModel,
-    identity: IdentityModel,
-    overrideTraits?: TraitModel[]
-): FeatureStateModel[] {
-    const featureStates = Object.values(
-        getIdentityFeatureStatesDict(environment, identity, overrideTraits)
-    );
-
-    if (environment.project.hideDisabledFlags) {
-        return featureStates.filter(fs => !!fs.enabled);
+const getTargetingMatchReason = (segmentOverride: segmentOverride, segmentName: string) => {
+    if (segmentOverride) {
+        // TURN INTO CONSTANT
+        return segmentOverride.segmentName === 'identity_overrides'
+            ? 'IDENTITY_OVERRIDE'
+            : `TARGETING_MATCH; segment=${segmentOverride.segmentName}`;
     }
-    return featureStates;
-}
-
-export function getEnvironmentFeatureState(environment: EnvironmentModel, featureName: string) {
-    const featuresStates = environment.featureStates.filter(f => f.feature.name === featureName);
-
-    if (featuresStates.length === 0) {
-        throw new FeatureStateNotFound('Feature State Not Found');
-    }
-
-    return featuresStates[0];
-}
-
-export function getEnvironmentFeatureStates(environment: EnvironmentModel): FeatureStateModel[] {
-    if (environment.project.hideDisabledFlags) {
-        return environment.featureStates.filter(fs => !!fs.enabled);
-    }
-    return environment.featureStates;
-}
+    return `DEFAULT`;
+};

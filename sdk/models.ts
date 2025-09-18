@@ -1,7 +1,9 @@
+import { FeatureContext } from '../flagsmith-engine/evaluationContext/models.js';
+import { EvaluationResult, FlagResult } from '../flagsmith-engine/evaluationResult/types.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
 
-type FlagValue = string | number | boolean | undefined;
+type FlagValue = string | number | boolean | undefined | null;
 
 /**
  * A Flagsmith feature. It has an enabled/disabled state, and an optional {@link FlagValue}.
@@ -56,6 +58,7 @@ export class Flag extends BaseFlag {
         isDefault?: boolean;
         featureId: number;
         featureName: string;
+        reason?: string;
     }) {
         super(params.value, params.enabled, !!params.isDefault);
         this.featureId = params.featureId;
@@ -71,6 +74,15 @@ export class Flag extends BaseFlag {
             enabled: fsm.enabled,
             featureId: fsm.feature.id,
             featureName: fsm.feature.name
+        });
+    }
+
+    static fromFlagResult(flagResult: FlagResult): Flag {
+        return new Flag({
+            enabled: flagResult.enabled,
+            value: flagResult.value ?? undefined,
+            featureId: Number(flagResult.feature_key),
+            featureName: flagResult.name
         });
     }
 
@@ -97,6 +109,28 @@ export class Flags {
         this.flags = data.flags;
         this.defaultFlagHandler = data.defaultFlagHandler;
         this.analyticsProcessor = data.analyticsProcessor;
+    }
+
+    static fromEvaluationResult(
+        evaluationResult: EvaluationResult,
+        defaultFlagHandler?: (v: string) => DefaultFlag,
+        analyticsProcessor?: AnalyticsProcessor
+    ): Flags {
+        const flags: { [key: string]: Flag } = {};
+        for (const flag of evaluationResult.flags) {
+            flags[flag.name] = new Flag({
+                enabled: flag.enabled,
+                value: flag.value ?? null,
+                featureId: Number(flag.feature_key),
+                featureName: flag.name,
+                reason: flag.reason
+            });
+        }
+        return new Flags({
+            flags: flags,
+            defaultFlagHandler: defaultFlagHandler,
+            analyticsProcessor: analyticsProcessor
+        });
     }
 
     static fromFeatureStateModels(data: {

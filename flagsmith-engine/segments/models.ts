@@ -1,6 +1,11 @@
 import * as semver from 'semver';
 
-import { FeatureStateModel } from '../features/models.js';
+import {
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueModel
+} from '../features/models.js';
 import { getCastingFunction as getCastingFunction } from '../utils/index.js';
 import {
     ALL_RULE,
@@ -13,6 +18,9 @@ import {
     CONDITION_OPERATORS
 } from './constants.js';
 import { isSemver } from './util.js';
+import { EvaluationResultSegments } from '../evaluationResult/models.js';
+import { EvaluationContext } from '../evaluationContext/evaluationContext.types.js';
+import { CONSTANTS } from '../features/constants.js';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;
@@ -57,7 +65,7 @@ export class SegmentConditionModel {
 
     operator: string;
     value: string | null | undefined;
-    property_: string | null | undefined;
+    property: string | null | undefined;
 
     constructor(
         operator: string,
@@ -66,7 +74,7 @@ export class SegmentConditionModel {
     ) {
         this.operator = operator;
         this.value = value;
-        this.property_ = property;
+        this.property = property;
     }
 
     matchesTraitValue(traitValue: any) {
@@ -143,5 +151,65 @@ export class SegmentModel {
     constructor(id: number, name: string) {
         this.id = id;
         this.name = name;
+    }
+
+    static fromSegmentResult(
+        segmentResults: EvaluationResultSegments,
+        evaluationContext: EvaluationContext
+    ): SegmentModel[] {
+        const segmentModels: SegmentModel[] = [];
+        if (!evaluationContext.segments) {
+            return [];
+        }
+
+        for (const segmentResult of segmentResults) {
+            const segmentContext = evaluationContext.segments[segmentResult.key];
+            if (segmentContext) {
+                const segment = new SegmentModel(parseInt(segmentContext.key), segmentContext.name);
+                segment.rules = segmentContext.rules.map(rule => new SegmentRuleModel(rule.type));
+                segment.featureStates =
+                    segmentContext.overrides?.map(override => {
+                        const feature = new FeatureModel(
+                            parseInt(override.feature_key),
+                            override.name,
+                            override?.variants?.length && override?.variants?.length > 1
+                                ? CONSTANTS.MULTIVARIATE
+                                : CONSTANTS.STANDARD
+                        );
+
+                        const featureState = new FeatureStateModel(
+                            feature,
+                            override.enabled,
+                            override.priority || 0
+                        );
+
+                        if (override.value !== undefined) {
+                            featureState.setValue(override.value);
+                        }
+
+                        if (
+                            override.variants &&
+                            override?.variants?.length > 1 &&
+                            override.variants.length > 0
+                        ) {
+                            featureState.multivariateFeatureStateValues = override.variants.map(
+                                variant =>
+                                    new MultivariateFeatureStateValueModel(
+                                        new MultivariateFeatureOptionModel(
+                                            variant.value,
+                                            variant?.id as number
+                                        ),
+                                        variant.weight as number,
+                                        variant.id as number
+                                    )
+                            );
+                        }
+
+                        return featureState;
+                    }) || [];
+                segmentModels.push(segment);
+            }
+        }
+        return segmentModels;
     }
 }

@@ -11,11 +11,13 @@ import {
 import { TraitModel, IdentityModel } from '../../../../flagsmith-engine/index.js';
 import { environment } from '../utils.js';
 import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
-import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
+import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
+import { getEvaluationContext } from '../../../../flagsmith-engine/evaluationContext/mappers.js';
+import { EvaluationContext } from '../../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
 
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
-    getHashedPercentateForObjIds: vi.fn(() => 1)
+    getHashedPercentageForObjIds: vi.fn(() => 1)
 }));
 
 let traitExistenceTestCases: [
@@ -48,8 +50,27 @@ let traitExistenceTestCases: [
 test('test_traits_match_segment_condition_for_trait_existence_operators', () => {
     for (const testCase of traitExistenceTestCases) {
         const [operator, conditionProperty, conditionValue, traits, expectedResult] = testCase;
-        let segmentModel = new SegmentConditionModel(operator, conditionValue, conditionProperty);
-        expect(traitsMatchSegmentCondition(traits, segmentModel, 'any', 'any')).toBe(
+        let segmentConditionModel = new SegmentConditionModel(
+            operator,
+            conditionValue,
+            conditionProperty
+        );
+        const traitsMap = traits.reduce((acc, trait) => {
+            acc[trait.traitKey] = trait.traitValue;
+            return acc;
+        }, {});
+        const context: EvaluationContext = {
+            environment: {
+                key: 'any',
+                name: 'any'
+            },
+            identity: {
+                traits: traitsMap,
+                key: 'any',
+                identifier: 'any'
+            }
+        };
+        expect(traitsMatchSegmentCondition(segmentConditionModel, 'any', context)).toBe(
             expectedResult
         );
     }
@@ -84,13 +105,17 @@ test('evaluateIdentityInSegment uses django ID for hashed percentage when presen
         feature_states: []
     };
     const segmentModel = buildSegmentModel(segmentDefinition);
+    const environmentModel = environment();
+    environmentModel.project.segments = [segmentModel];
+    const context = getEvaluationContext(environmentModel, identityModel);
 
-    var result = evaluateIdentityInSegment(identityModel, segmentModel);
+    const segmentContext = context.segments![1];
+    var result = evaluateIdentityInSegment(segmentContext, context);
 
     expect(result).toBe(true);
-    expect(getHashedPercentateForObjIds).toHaveBeenCalledTimes(1);
-    expect(getHashedPercentateForObjIds).toHaveBeenCalledWith([
-        segmentModel.id,
-        identityModel.djangoID
+    expect(getHashedPercentageForObjIds).toHaveBeenCalledTimes(1);
+    expect(getHashedPercentageForObjIds).toHaveBeenCalledWith([
+        segmentContext.key,
+        context.identity!.key
     ]);
 });

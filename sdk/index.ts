@@ -1,8 +1,5 @@
 import { Dispatcher } from 'undici-types';
-import {
-    getEnvironmentFeatureStates,
-    getIdentityFeatureStates
-} from '../flagsmith-engine/index.js';
+import { getEvaluationResult } from '../flagsmith-engine/index.js';
 import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
 import { IdentityModel } from '../flagsmith-engine/index.js';
@@ -16,7 +13,6 @@ import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
 import { Deferred, generateIdentitiesData, retryFetch } from './utils.js';
 import { SegmentModel } from '../flagsmith-engine/index.js';
-import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js';
 import {
     Fetch,
     FlagsmithCache,
@@ -25,6 +21,7 @@ import {
     TraitConfig
 } from './types.js';
 import { pino, Logger } from 'pino';
+import { getEvaluationContext } from '../flagsmith-engine/evaluationContext/mappers.js';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
@@ -278,7 +275,10 @@ export class Flagsmith {
             }))
         );
 
-        return getIdentitySegments(environment, identityModel);
+        const context = getEvaluationContext(environment, identityModel);
+        const evaluationResult = getEvaluationResult(context);
+        // DOUBLE CHECK THE IMPLEMENTATION HERE AND IF IT CAN BE REMOVED
+        return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
     }
 
     private async fetchEnvironment(): Promise<EnvironmentModel> {
@@ -397,14 +397,14 @@ export class Flagsmith {
 
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
         const environment = await this.getEnvironment();
-        const flags = Flags.fromFeatureStateModels({
-            featureStates: getEnvironmentFeatureStates(environment),
-            analyticsProcessor: this.analyticsProcessor,
-            defaultFlagHandler: this.defaultFlagHandler
-        });
+        const context = getEvaluationContext(environment);
+        const evaluationResult = getEvaluationResult(context);
+        const flags = Flags.fromEvaluationResult(evaluationResult);
+
         if (!!this.cache) {
             await this.cache.set('flags', flags);
         }
+
         return flags;
     }
 
@@ -422,14 +422,14 @@ export class Flagsmith {
             }))
         );
 
-        const featureStates = getIdentityFeatureStates(environment, identityModel);
+        const context = getEvaluationContext(environment, identityModel);
+        const evaluationResult = getEvaluationResult(context);
 
-        const flags = Flags.fromFeatureStateModels({
-            featureStates: featureStates,
-            analyticsProcessor: this.analyticsProcessor,
-            defaultFlagHandler: this.defaultFlagHandler,
-            identityID: identityModel.djangoID || identityModel.compositeKey
-        });
+        const flags = Flags.fromEvaluationResult(
+            evaluationResult,
+            this.defaultFlagHandler,
+            this.analyticsProcessor
+        );
 
         if (!!this.cache) {
             await this.cache.set(`flags-${identifier}`, flags);
