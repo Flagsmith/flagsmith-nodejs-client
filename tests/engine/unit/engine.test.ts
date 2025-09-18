@@ -12,6 +12,7 @@ import {
     segmentConditionStringValue
 } from './utils.js';
 import { getEvaluationContext } from '../../../flagsmith-engine/evaluationContext/mappers.js';
+import { TARGETING_REASONS } from '../../../flagsmith-engine/features/types.js';
 
 test('test_get_evaluation_result_without_any_override', () => {
     const context = getEvaluationContext(environment(), identity());
@@ -21,7 +22,7 @@ test('test_get_evaluation_result_without_any_override', () => {
     expect(flag).toBeDefined();
     expect(flag?.name).toBe(feature1().name);
     expect(flag?.feature_key).toBe(feature1().id.toString());
-    expect(flag?.reason).toBe('DEFAULT');
+    expect(flag?.reason).toBe(TARGETING_REASONS.DEFAULT);
 });
 
 // CHECK IF THIS TEST IS STILL NEEDED
@@ -54,7 +55,9 @@ test('test_get_evaluation_result_with_identity_override_and_no_segment_override'
 
         expect(flag.enabled).toBe(expected);
         expect(flag.reason).toBe(
-            flag.name === 'overridden_feature' ? 'IDENTITY_OVERRIDE' : 'DEFAULT'
+            flag.name === 'overridden_feature'
+                ? TARGETING_REASONS.IDENTITY_OVERRIDE
+                : TARGETING_REASONS.DEFAULT
         );
     }
 });
@@ -71,7 +74,9 @@ test('test_identity_get_all_feature_states_with_traits', () => {
     const overriddenFlag = result.flags.find(f => f.value === 'segment_override');
     expect(overriddenFlag).toBeDefined();
     expect(overriddenFlag?.value).toBe('segment_override');
-    expect(overriddenFlag?.reason).toEqual('TARGETING_MATCH; segment=test name');
+    expect(overriddenFlag?.reason).toEqual(
+        `${TARGETING_REASONS.TARGETING_MATCH}; segment=test name`
+    );
 });
 
 // TO CONFIRM ITS REMOVED
@@ -94,7 +99,7 @@ test('test_environment_get_all_feature_states', () => {
     expect(result.flags.length).toBe(Object.keys(context.features || {}).length);
 
     result.flags.forEach(flag => {
-        expect(flag.reason).toBe('DEFAULT');
+        expect(flag.reason).toBe(TARGETING_REASONS.DEFAULT);
     });
 
     for (const flag of result.flags) {

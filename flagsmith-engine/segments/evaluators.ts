@@ -1,4 +1,10 @@
-import { EvaluationContext, IdentityContext, SegmentContext } from '../evaluationContext/models.js';
+import {
+    EvaluationContext,
+    IdentityContext,
+    SegmentCondition,
+    SegmentContext,
+    SegmentRule
+} from '../evaluationContext/models.js';
 import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
@@ -29,7 +35,7 @@ export function evaluateIdentityInSegment(
 }
 
 export function traitsMatchSegmentCondition(
-    condition: SegmentConditionModel,
+    condition: SegmentCondition,
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
@@ -60,7 +66,7 @@ export function traitsMatchSegmentCondition(
     if (traitValue !== undefined && traitValue !== null) {
         const segmentCondition = new SegmentConditionModel(
             condition.operator,
-            condition.value,
+            condition.value as string,
             condition.property
         );
         return segmentCondition.matchesTraitValue(traitValue);
@@ -70,7 +76,7 @@ export function traitsMatchSegmentCondition(
 }
 
 function traitsMatchSegmentRule(
-    rule: any,
+    rule: SegmentRule,
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
@@ -78,7 +84,7 @@ function traitsMatchSegmentRule(
         rule.conditions && rule.conditions.length > 0
             ? evaluateRuleConditions(
                   rule.type,
-                  rule.conditions.map((condition: any) =>
+                  rule.conditions.map((condition: SegmentCondition) =>
                       traitsMatchSegmentCondition(condition, segmentKey, context)
                   )
               )
@@ -86,7 +92,7 @@ function traitsMatchSegmentRule(
 
     const matchesSubRules =
         rule.rules && rule.rules.length > 0
-            ? rule.rules.filter((subRule: any) =>
+            ? rule.rules.filter((subRule: SegmentRule) =>
                   traitsMatchSegmentRule(subRule, segmentKey, context)
               ).length === rule.rules.length
             : true;

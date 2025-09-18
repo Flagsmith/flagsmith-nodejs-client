@@ -2,6 +2,8 @@ import { EvaluationContext, FeatureContext } from './evaluationContext/models.js
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResult, EvaluationResultFlags } from './evaluationResult/models.js';
 import { evaluateFeatureValue } from './features/util.js';
+import { IDENTITY_OVERRIDE_SEGMENT_NAME } from './segments/constants.js';
+import { TARGETING_REASONS } from './features/types.js';
 export { EnvironmentModel } from './environments/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
@@ -69,12 +71,11 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
     return { context, flags, segments };
 }
 
-const getTargetingMatchReason = (segmentOverride: segmentOverride, segmentName: string) => {
+const getTargetingMatchReason = (segmentOverride: segmentOverride) => {
     if (segmentOverride) {
-        // TURN INTO CONSTANT
-        return segmentOverride.segmentName === 'identity_overrides'
-            ? 'IDENTITY_OVERRIDE'
-            : `TARGETING_MATCH; segment=${segmentOverride.segmentName}`;
+        return segmentOverride.segmentName === IDENTITY_OVERRIDE_SEGMENT_NAME
+            ? TARGETING_REASONS.IDENTITY_OVERRIDE
+            : `${TARGETING_REASONS.TARGETING_MATCH}; segment=${segmentOverride.segmentName}`;
     }
-    return `DEFAULT`;
+    return TARGETING_REASONS.DEFAULT;
 };

@@ -80,7 +80,7 @@ export class Flag extends BaseFlag {
     static fromFlagResult(flagResult: FlagResult): Flag {
         return new Flag({
             enabled: flagResult.enabled,
-            value: flagResult.value ?? undefined,
+            value: flagResult.value ?? null,
             featureId: Number(flagResult.feature_key),
             featureName: flagResult.name
         });

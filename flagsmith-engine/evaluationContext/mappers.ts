@@ -9,6 +9,7 @@ import {
 import { EnvironmentModel } from '../environments/models.js';
 import { IdentityModel } from '../identities/models.js';
 import { TraitModel } from '../identities/traits/models.js';
+import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../segments/constants.js';
 
 export function getEvaluationContext(
     environment: EnvironmentModel,
@@ -172,7 +173,7 @@ function mapIdentityOverridesToSegments(identity: IdentityModel): Segments {
 
     segments[segmentKey] = {
         key: segmentKey,
-        name: 'identity_overrides',
+        name: IDENTITY_OVERRIDE_SEGMENT_NAME,
         rules: [
             {
                 type: 'ALL',
