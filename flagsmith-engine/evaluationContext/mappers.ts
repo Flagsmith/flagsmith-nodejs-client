@@ -141,18 +141,6 @@ export function addIdentityToEvaluationContext(
     };
 }
 
-function mapRawSegmentRule(rule: any): any {
-    return {
-        type: rule.type,
-        conditions: rule.conditions?.map((condition: any) => ({
-            property: condition.property,
-            operator: condition.operator,
-            value: condition.value
-        })),
-        rules: rule.rules?.map((subRule: any) => mapRawSegmentRule(subRule))
-    };
-}
-
 function mapIdentityOverridesToSegments(identity: IdentityModel): Segments {
     const segments: Segments = {};
 

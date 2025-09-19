@@ -1,9 +1,6 @@
 import { Dispatcher } from 'undici-types';
-import { getEvaluationResult } from '../flagsmith-engine/index.js';
-import { EnvironmentModel } from '../flagsmith-engine/index.js';
+
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
-import { IdentityModel } from '../flagsmith-engine/index.js';
-import { TraitModel } from '../flagsmith-engine/index.js';
 
 import { ANALYTICS_ENDPOINT, AnalyticsProcessor } from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
@@ -12,7 +9,13 @@ import { FlagsmithAPIError } from './errors.js';
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
 import { Deferred, generateIdentitiesData, retryFetch } from './utils.js';
-import { SegmentModel } from '../flagsmith-engine/index.js';
+import {
+    SegmentModel,
+    EnvironmentModel,
+    IdentityModel,
+    TraitModel,
+    getEvaluationResult
+} from '../flagsmith-engine/index.js';
 import {
     Fetch,
     FlagsmithCache,
@@ -277,7 +280,7 @@ export class Flagsmith {
 
         const context = getEvaluationContext(environment, identityModel);
         const evaluationResult = getEvaluationResult(context);
-        // DOUBLE CHECK THE IMPLEMENTATION HERE AND IF IT CAN BE REMOVED
+
         return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
     }
 
