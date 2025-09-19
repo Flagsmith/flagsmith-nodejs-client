@@ -9,10 +9,12 @@ export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
 
-type segmentOverride = {
+type SegmentOverride = {
     feature: FeatureContext;
     segmentName: string;
 };
+
+export type SegmentOverrides = Record<string, SegmentOverride>;
 
 /**
  * Evaluates flags and segments for the given context.
@@ -40,9 +42,9 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
  * @param context - EvaluationContext containing identity and segment definitions
  * @returns Object containing segments the identity belongs to and any feature overrides
  */
-function evaluateSegments(context: EvaluationContext): {
+export function evaluateSegments(context: EvaluationContext): {
     segments: EvaluationResult['segments'];
-    segmentOverrides: Record<string, segmentOverride>;
+    segmentOverrides: Record<string, SegmentOverride>;
 } {
     if (!context.identity || !context.segments) {
         return { segments: [], segmentOverrides: {} };
@@ -67,8 +69,8 @@ function evaluateSegments(context: EvaluationContext): {
  * @param identitySegments - Segments that the identity belongs to
  * @returns Map of feature keys to their highest-priority segment overrides
  */
-function processSegmentOverrides(identitySegments: any[]): Record<string, segmentOverride> {
-    const segmentOverrides: Record<string, segmentOverride> = {};
+export function processSegmentOverrides(identitySegments: any[]): Record<string, SegmentOverride> {
+    const segmentOverrides: Record<string, SegmentOverride> = {};
 
     for (const segment of identitySegments) {
         if (!segment.overrides) continue;
@@ -100,9 +102,9 @@ function processSegmentOverrides(identitySegments: any[]): Record<string, segmen
  * @param segmentOverrides - Map of feature keys to their segment overrides
  * @returns EvaluationResultFlags containing evaluated flag results
  */
-function evaluateFeatures(
+export function evaluateFeatures(
     context: EvaluationContext,
-    segmentOverrides: Record<string, segmentOverride>
+    segmentOverrides: Record<string, SegmentOverride>
 ): EvaluationResultFlags {
     const flags: EvaluationResultFlags = [];
 
@@ -126,9 +128,9 @@ function evaluateFeatures(
     return flags;
 }
 
-function shouldApplyOverride(
+export function shouldApplyOverride(
     override: any,
-    existingOverrides: Record<string, segmentOverride>
+    existingOverrides: Record<string, SegmentOverride>
 ): boolean {
     const currentOverride = existingOverrides[override.feature_key];
     return (
@@ -136,11 +138,14 @@ function shouldApplyOverride(
     );
 }
 
-function isHigherPriority(priorityA: number | undefined, priorityB: number | undefined): boolean {
+export function isHigherPriority(
+    priorityA: number | undefined,
+    priorityB: number | undefined
+): boolean {
     return (priorityA ?? Infinity) < (priorityB ?? Infinity);
 }
 
-const getTargetingMatchReason = (segmentOverride: segmentOverride) => {
+const getTargetingMatchReason = (segmentOverride: SegmentOverride) => {
     if (segmentOverride) {
         return segmentOverride.segmentName === IDENTITY_OVERRIDE_SEGMENT_NAME
             ? TARGETING_REASONS.IDENTITY_OVERRIDE
