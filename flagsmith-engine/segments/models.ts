@@ -21,6 +21,7 @@ import { isSemver } from './util.js';
 import { EvaluationResultSegments } from '../evaluationResult/models.js';
 import { EvaluationContext } from '../evaluationContext/evaluationContext.types.js';
 import { CONSTANTS } from '../features/constants.js';
+import { SegmentContext } from '../evaluationResult/evaluationResult.types.js';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;
@@ -167,49 +168,57 @@ export class SegmentModel {
             if (segmentContext) {
                 const segment = new SegmentModel(parseInt(segmentContext.key), segmentContext.name);
                 segment.rules = segmentContext.rules.map(rule => new SegmentRuleModel(rule.type));
-                segment.featureStates =
-                    segmentContext.overrides?.map(override => {
-                        const feature = new FeatureModel(
-                            parseInt(override.feature_key),
-                            override.name,
-                            override?.variants?.length && override?.variants?.length > 1
-                                ? CONSTANTS.MULTIVARIATE
-                                : CONSTANTS.STANDARD
-                        );
-
-                        const featureState = new FeatureStateModel(
-                            feature,
-                            override.enabled,
-                            override.priority || 0
-                        );
-
-                        if (override.value !== undefined) {
-                            featureState.setValue(override.value);
-                        }
-
-                        if (
-                            override.variants &&
-                            override?.variants?.length > 1 &&
-                            override.variants.length > 0
-                        ) {
-                            featureState.multivariateFeatureStateValues = override.variants.map(
-                                variant =>
-                                    new MultivariateFeatureStateValueModel(
-                                        new MultivariateFeatureOptionModel(
-                                            variant.value,
-                                            variant?.id as number
-                                        ),
-                                        variant.weight as number,
-                                        variant.id as number
-                                    )
-                            );
-                        }
-
-                        return featureState;
-                    }) || [];
+                segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
+                    segmentContext.overrides || []
+                );
                 segmentModels.push(segment);
             }
         }
+
         return segmentModels;
+    }
+
+    private static createFeatureStatesFromOverrides(
+        overrides: SegmentContext['overrides']
+    ): FeatureStateModel[] {
+        if (!overrides) return [];
+        return overrides.map(override => {
+            const feature = new FeatureModel(
+                parseInt(override.feature_key),
+                override.name,
+                override.variants?.length && override.variants.length > 0
+                    ? CONSTANTS.MULTIVARIATE
+                    : CONSTANTS.STANDARD
+            );
+
+            const featureState = new FeatureStateModel(
+                feature,
+                override.enabled,
+                override.priority || 0
+            );
+
+            if (override.value !== undefined) {
+                featureState.setValue(override.value);
+            }
+
+            if (override.variants && override.variants.length > 0) {
+                featureState.multivariateFeatureStateValues = this.createMultivariateValues(
+                    override.variants
+                );
+            }
+
+            return featureState;
+        });
+    }
+
+    private static createMultivariateValues(variants: any[]): MultivariateFeatureStateValueModel[] {
+        return variants.map(
+            variant =>
+                new MultivariateFeatureStateValueModel(
+                    new MultivariateFeatureOptionModel(variant.value, variant.id as number),
+                    variant.weight as number,
+                    variant.id as number
+                )
+        );
     }
 }

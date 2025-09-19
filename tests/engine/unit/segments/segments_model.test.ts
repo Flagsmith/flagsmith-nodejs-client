@@ -1,3 +1,5 @@
+import { EvaluationContext } from '../../../../flagsmith-engine/evaluationContext/evaluationContext.types';
+import { CONSTANTS } from '../../../../flagsmith-engine/features/constants';
 import {
     ALL_RULE,
     ANY_RULE,
@@ -8,6 +10,7 @@ import {
     all,
     any,
     SegmentConditionModel,
+    SegmentModel,
     SegmentRuleModel
 } from '../../../../flagsmith-engine/segments/models';
 
@@ -134,4 +137,79 @@ test('test_segment_rule_matching_function', () => {
     for (const testCase of testCases) {
         expect(new SegmentRuleModel(testCase[0]).matchingFunction()).toBe(testCase[1]);
     }
+});
+
+test('test_fromSegmentResult_with_multiple_variants', () => {
+    const segmentResults = [{ key: '1', name: 'test_segment' }];
+
+    const evaluationContext: EvaluationContext = {
+        identity: {
+            key: 'not_exist',
+            identifier: 'not_exist'
+        },
+        environment: {
+            key: 'test',
+            name: 'test'
+        },
+        features: {},
+        segments: {
+            '1': {
+                key: '1',
+                name: 'test_segment',
+                rules: [
+                    {
+                        type: 'ALL',
+                        conditions: [
+                            {
+                                property: '$.identity.identifier',
+                                operator: 'EQUAL',
+                                value: 'test-user'
+                            }
+                        ]
+                    }
+                ],
+                overrides: [
+                    {
+                        key: 'override',
+                        feature_key: '1',
+                        name: 'multivariate_feature',
+                        enabled: true,
+                        value: 'default_value',
+                        priority: 1,
+                        variants: [
+                            { id: 1, value: 'variant_a', weight: 30 },
+                            { id: 2, value: 'variant_b', weight: 70 }
+                        ]
+                    }
+                ]
+            }
+        }
+    };
+
+    const result = SegmentModel.fromSegmentResult(segmentResults, evaluationContext);
+
+    expect(result).toHaveLength(1);
+
+    const segment = result[0];
+    expect(segment.name).toBe('test_segment');
+    expect(segment.featureStates).toHaveLength(1);
+
+    const featureState = segment.featureStates[0];
+    expect(featureState.feature.name).toBe('multivariate_feature');
+    expect(featureState.feature.type).toBe(CONSTANTS.MULTIVARIATE);
+    expect(featureState.enabled).toBe(true);
+    expect(featureState.getValue()).toBe('default_value');
+
+    // Test multivariate variants
+    expect(featureState.multivariateFeatureStateValues).toHaveLength(2);
+
+    const variant1 = featureState.multivariateFeatureStateValues[0];
+    expect(variant1.multivariateFeatureOption.value).toBe('variant_a');
+    expect(variant1.percentageAllocation).toBe(30);
+    expect(variant1.id).toBe(1);
+
+    const variant2 = featureState.multivariateFeatureStateValues[1];
+    expect(variant2.multivariateFeatureOption.value).toBe('variant_b');
+    expect(variant2.percentageAllocation).toBe(70);
+    expect(variant2.id).toBe(2);
 });
