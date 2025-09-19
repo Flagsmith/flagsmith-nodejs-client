@@ -9,6 +9,15 @@ import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
 
+/**
+ * Returns all segments that the identity belongs to based on segment rules evaluation.
+ *
+ * An identity belongs to a segment if it matches ALL of the segment's rules.
+ * If the context has no identity or segments, returns an empty array.
+ *
+ * @param context - Evaluation context containing identity and segment definitions
+ * @returns Array of segments that the identity matches
+ */
 export function getIdentitySegments(context: EvaluationContext): SegmentContext[] {
     if (!context.identity || !context.segments) return [];
     return Object.values(context.segments).filter(segment =>
@@ -25,6 +34,20 @@ export function evaluateIdentityInSegment(
     return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
 }
 
+/**
+ * Evaluates whether a segment condition matches the identity's traits or context values.
+ *
+ * Handles different types of conditions:
+ * - PERCENTAGE_SPLIT: Deterministic percentage-based bucketing using identity key
+ * - IS_SET/IS_NOT_SET: Checks for trait existence
+ * - Standard operators: EQUAL, NOT_EQUAL, etc. via SegmentConditionModel
+ * - JSONPath expressions: $.identity.identifier, $.environment.name, etc.
+ *
+ * @param condition - The condition to evaluate (property, operator, value)
+ * @param segmentKey - Key of the segment (used for percentage split hashing)
+ * @param context - Evaluation context containing identity, traits, and environment
+ * @returns true if the condition matches
+ */
 export function traitsMatchSegmentCondition(
     condition: SegmentCondition,
     segmentKey: string,
@@ -120,6 +143,20 @@ function getTraitValue(property: string, context?: EvaluationContext): any {
     return traits[property];
 }
 
+/**
+ * Evaluates JSONPath expressions against the evaluation context.
+ *
+ * Supports accessing nested context values using JSONPath syntax.
+ * Commonly used paths:
+ * - $.identity.identifier - User's unique identifier
+ * - $.identity.key - User's internal key
+ * - $.environment.name - Environment name
+ * - $.environment.key - Environment key
+ *
+ * @param jsonPath - JSONPath expression starting with '$.'
+ * @param context - Evaluation context to query against
+ * @returns The resolved value, or undefined if path doesn't exist or is invalid
+ */
 export function getContextValue(jsonPath: string, context?: EvaluationContext): any {
     if (!context || !jsonPath.startsWith('$.')) return undefined;
 
