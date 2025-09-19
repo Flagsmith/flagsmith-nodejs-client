@@ -1,3 +1,4 @@
+import * as jsonpath from 'jsonpath';
 import {
     EvaluationContext,
     SegmentCondition,
@@ -119,17 +120,13 @@ function getTraitValue(property: string, context?: EvaluationContext): any {
     return traits[property];
 }
 
-function getContextValue(jsonPath: string, context?: EvaluationContext): any {
-    if (!context) return undefined;
+export function getContextValue(jsonPath: string, context?: EvaluationContext): any {
+    if (!context || !jsonPath.startsWith('$.')) return undefined;
 
-    switch (jsonPath) {
-        case '$.identity.identifier':
-            return context.identity?.identifier;
-        case '$.environment.name':
-            return context.environment?.name;
-        case '$.environment.key':
-            return context.environment?.key;
-        default:
-            return undefined;
+    try {
+        const results = jsonpath.query(context, jsonPath);
+        return results.length > 0 ? results[0] : undefined;
+    } catch (error) {
+        return undefined;
     }
 }

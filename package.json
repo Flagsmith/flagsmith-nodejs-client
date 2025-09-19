@@ -63,12 +63,14 @@
     "generate-engine-types": "npm run generate-evaluation-result-types && npm run generate-evaluation-context-types"
   },
   "dependencies": {
+    "jsonpath": "^1.1.1",
     "pino": "^8.8.0",
     "semver": "^7.3.7",
     "undici-types": "^6.19.8"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/jsonpath": "^0.2.4",
     "@types/node": "^20.16.10",
     "@types/semver": "^7.3.9",
     "@types/uuid": "^8.3.4",
