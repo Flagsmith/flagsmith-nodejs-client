@@ -118,29 +118,6 @@ function mapSegmentRuleModelToRule(rule: any): any {
     };
 }
 
-export function createIdentityContext(
-    environmentKey: string,
-    identifier: string,
-    traits: { [key: string]: any } = {}
-): IdentityContext {
-    return {
-        identifier,
-        key: `${environmentKey}_${identifier}`,
-        traits
-    };
-}
-
-export function addIdentityToEvaluationContext(
-    context: EvaluationContext,
-    identifier: string,
-    traits: { [key: string]: any } = {}
-): EvaluationContext {
-    return {
-        ...context,
-        identity: createIdentityContext(context.environment.key, identifier, traits)
-    };
-}
-
 function mapIdentityOverridesToSegments(identity: IdentityModel): Segments {
     const segments: Segments = {};
 
