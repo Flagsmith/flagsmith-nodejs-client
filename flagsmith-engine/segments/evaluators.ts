@@ -19,14 +19,9 @@ export function evaluateIdentityInSegment(
     segment: SegmentContext,
     context?: EvaluationContext
 ): boolean {
-    const result =
-        segment.rules.length > 0 &&
-        segment.rules.filter(rule => {
-            const ruleResult = traitsMatchSegmentRule(rule, segment.key, context);
-            return ruleResult;
-        }).length === segment.rules.length;
+    if (segment.rules.length === 0) return false;
 
-    return result;
+    return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
 }
 
 export function traitsMatchSegmentCondition(
@@ -34,7 +29,6 @@ export function traitsMatchSegmentCondition(
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
-    const traits = context?.identity?.traits || {};
     const identityKey = context?.identity?.key || '';
 
     if (condition.operator === PERCENTAGE_SPLIT) {
@@ -44,17 +38,13 @@ export function traitsMatchSegmentCondition(
     if (!condition.property) {
         return false;
     }
-    let traitValue = traits[condition.property];
 
-    if (condition?.property?.startsWith('$.')) {
-        traitValue = getContextValue(condition.property, context);
-    } else {
-        traitValue = traits[condition.property];
-    }
+    const traitValue = getTraitValue(condition.property, context);
 
     if (condition.operator === IS_SET) {
         return traitValue !== undefined && traitValue !== null;
-    } else if (condition.operator === IS_NOT_SET) {
+    }
+    if (condition.operator === IS_NOT_SET) {
         return traitValue === undefined || traitValue === null;
     }
 
@@ -75,24 +65,36 @@ function traitsMatchSegmentRule(
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
-    const matchesConditions =
-        rule.conditions && rule.conditions.length > 0
-            ? evaluateRuleConditions(
-                  rule.type,
-                  rule.conditions.map((condition: SegmentCondition) =>
-                      traitsMatchSegmentCondition(condition, segmentKey, context)
-                  )
-              )
-            : true;
-
-    const matchesSubRules =
-        rule.rules && rule.rules.length > 0
-            ? rule.rules.filter((subRule: SegmentRule) =>
-                  traitsMatchSegmentRule(subRule, segmentKey, context)
-              ).length === rule.rules.length
-            : true;
+    const matchesConditions = evaluateConditions(rule, segmentKey, context);
+    const matchesSubRules = evaluateSubRules(rule, segmentKey, context);
 
     return matchesConditions && matchesSubRules;
+}
+
+function evaluateConditions(
+    rule: SegmentRule,
+    segmentKey: string,
+    context?: EvaluationContext
+): boolean {
+    if (!rule.conditions || rule.conditions.length === 0) return true;
+
+    const conditionResults = rule.conditions.map((condition: SegmentCondition) =>
+        traitsMatchSegmentCondition(condition, segmentKey, context)
+    );
+
+    return evaluateRuleConditions(rule.type, conditionResults);
+}
+
+function evaluateSubRules(
+    rule: SegmentRule,
+    segmentKey: string,
+    context?: EvaluationContext
+): boolean {
+    if (!rule.rules || rule.rules.length === 0) return true;
+
+    return rule.rules.every((subRule: SegmentRule) =>
+        traitsMatchSegmentRule(subRule, segmentKey, context)
+    );
 }
 
 function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): boolean {
@@ -106,6 +108,15 @@ function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): 
         default:
             return false;
     }
+}
+
+function getTraitValue(property: string, context?: EvaluationContext): any {
+    if (property.startsWith('$.')) {
+        return getContextValue(property, context);
+    }
+
+    const traits = context?.identity?.traits || {};
+    return traits[property];
 }
 
 function getContextValue(jsonPath: string, context?: EvaluationContext): any {
