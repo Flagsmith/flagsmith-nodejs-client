@@ -10,7 +10,7 @@ function extractTestCases(data: any): {
     const test_data = data['test_cases'].map((test_case: any) => {
         return {
             context: test_case['context'],
-            response: test_case['response']
+            response: test_case['result']
         };
     });
     return test_data;
@@ -25,13 +25,13 @@ test('Test Engine', () => {
             .allFlags()
             .sort((a, b) => (a.featureName > b.featureName ? 1 : -1));
         const sortedAPIFlags = testCase.response['flags'].sort((a: any, b: any) =>
-            a.feature.name > b.feature.name ? 1 : -1
+            a.name > b.name ? 1 : -1
         );
 
         expect(sortedEngineFlags.length).toBe(sortedAPIFlags.length);
 
         for (let i = 0; i < sortedEngineFlags.length; i++) {
-            expect(sortedEngineFlags[i].value).toBe(sortedAPIFlags[i]['feature_state_value']);
+            expect(sortedEngineFlags[i].value).toBe(sortedAPIFlags[i].value);
             expect(sortedEngineFlags[i].enabled).toBe(sortedAPIFlags[i]['enabled']);
         }
     }
