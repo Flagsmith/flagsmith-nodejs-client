@@ -33,14 +33,6 @@ test('test_get_evaluation_result_without_any_override', () => {
     expect(flag?.reason).toBe(TARGETING_REASONS.DEFAULT);
 });
 
-// CHECK IF THIS TEST IS STILL NEEDED
-// test('test_identity_get_feature_state_from_contextwithout_any_override_no_fs', () => {
-//     expect(() => {
-//         const context = getEvaluationContext(environment(), identity());
-//         getIdentityFeatureStateFromContext(context, 'nonExistentName');
-//     }).toThrowError('Feature State Not Found');
-// });
-
 test('test_get_evaluation_result_with_identity_override_and_no_segment_override', () => {
     const env = environment();
     const ident = identity();
@@ -48,6 +40,7 @@ test('test_get_evaluation_result_with_identity_override_and_no_segment_override'
 
     env.featureStates.push(new FeatureStateModel(overridden_feature, false, 3));
     ident.identityFeatures = [new FeatureStateModel(overridden_feature, true, 4)];
+    env.identityOverrides = [ident];
 
     const context = getEvaluationContext(env, ident);
     const result = getEvaluationResult(context);

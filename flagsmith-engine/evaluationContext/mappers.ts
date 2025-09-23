@@ -10,6 +10,7 @@ import { EnvironmentModel } from '../environments/models.js';
 import { IdentityModel } from '../identities/models.js';
 import { TraitModel } from '../identities/traits/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../segments/constants.js';
+import { createHash } from 'node:crypto';
 
 export function getEvaluationContext(
     environment: EnvironmentModel,
@@ -23,11 +24,7 @@ export function getEvaluationContext(
 
     const context = {
         ...environmentContext,
-        ...(identityContext && { identity: identityContext }),
-        segments: {
-            ...environmentContext.segments,
-            ...(identity && mapIdentityOverridesToSegments(identity))
-        }
+        ...(identityContext && { identity: identityContext })
     };
 
     return context;
@@ -61,9 +58,9 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
         };
     }
 
-    const segments: Segments = {};
+    const segmentOverrides: Segments = {};
     for (const segment of environment.project.segments) {
-        segments[segment.id.toString()] = {
+        segmentOverrides[segment.id.toString()] = {
             key: segment.id.toString(),
             name: segment.name,
             rules: segment.rules.map(rule => mapSegmentRuleModelToRule(rule)),
@@ -81,10 +78,18 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
         };
     }
 
+    let identityOverrideSegments: Segments = {};
+    if (environment.identityOverrides && environment.identityOverrides.length > 0) {
+        identityOverrideSegments = mapIdentityOverridesToSegments(environment.identityOverrides);
+    }
+
     return {
         environment: environmentContext,
         features,
-        segments
+        segments: {
+            ...segmentOverrides,
+            ...identityOverrideSegments
+        }
     };
 }
 
@@ -118,42 +123,56 @@ function mapSegmentRuleModelToRule(rule: any): any {
     };
 }
 
-function mapIdentityOverridesToSegments(identity: IdentityModel): Segments {
+function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Segments {
     const segments: Segments = {};
+    const featuresToIdentifiers = new Map<string, { identifiers: string[]; overrides: any[] }>();
 
-    if (!identity.identityFeatures || identity.identityFeatures.length === 0) {
-        return segments;
+    for (const identity of identityOverrides) {
+        if (!identity.identityFeatures || identity.identityFeatures.length === 0) {
+            continue;
+        }
+
+        const sortedFeatures = [...identity.identityFeatures].sort((a, b) =>
+            a.feature.name.localeCompare(b.feature.name)
+        );
+        const overridesKey = sortedFeatures.map(fs => ({
+            feature_key: fs.feature.id.toString(),
+            name: fs.feature.name,
+            enabled: fs.enabled,
+            value: fs.getValue(),
+            priority: -Infinity
+        }));
+
+        const overridesHash = createHash('sha1').update(JSON.stringify(overridesKey)).digest('hex');
+
+        if (!featuresToIdentifiers.has(overridesHash)) {
+            featuresToIdentifiers.set(overridesHash, { identifiers: [], overrides: overridesKey });
+        }
+
+        featuresToIdentifiers.get(overridesHash)!.identifiers.push(identity.identifier);
     }
+    for (const [overrideHash, { identifiers, overrides }] of featuresToIdentifiers.entries()) {
+        const segmentKey = `identity_override_${overrideHash}`;
 
-    const overrides = identity.identityFeatures.map(fs => ({
-        key: fs.djangoID?.toString() || fs.featurestateUUID,
-        feature_key: fs.feature.id.toString(),
-        name: fs.feature.name,
-        enabled: fs.enabled,
-        value: fs.getValue(),
-        priority: -Infinity
-    }));
-
-    // Can be grouped in a massive IN segment with all the overrides
-    const segmentKey = `identity_override_${identity.identifier}`;
-
-    segments[segmentKey] = {
-        key: segmentKey,
-        name: IDENTITY_OVERRIDE_SEGMENT_NAME,
-        rules: [
-            {
-                type: 'ALL',
-                conditions: [
-                    {
-                        property: '$.identity.identifier',
-                        operator: 'EQUAL',
-                        value: identity.identifier
-                    }
-                ]
-            }
-        ],
-        overrides
-    };
+        segments[segmentKey] = {
+            key: segmentKey,
+            name: IDENTITY_OVERRIDE_SEGMENT_NAME,
+            rules: [
+                {
+                    type: 'ALL',
+                    conditions: [
+                        {
+                            property: '$.identity.identifier',
+                            operator: 'IN',
+                            // TODO: Modify once new IN operator is implemented
+                            value: identifiers.join(',')
+                        }
+                    ]
+                }
+            ],
+            overrides: overrides
+        };
+    }
 
     return segments;
 }
