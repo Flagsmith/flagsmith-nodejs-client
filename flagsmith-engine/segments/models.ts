@@ -65,12 +65,12 @@ export class SegmentConditionModel {
     };
 
     operator: string;
-    value: string | null | undefined;
+    value: string | null | undefined | string[];
     property: string | null | undefined;
 
     constructor(
         operator: string,
-        value?: string | null | undefined,
+        value?: string | null | undefined | string[],
         property?: string | null | undefined
     ) {
         this.operator = operator;
@@ -88,21 +88,32 @@ export class SegmentConditionModel {
                 );
             },
             evaluateRegex: (traitValue: any) => {
-                return !!this.value && !!traitValue?.toString().match(new RegExp(this.value));
+                return (
+                    !!this.value &&
+                    !!traitValue?.toString().match(new RegExp(this.value?.toString()))
+                );
             },
             evaluateModulo: (traitValue: any) => {
                 if (isNaN(parseFloat(traitValue)) || !this.value) {
                     return false;
                 }
-                const parts = this.value.split('|');
+                const parts = this.value?.toString().split('|');
                 const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
                 return traitValue % divisor === reminder;
             },
-            evaluateIn: (traitValue: any) => {
-                // Looks for a list => all good but checks if it's a list of string
-                // If it's a string => Assume it's a json encoded list
-                // Fallback to the old logic
-                // Add some tests
+            evaluateIn: (traitValue: string[] | string) => {
+                if (Array.isArray(this.value)) {
+                    return this.value.includes(traitValue.toString());
+                }
+
+                if (typeof this.value === 'string') {
+                    try {
+                        const parsed = JSON.parse(this.value);
+                        if (Array.isArray(parsed)) {
+                            return parsed.includes(traitValue.toString());
+                        }
+                    } catch {}
+                }
                 return this.value?.split(',').includes(traitValue.toString());
             }
         };

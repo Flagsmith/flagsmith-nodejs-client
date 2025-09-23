@@ -1,6 +1,7 @@
 import * as jsonpath from 'jsonpath';
 import {
     EvaluationContext,
+    InSegmentCondition,
     SegmentCondition,
     SegmentContext,
     SegmentRule
@@ -49,16 +50,14 @@ export function evaluateIdentityInSegment(
  * @returns true if the condition matches
  */
 export function traitsMatchSegmentCondition(
-    condition: SegmentCondition,
+    condition: SegmentCondition | InSegmentCondition,
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
-    // This could be any context value and identity key is the fallback ($.environment.key / $.environment.name ...) => getContextValue
-    // We need to re-implement the IN operator for context values (especially because of the JSONEncodedList + context values)
-    const identityKey = context?.identity?.key || '';
-
     if (condition.operator === PERCENTAGE_SPLIT) {
-        const hashedPercentage = getHashedPercentageForObjIds([segmentKey, identityKey]);
+        const contextValueKey =
+            getContextValue(condition.property, context) || context?.identity?.key;
+        const hashedPercentage = getHashedPercentageForObjIds([segmentKey, contextValueKey]);
         return hashedPercentage <= parseFloat(String(condition.value));
     }
     if (!condition.property) {
@@ -160,7 +159,7 @@ function getTraitValue(property: string, context?: EvaluationContext): any {
  * @returns The resolved value, or undefined if path doesn't exist or is invalid
  */
 export function getContextValue(jsonPath: string, context?: EvaluationContext): any {
-    if (!context || !jsonPath.startsWith('$.')) return undefined;
+    if (!context || !jsonPath?.startsWith('$.')) return undefined;
 
     try {
         const results = jsonpath.query(context, jsonPath);

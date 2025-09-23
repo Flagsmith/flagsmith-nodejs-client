@@ -22,7 +22,7 @@ export type SegmentKey = SegmentContext['key'];
 export type SegmentName = SegmentContext['name'];
 export type SegmentRuleType = SegmentRule['type'];
 export type ConditionOperator = SegmentCondition['operator'] | InSegmentCondition['operator'];
-export type ConditionProperty = SegmentCondition['property'];
+export type ConditionProperty = SegmentCondition['property'] | InSegmentCondition['property'];
 export type ConditionValue = SegmentCondition['value'] | InSegmentCondition['value'];
 
 export type FeatureKey = FeatureContext['feature_key'];

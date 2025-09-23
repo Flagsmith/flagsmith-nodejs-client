@@ -17,9 +17,12 @@ import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils
 import { getEvaluationContext } from '../../../../flagsmith-engine/evaluationContext/mappers.js';
 import {
     EvaluationContext,
+    InSegmentCondition,
     SegmentCondition,
+    SegmentCondition1,
     SegmentContext
 } from '../../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
+import { SegmentConditionModel } from '../../../../flagsmith-engine/segments/models.js';
 
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
@@ -203,6 +206,98 @@ describe('getIdentitySegments integration', () => {
     });
 });
 
+describe('IN operator', () => {
+    const mockContext: EvaluationContext = {
+        environment: { key: 'env', name: 'test' },
+        identity: {
+            key: 'test-user',
+            identifier: 'test',
+            traits: { name: 'test' }
+        },
+        segments: {},
+        features: {}
+    };
+
+    test.each([
+        // Array of strings
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: ['test', 'john-doe']
+            },
+            true
+        ],
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: ['john-doe']
+            },
+            false
+        ],
+
+        // JSON encoded
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: '["test", "john-doe"]'
+            },
+            true
+        ],
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: '["john-doe"]'
+            },
+            false
+        ],
+
+        // Legacy value string to split
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: 'test,john-doe'
+            },
+            true
+        ],
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: 'john-doe'
+            },
+            false
+        ],
+        // Fails because the value is split in middle
+        [
+            {
+                property: '$.identity.identifier',
+                operator: CONDITION_OPERATORS.IN,
+                value: 'te,st,john-doe'
+            },
+            false
+        ],
+
+        // Edge cases
+        [{ property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: '' }, false],
+        [{ property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: [] }, false],
+        [
+            { property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: '[]' },
+            false
+        ]
+    ] as Array<[SegmentCondition | InSegmentCondition, boolean]>)(
+        'evaluates IN condition %j to %s',
+        (condition: SegmentCondition | InSegmentCondition, expected: boolean) => {
+            const result = traitsMatchSegmentCondition(condition, 'segment', mockContext);
+            expect(result).toBe(expected);
+        }
+    );
+});
+
 describe('evaluateIdentityInSegment', () => {
     const mockContext: EvaluationContext = {
         environment: { key: 'env', name: 'test' },
@@ -361,7 +456,11 @@ describe('percentage split operator', () => {
     ])('percentage %d with threshold %d returns %s', (hashedValue, threshold, expected) => {
         const mockHashFn = getHashedPercentageForObjIds;
         mockHashFn.mockReturnValue(hashedValue);
-        const condition = { property: 'any', operator: 'PERCENTAGE_SPLIT', value: threshold };
+        const condition = {
+            property: 'any',
+            operator: 'PERCENTAGE_SPLIT',
+            value: threshold.toString()
+        } as SegmentCondition1 | InSegmentCondition;
         const result = traitsMatchSegmentCondition(condition, 'seg1', mockContext);
 
         expect(result).toBe(expected);
