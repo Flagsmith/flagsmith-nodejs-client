@@ -134,6 +134,7 @@ function mapIdentityOverridesToSegments(identity: IdentityModel): Segments {
         priority: -Infinity
     }));
 
+    // Can be grouped in a massive IN segment with all the overrides
     const segmentKey = `identity_override_${identity.identifier}`;
 
     segments[segmentKey] = {

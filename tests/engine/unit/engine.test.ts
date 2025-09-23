@@ -20,8 +20,6 @@ import {
 } from './utils.js';
 import { getEvaluationContext } from '../../../flagsmith-engine/evaluationContext/mappers.js';
 import { TARGETING_REASONS } from '../../../flagsmith-engine/features/types.js';
-import { flagsmith } from '../../sdk/utils.js';
-import { getIdentitySegments } from '../../../flagsmith-engine/segments/evaluators.js';
 import { EvaluationContext } from '../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
 
 test('test_get_evaluation_result_without_any_override', () => {
@@ -89,18 +87,6 @@ test('test_identity_get_all_feature_states_with_traits', () => {
     );
 });
 
-// TO CONFIRM ITS REMOVED
-// test('test_identity_get_all_feature_states_with_traits_hideDisabledFlags', () => {
-//     const trait_models = new TraitModel(segmentConditionProperty, segmentConditionStringValue);
-
-//     const env = environmentWithSegmentOverride();
-
-//     const context = getEvaluationContext(env, identityInSegment(), [trait_models]);
-//     const result = getEvaluationResult(context, true);
-
-//     expect(result.flags.length).toBe(0);
-// });
-
 test('test_environment_get_all_feature_states', () => {
     const env = environment();
     const context = getEvaluationContext(env);
@@ -118,44 +104,6 @@ test('test_environment_get_all_feature_states', () => {
         expect(flag.value).toBe(envFeature?.value);
     }
 });
-// CONFIRM hide_disabled_flags is removed in local evaluation
-// test('test_environment_get_feature_states_hides_disabled_flags_if_enabled', () => {
-//     // One feature is disabled this environment
-//     const env = environment();
-//     const context = getEvaluationContext(env);
-//     const result = getEvaluationResult(context, true);
-
-//     expect(result.flags.length).toBe(1);
-
-//     result.flags.forEach(flag => {
-//         expect(flag.reason).toBe('DEFAULT');
-//     });
-
-//     for (const flag of result.flags) {
-//         const envFeature = Object.values(context.features || {}).find(f => f.name === flag.name);
-//         expect(flag.enabled).toBe(envFeature?.enabled);
-//         expect(flag.value).toBe(envFeature?.value);
-//     }
-// });
-
-// Check if this test is still needed
-// test('test_environment_get_feature_state', () => {
-//     const env = environment();
-//     const feature = feature1();
-//     const context = getEvaluationContext(env, identity());
-//     const featureState = getEnvironmentFeatureStateFromContext(context, feature.name);
-
-//     expect(featureState.name).toStrictEqual(feature.name);
-// });
-
-// Check if this test is still needed
-// test('test_environment_get_feature_state_raises_feature_state_not_found', () => {
-//     const context = getEvaluationContext(environment(), identity());
-//     const result = getEvaluationResult(context);
-//     expect(() => {
-//         getEnvironmentFeatureStateFromContext(context, 'not_a_feature_name');
-//     }).toThrowError('Feature State Not Found');
-// });
 
 test('isHigherPriority should handle undefined priorities correctly', () => {
     expect(isHigherPriority(1, 2)).toBe(true);

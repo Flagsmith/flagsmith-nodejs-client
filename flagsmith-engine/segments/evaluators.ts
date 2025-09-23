@@ -53,6 +53,8 @@ export function traitsMatchSegmentCondition(
     segmentKey: string,
     context?: EvaluationContext
 ): boolean {
+    // This could be any context value and identity key is the fallback ($.environment.key / $.environment.name ...) => getContextValue
+    // We need to re-implement the IN operator for context values (especially because of the JSONEncodedList + context values)
     const identityKey = context?.identity?.key || '';
 
     if (condition.operator === PERCENTAGE_SPLIT) {

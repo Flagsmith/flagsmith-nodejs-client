@@ -30,9 +30,6 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
     const { segments, segmentOverrides } = evaluateSegments(context);
     const flags = evaluateFeatures(context, segmentOverrides);
 
-    // Not sure if we need this - Keeping till confirmed hidedisabledflags is remote evaluation only
-    // const filteredFlags = hideDisabledFlags ? flags.filter(flag => flag.enabled) : flags;
-
     return { context, flags, segments };
 }
 

@@ -99,6 +99,10 @@ export class SegmentConditionModel {
                 return traitValue % divisor === reminder;
             },
             evaluateIn: (traitValue: any) => {
+                // Looks for a list => all good but checks if it's a list of string
+                // If it's a string => Assume it's a json encoded list
+                // Fallback to the old logic
+                // Add some tests
                 return this.value?.split(',').includes(traitValue.toString());
             }
         };
