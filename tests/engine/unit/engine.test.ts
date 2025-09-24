@@ -21,6 +21,7 @@ import {
 import { getEvaluationContext } from '../../../flagsmith-engine/evaluationContext/mappers.js';
 import { TARGETING_REASONS } from '../../../flagsmith-engine/features/types.js';
 import { EvaluationContext } from '../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
+import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../../flagsmith-engine/segments/constants.js';
 
 test('test_get_evaluation_result_without_any_override', () => {
     const context = getEvaluationContext(environment(), identity());
@@ -57,7 +58,7 @@ test('test_get_evaluation_result_with_identity_override_and_no_segment_override'
         expect(flag.enabled).toBe(expected);
         expect(flag.reason).toBe(
             flag.name === 'overridden_feature'
-                ? TARGETING_REASONS.IDENTITY_OVERRIDE
+                ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${IDENTITY_OVERRIDE_SEGMENT_NAME}`
                 : TARGETING_REASONS.DEFAULT
         );
     }

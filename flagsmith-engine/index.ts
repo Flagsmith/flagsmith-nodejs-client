@@ -143,10 +143,7 @@ export function isHigherPriority(
 }
 
 const getTargetingMatchReason = (segmentOverride: SegmentOverride) => {
-    if (segmentOverride) {
-        return segmentOverride.segmentName === IDENTITY_OVERRIDE_SEGMENT_NAME
-            ? TARGETING_REASONS.IDENTITY_OVERRIDE
-            : `${TARGETING_REASONS.TARGETING_MATCH}; segment=${segmentOverride.segmentName}`;
-    }
-    return TARGETING_REASONS.DEFAULT;
+    return segmentOverride
+        ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${segmentOverride.segmentName}`
+        : TARGETING_REASONS.DEFAULT;
 };
