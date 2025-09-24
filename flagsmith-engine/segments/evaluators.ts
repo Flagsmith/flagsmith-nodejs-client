@@ -5,7 +5,7 @@ import {
     SegmentCondition,
     SegmentContext,
     SegmentRule
-} from '../evaluationContext/models.js';
+} from '../evaluation/models.js';
 import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';

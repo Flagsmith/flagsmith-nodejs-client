@@ -14,15 +14,14 @@ import { TraitModel, IdentityModel } from '../../../../flagsmith-engine/index.js
 import { environment } from '../utils.js';
 import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
 import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
-import { getEvaluationContext } from '../../../../flagsmith-engine/evaluationContext/mappers.js';
+import { getEvaluationContext } from '../../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 import {
     EvaluationContext,
     InSegmentCondition,
     SegmentCondition,
     SegmentCondition1,
     SegmentContext
-} from '../../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
-import { SegmentConditionModel } from '../../../../flagsmith-engine/segments/models.js';
+} from '../../../../flagsmith-engine/evaluation/models.js';
 
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({

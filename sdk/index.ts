@@ -24,7 +24,7 @@ import {
     TraitConfig
 } from './types.js';
 import { pino, Logger } from 'pino';
-import { getEvaluationContext } from '../flagsmith-engine/evaluationContext/mappers.js';
+import { getEvaluationContext } from '../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';

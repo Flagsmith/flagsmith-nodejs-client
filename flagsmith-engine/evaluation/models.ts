@@ -1,3 +1,7 @@
+// This file is the entry point for the evaluation module types
+// All types from evaluations should be at least imported here and re-exported
+// Do not use types directly from generated files
+
 import type {
     EnvironmentContext,
     IdentityContext,
@@ -9,8 +13,14 @@ import type {
     FeatureValue as ContextFeatureValue,
     Traits,
     Features,
-    Segments
-} from './evaluationContext.types.ts';
+    Segments,
+    EvaluationContext
+} from './evaluationContext/evaluationContext.types.js';
+
+import type {
+    EvaluationResult as EvaluationContextResult,
+    FlagResult as EvaluationContextResultFlagResult
+} from './evaluationResult/evaluationResult.types.js';
 
 export type EnvironmentKey = EnvironmentContext['key'];
 export type EnvironmentName = EnvironmentContext['name'];
@@ -39,4 +49,24 @@ export type TraitMap = Traits;
 export type FeatureMap = Features;
 export type SegmentMap = Segments;
 
-export type * from './evaluationContext.types.ts';
+export type SegmentConditionOperator = SegmentCondition['operator'];
+
+export type EvaluationReason = EvaluationContextResultFlagResult['reason'];
+
+export type EvaluationResultSegments = EvaluationContextResult['segments'];
+export type EvaluationResultFlags = {
+    feature_key: FeatureKey;
+    name: FeatureName;
+    enabled: FeatureEnabled;
+    value: FeatureValue;
+    reason: EvaluationReason;
+}[];
+
+export type EvaluationResult = {
+    context: EvaluationContext;
+    flags: EvaluationResultFlags;
+    segments: EvaluationResultSegments;
+};
+
+export type { FlagResult } from './evaluationResult/evaluationResult.types.js';
+export type * from './evaluationContext/evaluationContext.types.js';

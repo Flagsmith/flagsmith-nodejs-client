@@ -6,7 +6,7 @@ import {
     MultivariateFeatureStateValueModel
 } from './models.js';
 
-import { FeatureContext } from '../evaluationContext/models.js';
+import { FeatureContext } from '../evaluation/models.js';
 import { getHashedPercentageForObjIds as getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 
 export function buildFeatureModel(featuresModelJSON: any): FeatureModel {

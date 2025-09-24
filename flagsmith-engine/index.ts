@@ -1,8 +1,7 @@
-import { EvaluationContext, FeatureContext } from './evaluationContext/models.js';
+import { EvaluationContext, FeatureContext } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
-import { EvaluationResult, EvaluationResultFlags } from './evaluationResult/models.js';
+import { EvaluationResult, EvaluationResultFlags } from './evaluation/models.js';
 import { evaluateFeatureValue } from './features/util.js';
-import { IDENTITY_OVERRIDE_SEGMENT_NAME } from './segments/constants.js';
 import { TARGETING_REASONS } from './features/types.js';
 export { EnvironmentModel } from './environments/models.js';
 export { IdentityModel } from './identities/models.js';

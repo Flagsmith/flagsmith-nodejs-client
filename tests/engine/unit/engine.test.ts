@@ -18,9 +18,9 @@ import {
     segmentConditionProperty,
     segmentConditionStringValue
 } from './utils.js';
-import { getEvaluationContext } from '../../../flagsmith-engine/evaluationContext/mappers.js';
+import { getEvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 import { TARGETING_REASONS } from '../../../flagsmith-engine/features/types.js';
-import { EvaluationContext } from '../../../flagsmith-engine/evaluationContext/evaluationContext.types.js';
+import { EvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../../flagsmith-engine/segments/constants.js';
 
 test('test_get_evaluation_result_without_any_override', () => {

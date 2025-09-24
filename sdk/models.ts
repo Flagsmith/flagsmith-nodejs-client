@@ -1,7 +1,4 @@
-import {
-    EvaluationResult,
-    FlagResult
-} from '../flagsmith-engine/evaluationResult/evaluationResult.types.js';
+import { EvaluationResult, FlagResult } from '../flagsmith-engine/evaluation/models.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
 

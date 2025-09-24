@@ -18,10 +18,12 @@ import {
     CONDITION_OPERATORS
 } from './constants.js';
 import { isSemver } from './util.js';
-import { EvaluationResultSegments } from '../evaluationResult/models.js';
-import { EvaluationContext } from '../evaluationContext/evaluationContext.types.js';
+import {
+    EvaluationContext,
+    Overrides
+} from '../evaluation/evaluationContext/evaluationContext.types.js';
 import { CONSTANTS } from '../features/constants.js';
-import { SegmentContext } from '../evaluationResult/evaluationResult.types.js';
+import { EvaluationResultSegments } from '../evaluation/models.js';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;
@@ -193,9 +195,7 @@ export class SegmentModel {
         return segmentModels;
     }
 
-    private static createFeatureStatesFromOverrides(
-        overrides: SegmentContext['overrides']
-    ): FeatureStateModel[] {
+    private static createFeatureStatesFromOverrides(overrides: Overrides): FeatureStateModel[] {
         if (!overrides) return [];
         return overrides.map(override => {
             const feature = new FeatureModel(

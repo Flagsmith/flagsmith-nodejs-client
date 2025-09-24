@@ -5,11 +5,11 @@ import {
     EvaluationContext,
     EnvironmentContext,
     IdentityContext
-} from './models.js';
-import { EnvironmentModel } from '../environments/models.js';
-import { IdentityModel } from '../identities/models.js';
-import { TraitModel } from '../identities/traits/models.js';
-import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../segments/constants.js';
+} from '../models.js';
+import { EnvironmentModel } from '../../environments/models.js';
+import { IdentityModel } from '../../identities/models.js';
+import { TraitModel } from '../../identities/traits/models.js';
+import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
 
 export function getEvaluationContext(
