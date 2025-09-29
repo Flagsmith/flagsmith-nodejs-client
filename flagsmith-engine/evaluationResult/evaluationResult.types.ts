@@ -112,7 +112,7 @@ export type Value3 = string | number | boolean | null;
  */
 export type Weight = number;
 /**
- * An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.
+ * An array of environment default values associated with the feature. Empty for standard features, or contains multiple values for multivariate features.
  */
 export type Variants = FeatureValue[];
 /**

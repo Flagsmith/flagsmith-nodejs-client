@@ -21,18 +21,11 @@ import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
  */
 export function getIdentitySegments(context: EvaluationContext): SegmentContext[] {
     if (!context.identity || !context.segments) return [];
-    return Object.values(context.segments).filter(segment =>
-        evaluateIdentityInSegment(segment, context)
-    );
-}
 
-export function evaluateIdentityInSegment(
-    segment: SegmentContext,
-    context?: EvaluationContext
-): boolean {
-    if (segment.rules.length === 0) return false;
-
-    return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
+    return Object.values(context.segments).filter(segment => {
+        if (segment.rules.length === 0) return false;
+        return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
+    });
 }
 
 /**

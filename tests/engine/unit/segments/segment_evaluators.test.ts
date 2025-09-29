@@ -6,7 +6,6 @@ import {
 
 import {
     traitsMatchSegmentCondition,
-    evaluateIdentityInSegment,
     getContextValue,
     getIdentitySegments
 } from '../../../../flagsmith-engine/segments/evaluators.js';
@@ -84,7 +83,7 @@ test('test_traits_match_segment_condition_for_trait_existence_operators', () => 
     }
 });
 
-test('evaluateIdentityInSegment uses django ID for hashed percentage when present', () => {
+test('getIdentitySegments uses django ID for hashed percentage when present', () => {
     var identityModel = new IdentityModel(
         Date.now().toString(),
         [],
@@ -117,13 +116,12 @@ test('evaluateIdentityInSegment uses django ID for hashed percentage when presen
     environmentModel.project.segments = [segmentModel];
     const context = getEvaluationContext(environmentModel, identityModel);
 
-    const segmentContext = context.segments![1];
-    var result = evaluateIdentityInSegment(segmentContext, context);
+    var result = getIdentitySegments(context);
 
-    expect(result).toBe(true);
+    expect(result).toHaveLength(1);
     expect(getHashedPercentageForObjIds).toHaveBeenCalledTimes(1);
     expect(getHashedPercentageForObjIds).toHaveBeenCalledWith([
-        segmentContext.key,
+        result[0].key,
         context.identity!.key
     ]);
 });
@@ -297,81 +295,102 @@ describe('IN operator', () => {
     );
 });
 
-describe('evaluateIdentityInSegment', () => {
-    const mockContext: EvaluationContext = {
+describe('getIdentitySegments single segment evaluation', () => {
+    const baseContext: EvaluationContext = {
         environment: { key: 'env', name: 'test' },
         identity: { key: 'user', identifier: 'test@example.com', traits: { age: 25 } },
         segments: {},
         features: {}
     };
 
-    test('returns false for segment with no rules', () => {
-        const segment: SegmentContext = {
-            key: '1',
-            name: 'empty_segment',
-            rules: [],
-            overrides: []
+    test('returns empty array for segment with no rules', () => {
+        const context = {
+            ...baseContext,
+            segments: {
+                '1': {
+                    key: '1',
+                    name: 'empty_segment',
+                    rules: [],
+                    overrides: []
+                }
+            }
         };
 
-        expect(evaluateIdentityInSegment(segment, mockContext)).toBe(false);
+        expect(getIdentitySegments(context)).toEqual([]);
     });
 
-    test('returns true when all rules match', () => {
-        const segment: SegmentContext = {
-            key: '1',
-            name: 'matching_segment',
-            rules: [
-                {
-                    type: 'ALL',
-                    conditions: [
+    test('returns segment when all rules match', () => {
+        const context: EvaluationContext = {
+            ...baseContext,
+            segments: {
+                '1': {
+                    key: '1',
+                    name: 'matching_segment',
+                    rules: [
                         {
-                            property: '$.identity.identifier',
-                            operator: 'EQUAL',
-                            value: 'test@example.com'
-                        }
-                    ]
-                },
-                {
-                    type: 'ALL',
-                    conditions: [
+                            type: ALL_RULE,
+                            conditions: [
+                                {
+                                    property: '$.identity.identifier',
+                                    operator: 'EQUAL',
+                                    value: 'test@example.com'
+                                }
+                            ],
+                            rules: []
+                        },
                         {
-                            property: '$.identity.identifier',
-                            operator: 'CONTAINS',
-                            value: 'test@example.com'
+                            type: ALL_RULE,
+                            conditions: [
+                                {
+                                    property: '$.identity.identifier',
+                                    operator: 'CONTAINS',
+                                    value: 'test@example.com'
+                                }
+                            ],
+                            rules: []
                         }
-                    ]
+                    ],
+                    overrides: []
                 }
-            ],
-            overrides: []
+            }
         };
 
-        expect(evaluateIdentityInSegment(segment, mockContext)).toBe(true);
+        const result = getIdentitySegments(context);
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('matching_segment');
     });
 
-    test('returns false when any rule fails', () => {
-        const segment: SegmentContext = {
-            key: '1',
-            name: 'failing_segment',
-            rules: [
-                {
-                    type: 'ALL',
-                    conditions: [
+    test('returns empty array when any rule fails', () => {
+        const context: EvaluationContext = {
+            ...baseContext,
+            segments: {
+                '1': {
+                    key: '1',
+                    name: 'failing_segment',
+                    rules: [
                         {
-                            property: '$.identity.identifier',
-                            operator: 'EQUAL',
-                            value: 'test@example.com'
+                            type: ALL_RULE,
+                            conditions: [
+                                {
+                                    property: '$.identity.identifier',
+                                    operator: 'EQUAL',
+                                    value: 'test@example.com'
+                                }
+                            ],
+                            rules: []
+                        },
+                        {
+                            type: ALL_RULE,
+                            conditions: [{ property: 'age', operator: 'EQUAL', value: '30' }],
+                            rules: []
                         }
-                    ]
-                },
-                {
-                    type: 'ALL',
-                    conditions: [{ property: 'age', operator: 'EQUAL', value: '30' }]
+                    ],
+                    overrides: []
                 }
-            ],
-            overrides: []
+            }
         };
 
-        expect(evaluateIdentityInSegment(segment, mockContext)).toBe(false);
+        expect(getIdentitySegments(context)).toEqual([]);
     });
 });
 
