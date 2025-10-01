@@ -24,9 +24,11 @@ test('Test Engine', () => {
         const sortedEngineFlags = flags
             .allFlags()
             .sort((a, b) => (a.featureName > b.featureName ? 1 : -1));
-        const sortedAPIFlags = testCase.response['flags'].sort((a: any, b: any) =>
+
+        const expectedFlags = testCase.response['flags'] || {};
+        const sortedAPIFlags = Object.values(expectedFlags).sort((a: any, b: any) =>
             a.name > b.name ? 1 : -1
-        );
+        ) as Flags[];
 
         expect(sortedEngineFlags.length).toBe(sortedAPIFlags.length);
 

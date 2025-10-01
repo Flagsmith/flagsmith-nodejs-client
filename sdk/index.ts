@@ -4,7 +4,7 @@ import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js'
 
 import { ANALYTICS_ENDPOINT, AnalyticsProcessor } from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
-import { FlagsmithAPIError } from './errors.js';
+import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
@@ -279,6 +279,9 @@ export class Flagsmith {
         );
 
         const context = getEvaluationContext(environment, identityModel);
+        if (!context) {
+            throw new FlagsmithClientError('Local evaluation required to obtain identity segments');
+        }
         const evaluationResult = getEvaluationResult(context);
 
         return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
@@ -401,6 +404,9 @@ export class Flagsmith {
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
         const environment = await this.getEnvironment();
         const context = getEvaluationContext(environment);
+        if (!context) {
+            throw new FlagsmithClientError('Unable to get flags. No environment present.');
+        }
         const evaluationResult = getEvaluationResult(context);
         const flags = Flags.fromEvaluationResult(evaluationResult);
 
@@ -426,6 +432,9 @@ export class Flagsmith {
         );
 
         const context = getEvaluationContext(environment, identityModel);
+        if (!context) {
+            throw new FlagsmithClientError('Unable to get flags. No environment present.');
+        }
         const evaluationResult = getEvaluationResult(context);
 
         const flags = Flags.fromEvaluationResult(

@@ -18,8 +18,7 @@ import {
     EvaluationContext,
     InSegmentCondition,
     SegmentCondition,
-    SegmentCondition1,
-    SegmentContext
+    SegmentCondition1
 } from '../../../../flagsmith-engine/evaluation/models.js';
 
 // todo: work out how to implement this in a test function or before hook
