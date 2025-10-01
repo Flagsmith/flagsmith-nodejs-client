@@ -90,18 +90,35 @@ export class SegmentConditionModel {
                 );
             },
             evaluateRegex: (traitValue: any) => {
-                return (
-                    !!this.value &&
-                    !!traitValue?.toString().match(new RegExp(this.value?.toString()))
-                );
-            },
-            evaluateModulo: (traitValue: any) => {
-                if (isNaN(parseFloat(traitValue)) || !this.value) {
+                try {
+                    if (!this.value) {
+                        return false;
+                    }
+                    const regex = new RegExp(this.value?.toString());
+                    return !!traitValue?.toString().match(regex);
+                } catch {
                     return false;
                 }
-                const parts = this.value?.toString().split('|');
-                const [divisor, reminder] = [parseFloat(parts[0]), parseFloat(parts[1])];
-                return traitValue % divisor === reminder;
+            },
+            evaluateModulo: (traitValue: any) => {
+                const parsedTraitValue = parseFloat(traitValue);
+                if (isNaN(parsedTraitValue) || !this.value) {
+                    return false;
+                }
+
+                const parts = this.value.toString().split('|');
+                if (parts.length !== 2) {
+                    return false;
+                }
+
+                const divisor = parseFloat(parts[0]);
+                const remainder = parseFloat(parts[1]);
+
+                if (isNaN(divisor) || isNaN(remainder) || divisor === 0) {
+                    return false;
+                }
+
+                return parsedTraitValue % divisor === remainder;
             },
             evaluateIn: (traitValue: string[] | string) => {
                 if (Array.isArray(this.value)) {
