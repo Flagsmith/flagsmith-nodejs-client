@@ -329,7 +329,7 @@ export class Flagsmith {
         url: string,
         method: string,
         body?: { [key: string]: any }
-    ): Promise<any> {
+    ): Promise<{ response: Response; data: any }> {
         const headers: { [key: string]: any } = { 'Content-Type': 'application/json' };
         if (this.environmentKey) {
             headers['X-Environment-Key'] = this.environmentKey as string;
@@ -361,7 +361,7 @@ export class Flagsmith {
             );
         }
 
-        return data.json();
+        return { response: data, data: await data.json() };
     }
 
     /**
@@ -395,25 +395,41 @@ export class Flagsmith {
         const documents: any[] = [];
         let url = this.environmentUrl;
         let loggedWarning = false;
+
         while (true) {
-            if (!loggedWarning) {
-                const elapsedMs = Date.now() - startTime;
-                if (elapsedMs > this.environmentRefreshIntervalSeconds * 1000) {
-                    this.logger.warn(
-                        `Environment document retrieval exceeded the polling interval of ${this.environmentRefreshIntervalSeconds} seconds.`
-                    );
-                    loggedWarning = true;
+            try {
+                if (!loggedWarning) {
+                    const elapsedMs = Date.now() - startTime;
+                    if (elapsedMs > this.environmentRefreshIntervalSeconds * 1000) {
+                        this.logger.warn(
+                            `Environment document retrieval exceeded the polling interval of ${this.environmentRefreshIntervalSeconds} seconds.`
+                        );
+                        loggedWarning = true;
+                    }
                 }
-            }
 
-            const response = await this.getJSONResponse(url, 'GET');
-            documents.push(response);
+                const { response, data } = await this.getJSONResponse(url, 'GET');
 
-            if (response.links && response.links.next && response.links.next.url) {
-                url = response.links.next.url;
-                continue;
+                documents.push(data);
+
+                const linkHeader = response.headers.get('link');
+                if (linkHeader) {
+                    const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+
+                    if (nextMatch) {
+                        const relativeUrl = decodeURIComponent(nextMatch[1]);
+                        url = new URL(relativeUrl, this.apiUrl).href;
+
+                        continue;
+                    }
+                }
+                break;
+            } catch (error) {
+                if (error instanceof FlagsmithAPIError && error.message.includes('502')) {
+                    break;
+                }
+                throw error;
             }
-            break;
         }
 
         // Compile the document
@@ -473,7 +489,7 @@ export class Flagsmith {
         if (!this.environmentFlagsUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
-        const apiFlags = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
+        const { data: apiFlags } = await this.getJSONResponse(this.environmentFlagsUrl, 'GET');
         const flags = Flags.fromAPIFlags({
             apiFlags: apiFlags,
             analyticsProcessor: this.analyticsProcessor,
@@ -494,7 +510,7 @@ export class Flagsmith {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
         const data = generateIdentitiesData(identifier, traits, transient);
-        const jsonResponse = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
+        const { data: jsonResponse } = await this.getJSONResponse(this.identitiesUrl, 'POST', data);
         const flags = Flags.fromAPIFlags({
             apiFlags: jsonResponse['flags'],
             analyticsProcessor: this.analyticsProcessor,

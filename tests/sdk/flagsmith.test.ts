@@ -41,131 +41,142 @@ test('test_update_environment_sets_environment', async () => {
 });
 
 test('test_update_environment_handles_paginated_document', async () => {
-    const createMockFetch = (pages: any[]) => {
+    type EnvDocumentMockResponse = {
+        responseHeader: string | null;
+        page: any;
+    };
+
+    const createMockFetch = (pages: EnvDocumentMockResponse[]) => {
         let callCount = 0;
         return vi.fn((url: string, options?: RequestInit) => {
-            const headers = options?.headers as Record<string, string>;
-            const env = headers['X-Environment-Key'];
-
             if (url.includes('/environment-document')) {
-                if (env.startsWith('ser.')) {
-                    const page = pages[callCount];
-                    if (page) {
-                        callCount++;
-                        return Promise.resolve(new Response(JSON.stringify(page), { status: 200 }));
+                const document = envDocumentMockResponse[callCount];
+                if (document) {
+                    callCount++;
+
+                    const responseHeaders: Record<string, string> = {};
+
+                    if (document.responseHeader) {
+                        responseHeaders['Link'] = `<${document.responseHeader}>; rel="next"`;
                     }
+
+                    return Promise.resolve(
+                        new Response(JSON.stringify(document.page), {
+                            status: 200,
+                            headers: responseHeaders
+                        })
+                    );
                 }
-                return Promise.resolve(
-                    new Response('environment-document called without a server-side key', {
-                        status: 401
-                    })
-                );
             }
             return Promise.resolve(new Response('unknown url ' + url, { status: 404 }));
         });
     };
 
-    const pages = [
+    const envDocumentMockResponse: EnvDocumentMockResponse[] = [
         {
-            id: 1,
-            api_key: 'test-key',
-            project: {
+            responseHeader: '/api/v1/environment-document?page=2',
+            page: {
                 id: 1,
-                name: 'test',
-                organisation: {
+                api_key: 'test-key',
+                project: {
                     id: 1,
-                    name: 'Test Org',
-                    feature_analytics: false,
-                    persist_trait_data: true,
-                    stop_serving_flags: false
-                },
-                hide_disabled_flags: false,
-                segments: []
-            },
-            feature_states: [
-                {
-                    feature_state_value: 'first_page_feature_state',
-                    multivariate_feature_state_values: [],
-                    django_id: 81027,
-                    feature: {
-                        id: 15058,
-                        type: 'STANDARD',
-                        name: 'string_feature'
+                    name: 'test',
+                    organisation: {
+                        id: 1,
+                        name: 'Test Org',
+                        feature_analytics: false,
+                        persist_trait_data: true,
+                        stop_serving_flags: false
                     },
-                    enabled: false
+                    hide_disabled_flags: false,
+                    segments: []
                 },
-                {
-                    feature_state_value: 'second_page_feature_state',
-                    multivariate_feature_state_values: [],
-                    django_id: 81027,
-                    feature: {
-                        id: 15058,
-                        type: 'STANDARD',
-                        name: 'string_feature'
+                feature_states: [
+                    {
+                        feature_state_value: 'first_page_feature_state',
+                        multivariate_feature_state_values: [],
+                        django_id: 81027,
+                        feature: {
+                            id: 15058,
+                            type: 'STANDARD',
+                            name: 'string_feature'
+                        },
+                        enabled: false
                     },
-                    enabled: false
-                },
-                {
-                    feature_state_value: 'third_page_feature_state',
-                    multivariate_feature_state_values: [],
-                    django_id: 81027,
-                    feature: {
-                        id: 15058,
-                        type: 'STANDARD',
-                        name: 'string_feature'
+                    {
+                        feature_state_value: 'second_page_feature_state',
+                        multivariate_feature_state_values: [],
+                        django_id: 81027,
+                        feature: {
+                            id: 15058,
+                            type: 'STANDARD',
+                            name: 'string_feature'
+                        },
+                        enabled: false
                     },
-                    enabled: false
-                }
-            ],
-            identity_overrides: [{ id: 1, identifier: 'user1' }],
-            links: { next: { url: '/api/v1/environment-document?page=2' } }
+                    {
+                        feature_state_value: 'third_page_feature_state',
+                        multivariate_feature_state_values: [],
+                        django_id: 81027,
+                        feature: {
+                            id: 15058,
+                            type: 'STANDARD',
+                            name: 'string_feature'
+                        },
+                        enabled: false
+                    }
+                ],
+                identity_overrides: [{ id: 1, identifier: 'user1' }]
+            }
         },
         {
-            id: 1,
-            api_key: 'test-key',
-            project: {
-                id: 1,
-                name: 'test',
-                organisation: {
+            responseHeader: '/api/v1/environment-document?page=3',
+            page: {
+                api_key: 'test-key',
+                project: {
                     id: 1,
-                    name: 'Test Org',
-                    feature_analytics: false,
-                    persist_trait_data: true,
-                    stop_serving_flags: false
+                    name: 'test',
+                    organisation: {
+                        id: 1,
+                        name: 'Test Org',
+                        feature_analytics: false,
+                        persist_trait_data: true,
+                        stop_serving_flags: false
+                    },
+                    hide_disabled_flags: false,
+                    segments: []
                 },
-                hide_disabled_flags: false,
-                segments: []
-            },
-            feature_states: [],
-            identity_overrides: [{ id: 2, identifier: 'user2' }],
-            links: { next: { url: '/api/v1/environment-document?page=3' } }
+                feature_states: [],
+                identity_overrides: [{ id: 2, identifier: 'user2' }]
+            }
         },
         {
-            id: 1,
-            api_key: 'test-key',
-            project: {
-                id: 1,
-                name: 'test',
-                organisation: {
+            responseHeader: null,
+            page: {
+                api_key: 'test-key',
+                project: {
                     id: 1,
-                    name: 'Test Org',
-                    feature_analytics: false,
-                    persist_trait_data: true,
-                    stop_serving_flags: false
+                    name: 'test',
+                    organisation: {
+                        id: 1,
+                        name: 'Test Org',
+                        feature_analytics: false,
+                        persist_trait_data: true,
+                        stop_serving_flags: false
+                    },
+                    hide_disabled_flags: false,
+                    segments: []
                 },
-                hide_disabled_flags: false,
-                segments: []
-            },
-            feature_states: [],
-            identity_overrides: [{ id: 2, identifier: 'user3' }],
-            links: null
+                feature_states: [],
+                identity_overrides: [{ id: 2, identifier: 'user3' }]
+            }
         }
     ];
 
     const flg = new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true,
-        fetch: createMockFetch(pages)
+        fetch: createMockFetch(envDocumentMockResponse)
     });
 
     const environment = await flg.getEnvironment();
