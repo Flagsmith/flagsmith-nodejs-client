@@ -93,6 +93,28 @@ test.only('test_update_environment_handles_paginated_document', async () => {
                         name: 'string_feature'
                     },
                     enabled: false
+                },
+                {
+                    feature_state_value: 'second_page_feature_state',
+                    multivariate_feature_state_values: [],
+                    django_id: 81027,
+                    feature: {
+                        id: 15058,
+                        type: 'STANDARD',
+                        name: 'string_feature'
+                    },
+                    enabled: false
+                },
+                {
+                    feature_state_value: 'third_page_feature_state',
+                    multivariate_feature_state_values: [],
+                    django_id: 81027,
+                    feature: {
+                        id: 15058,
+                        type: 'STANDARD',
+                        name: 'string_feature'
+                    },
+                    enabled: false
                 }
             ],
             identity_overrides: [{ id: 1, identifier: 'user1' }],
@@ -114,19 +136,7 @@ test.only('test_update_environment_handles_paginated_document', async () => {
                 hide_disabled_flags: false,
                 segments: []
             },
-            feature_states: [
-                {
-                    feature_state_value: 'second_page_feature_state',
-                    multivariate_feature_state_values: [],
-                    django_id: 81027,
-                    feature: {
-                        id: 15058,
-                        type: 'STANDARD',
-                        name: 'string_feature'
-                    },
-                    enabled: false
-                }
-            ],
+            feature_states: [],
             identity_overrides: [{ id: 2, identifier: 'user2' }],
             links: { next: { url: '/api/v1/environment-document?page=3' } }
         },
@@ -146,19 +156,7 @@ test.only('test_update_environment_handles_paginated_document', async () => {
                 hide_disabled_flags: false,
                 segments: []
             },
-            feature_states: [
-                {
-                    feature_state_value: 'third_page_feature_state',
-                    multivariate_feature_state_values: [],
-                    django_id: 81027,
-                    feature: {
-                        id: 15058,
-                        type: 'STANDARD',
-                        name: 'string_feature'
-                    },
-                    enabled: false
-                }
-            ],
+            feature_states: [],
             identity_overrides: [{ id: 2, identifier: 'user3' }],
             links: null
         }

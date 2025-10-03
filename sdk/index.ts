@@ -421,8 +421,6 @@ export class Flagsmith {
         for (let i = 1; i < documents.length; i++) {
             compiledDocument.identity_overrides = compiledDocument.identity_overrides || [];
             compiledDocument.identity_overrides.push(...(documents[i].identity_overrides || []));
-            compiledDocument.feature_states = compiledDocument.feature_states || [];
-            compiledDocument.feature_states.push(...(documents[i].feature_states || []));
         }
 
         return buildEnvironmentModel(compiledDocument);
