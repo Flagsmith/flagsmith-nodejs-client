@@ -40,6 +40,151 @@ test('test_update_environment_sets_environment', async () => {
     expect(await flg.getEnvironment()).toStrictEqual(model);
 });
 
+test.only('test_update_environment_handles_paginated_document', async () => {
+    const createMockFetch = (pages: any[]) => {
+        let callCount = 0;
+        return vi.fn((url: string, options?: RequestInit) => {
+            const headers = options?.headers as Record<string, string>;
+            const env = headers['X-Environment-Key'];
+
+            if (url.includes('/environment-document')) {
+                if (env.startsWith('ser.')) {
+                    const page = pages[callCount];
+                    if (page) {
+                        callCount++;
+                        return Promise.resolve(new Response(JSON.stringify(page), { status: 200 }));
+                    }
+                }
+                return Promise.resolve(
+                    new Response('environment-document called without a server-side key', {
+                        status: 401
+                    })
+                );
+            }
+            return Promise.resolve(new Response('unknown url ' + url, { status: 404 }));
+        });
+    };
+
+    const pages = [
+        {
+            id: 1,
+            api_key: 'test-key',
+            project: {
+                id: 1,
+                name: 'test',
+                organisation: {
+                    id: 1,
+                    name: 'Test Org',
+                    feature_analytics: false,
+                    persist_trait_data: true,
+                    stop_serving_flags: false
+                },
+                hide_disabled_flags: false,
+                segments: []
+            },
+            feature_states: [
+                {
+                    feature_state_value: 'first_page_feature_state',
+                    multivariate_feature_state_values: [],
+                    django_id: 81027,
+                    feature: {
+                        id: 15058,
+                        type: 'STANDARD',
+                        name: 'string_feature'
+                    },
+                    enabled: false
+                }
+            ],
+            identity_overrides: [{ id: 1, identifier: 'user1' }],
+            links: { next: { url: '/api/v1/environment-document?page=2' } }
+        },
+        {
+            id: 1,
+            api_key: 'test-key',
+            project: {
+                id: 1,
+                name: 'test',
+                organisation: {
+                    id: 1,
+                    name: 'Test Org',
+                    feature_analytics: false,
+                    persist_trait_data: true,
+                    stop_serving_flags: false
+                },
+                hide_disabled_flags: false,
+                segments: []
+            },
+            feature_states: [
+                {
+                    feature_state_value: 'second_page_feature_state',
+                    multivariate_feature_state_values: [],
+                    django_id: 81027,
+                    feature: {
+                        id: 15058,
+                        type: 'STANDARD',
+                        name: 'string_feature'
+                    },
+                    enabled: false
+                }
+            ],
+            identity_overrides: [{ id: 2, identifier: 'user2' }],
+            links: { next: { url: '/api/v1/environment-document?page=3' } }
+        },
+        {
+            id: 1,
+            api_key: 'test-key',
+            project: {
+                id: 1,
+                name: 'test',
+                organisation: {
+                    id: 1,
+                    name: 'Test Org',
+                    feature_analytics: false,
+                    persist_trait_data: true,
+                    stop_serving_flags: false
+                },
+                hide_disabled_flags: false,
+                segments: []
+            },
+            feature_states: [
+                {
+                    feature_state_value: 'third_page_feature_state',
+                    multivariate_feature_state_values: [],
+                    django_id: 81027,
+                    feature: {
+                        id: 15058,
+                        type: 'STANDARD',
+                        name: 'string_feature'
+                    },
+                    enabled: false
+                }
+            ],
+            identity_overrides: [{ id: 2, identifier: 'user3' }],
+            links: null
+        }
+    ];
+
+    const flg = new Flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        fetch: createMockFetch(pages)
+    });
+
+    const environment = await flg.getEnvironment();
+
+    expect(environment.identityOverrides).toHaveLength(3);
+    expect(environment.identityOverrides[0].identifier).toBe('user1');
+    expect(environment.identityOverrides[1].identifier).toBe('user2');
+    expect(environment.identityOverrides[2].identifier).toBe('user3');
+    expect(environment.featureStates).toHaveLength(3);
+    expect(environment.featureStates[0].getValue()).toBe('first_page_feature_state');
+    expect(environment.featureStates[1].getValue()).toBe('second_page_feature_state');
+    expect(environment.featureStates[2].getValue()).toBe('third_page_feature_state');
+    expect(environment.project.name).toBe('test');
+    expect(environment.project.organisation.name).toBe('Test Org');
+    expect(environment.project.organisation.id).toBe(1);
+});
+
 test('test_set_agent_options', async () => {
     const agent = new Agent({});
 

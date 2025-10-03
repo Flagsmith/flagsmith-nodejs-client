@@ -391,8 +391,41 @@ export class Flagsmith {
         if (!this.environmentUrl) {
             throw new Error('`apiUrl` argument is missing or invalid.');
         }
-        const environment_data = await this.getJSONResponse(this.environmentUrl, 'GET');
-        return buildEnvironmentModel(environment_data);
+        const startTime = Date.now();
+        const documents: any[] = [];
+        let url = this.environmentUrl;
+        let loggedWarning = false;
+        while (true) {
+            if (!loggedWarning) {
+                const elapsedMs = Date.now() - startTime;
+                if (elapsedMs > this.environmentRefreshIntervalSeconds * 1000) {
+                    this.logger.warn(
+                        `Environment document retrieval exceeded the polling interval of ${this.environmentRefreshIntervalSeconds} seconds.`
+                    );
+                    loggedWarning = true;
+                }
+            }
+
+            const response = await this.getJSONResponse(url, 'GET');
+            documents.push(response);
+
+            if (response.links && response.links.next && response.links.next.url) {
+                url = response.links.next.url;
+                continue;
+            }
+            break;
+        }
+
+        // Compile the document
+        const compiledDocument = documents[0];
+        for (let i = 1; i < documents.length; i++) {
+            compiledDocument.identity_overrides = compiledDocument.identity_overrides || [];
+            compiledDocument.identity_overrides.push(...(documents[i].identity_overrides || []));
+            compiledDocument.feature_states = compiledDocument.feature_states || [];
+            compiledDocument.feature_states.push(...(documents[i].feature_states || []));
+        }
+
+        return buildEnvironmentModel(compiledDocument);
     }
 
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
