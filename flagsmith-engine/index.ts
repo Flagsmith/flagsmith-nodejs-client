@@ -1,8 +1,8 @@
 import { EvaluationContext, FeatureContext } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResult, EvaluationResultFlags } from './evaluation/models.js';
-import { evaluateFeatureValue } from './features/util.js';
 import { TARGETING_REASONS } from './features/types.js';
+import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
 export { EnvironmentModel } from './environments/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
@@ -122,6 +122,39 @@ export function evaluateFeatures(
     }
 
     return flags;
+}
+
+function evaluateFeatureValue(feature: FeatureContext, identityKey?: string): any {
+    if (!!feature.variants && feature.variants.length > 0 && !!identityKey) {
+        return getMultivariateFeatureValue(feature, identityKey);
+    }
+
+    return feature.value;
+}
+
+/**
+ * Evaluates a multivariate feature flag to determine which variant value to return for a given identity.
+ *
+ * Uses deterministic hashing to ensure the same identity always receives the same variant,
+ * while distributing variants according to their configured weight percentages.
+ *
+ * @param feature - The feature context containing variants and their weights
+ * @param identityKey - The identity key used for deterministic variant selection
+ * @returns The variant value if the identity falls within a variant's range, otherwise the default feature value
+ */
+function getMultivariateFeatureValue(feature: FeatureContext, identityKey?: string): any {
+    const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
+
+    let startPercentage = 0;
+    for (const variant of feature?.variants || []) {
+        const limit = startPercentage + variant.weight;
+
+        if (startPercentage <= percentageValue && percentageValue < limit) {
+            return variant.value;
+        }
+        startPercentage = limit;
+    }
+    return feature.value;
 }
 
 export function shouldApplyOverride(
