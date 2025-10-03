@@ -3,6 +3,9 @@ import { Dispatcher } from 'undici-types';
 
 type Traits = { [key: string]: TraitConfig | FlagsmithTraitValue };
 
+const FLAGSMITH_USER_AGENT = 'flagsmith-nodejs-sdk';
+const FLAGSMITH_UNKNOWN_VERSION = 'unknown';
+
 export function isTraitConfig(
     traitValue: TraitConfig | FlagsmithTraitValue
 ): traitValue is TraitConfig {
@@ -100,5 +103,15 @@ export class Deferred<T> {
 
     public reject(reason?: unknown): void {
         this.rejectPromise(reason);
+    }
+}
+
+export function getUserAgent(): string {
+    try {
+        const packageJson = require('../package.json');
+        const version = packageJson?.version;
+        return version ? `${FLAGSMITH_USER_AGENT}/${version}` : FLAGSMITH_UNKNOWN_VERSION;
+    } catch {
+        return FLAGSMITH_UNKNOWN_VERSION;
     }
 }
