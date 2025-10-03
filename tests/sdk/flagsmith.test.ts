@@ -40,7 +40,7 @@ test('test_update_environment_sets_environment', async () => {
     expect(await flg.getEnvironment()).toStrictEqual(model);
 });
 
-test.only('test_update_environment_handles_paginated_document', async () => {
+test('test_update_environment_handles_paginated_document', async () => {
     const createMockFetch = (pages: any[]) => {
         let callCount = 0;
         return vi.fn((url: string, options?: RequestInit) => {
