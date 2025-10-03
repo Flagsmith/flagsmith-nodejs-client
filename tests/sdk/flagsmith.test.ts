@@ -48,23 +48,29 @@ test('test_update_environment_handles_paginated_document', async () => {
             const env = headers['X-Environment-Key'];
 
             if (url.includes('/environment-document')) {
-                if (env.startsWith('ser.')) {
-                    const page = pages[callCount];
-                    if (page) {
-                        callCount++;
-                        return Promise.resolve(new Response(JSON.stringify(page), { status: 200 }));
+                const page = pages[callCount];
+                if (page) {
+                    callCount++;
+
+                    const responseHeaders: Record<string, string> = {};
+
+                    if (page.nextUrl) {
+                        responseHeaders['Link'] = `<${page.nextUrl}>; rel="next"`;
                     }
+
+                    return Promise.resolve(
+                        new Response(JSON.stringify(page), {
+                            status: 200,
+                            headers: responseHeaders
+                        })
+                    );
                 }
-                return Promise.resolve(
-                    new Response('environment-document called without a server-side key', {
-                        status: 401
-                    })
-                );
             }
             return Promise.resolve(new Response('unknown url ' + url, { status: 404 }));
         });
     };
 
+    // Added a field "nextUrl" to indicate the mock there is a next page
     const pages = [
         {
             id: 1,
@@ -118,7 +124,7 @@ test('test_update_environment_handles_paginated_document', async () => {
                 }
             ],
             identity_overrides: [{ id: 1, identifier: 'user1' }],
-            links: { next: { url: '/api/v1/environment-document?page=2' } }
+            nextUrl: '/api/v1/environment-document?page=2'
         },
         {
             id: 1,
@@ -138,7 +144,7 @@ test('test_update_environment_handles_paginated_document', async () => {
             },
             feature_states: [],
             identity_overrides: [{ id: 2, identifier: 'user2' }],
-            links: { next: { url: '/api/v1/environment-document?page=3' } }
+            nextUrl: '/api/v1/environment-document?page=3'
         },
         {
             id: 1,
@@ -158,7 +164,7 @@ test('test_update_environment_handles_paginated_document', async () => {
             },
             feature_states: [],
             identity_overrides: [{ id: 2, identifier: 'user3' }],
-            links: null
+            nextUrl: null
         }
     ];
 

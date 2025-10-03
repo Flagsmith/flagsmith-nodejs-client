@@ -12,7 +12,6 @@ import {
     environmentWithSegmentOverride,
     feature1,
     getEnvironmentFeatureStateForFeature,
-    getEnvironmentFeatureStateForFeatureByName,
     identity,
     identityInSegment,
     segmentConditionProperty,
