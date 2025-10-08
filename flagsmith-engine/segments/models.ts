@@ -41,18 +41,36 @@ export const matchingFunctions = {
         !!otherValue && otherValue.includes(thisValue)
 };
 
+// Semver library throws an error if the version is invalid, in this case, we want to catch and return false
+const safeSemverCompare = (
+    semverMatchingFunction: (conditionValue: any, traitValue: any) => boolean
+) => {
+    return (conditionValue: any, traitValue: any) => {
+        try {
+            return semverMatchingFunction(conditionValue, traitValue);
+        } catch {
+            return false;
+        }
+    };
+};
+
 export const semverMatchingFunction = {
     ...matchingFunctions,
-    [CONDITION_OPERATORS.EQUAL]: (thisValue: any, otherValue: any) =>
-        semver.eq(thisValue, otherValue),
-    [CONDITION_OPERATORS.GREATER_THAN]: (thisValue: any, otherValue: any) =>
-        semver.gt(otherValue, thisValue),
-    [CONDITION_OPERATORS.GREATER_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
-        semver.gte(otherValue, thisValue),
-    [CONDITION_OPERATORS.LESS_THAN]: (thisValue: any, otherValue: any) =>
-        semver.gt(thisValue, otherValue),
-    [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
-        semver.gte(thisValue, otherValue)
+    [CONDITION_OPERATORS.EQUAL]: safeSemverCompare((conditionValue, traitValue) =>
+        semver.eq(traitValue, conditionValue)
+    ),
+    [CONDITION_OPERATORS.GREATER_THAN]: safeSemverCompare((conditionValue, traitValue) =>
+        semver.gt(traitValue, conditionValue)
+    ),
+    [CONDITION_OPERATORS.GREATER_THAN_INCLUSIVE]: safeSemverCompare((conditionValue, traitValue) =>
+        semver.gte(traitValue, conditionValue)
+    ),
+    [CONDITION_OPERATORS.LESS_THAN]: safeSemverCompare((conditionValue, traitValue) =>
+        semver.lt(traitValue, conditionValue)
+    ),
+    [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: safeSemverCompare((conditionValue, traitValue) =>
+        semver.lte(traitValue, conditionValue)
+    )
 };
 
 export const getMatchingFunctions = (semver: boolean) =>
