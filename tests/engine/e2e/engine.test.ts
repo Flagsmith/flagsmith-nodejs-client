@@ -57,6 +57,7 @@ describe('Engine Integration Tests', () => {
             for (let i = 0; i < sortedEngineFlags.length; i++) {
                 expect(sortedEngineFlags[i].value).toBe(sortedAPIFlags[i].value);
                 expect(sortedEngineFlags[i].enabled).toBe(sortedAPIFlags[i].enabled);
+                expect(sortedEngineFlags[i].reason).toBe(sortedAPIFlags[i].reason);
             }
         });
     });

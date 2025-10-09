@@ -108,28 +108,34 @@ export function evaluateFeatures(
         const segmentOverride = segmentOverrides[feature.feature_key];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
         const hasOverride = !!segmentOverride;
-        const reason = getTargetingMatchReason(segmentOverride);
+
+        const { value: evaluatedValue, reason: evaluatedReason } = hasOverride
+            ? { value: finalFeature.value, reason: undefined }
+            : evaluateFeatureValue(finalFeature, context.identity?.key);
 
         flags.push({
             feature_key: finalFeature.feature_key,
             name: finalFeature.name,
             enabled: finalFeature.enabled,
-            value: hasOverride
-                ? finalFeature.value
-                : evaluateFeatureValue(finalFeature, context.identity?.key),
-            reason
+            value: evaluatedValue,
+            reason:
+                evaluatedReason ??
+                getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
         });
     }
 
     return flags;
 }
 
-function evaluateFeatureValue(feature: FeatureContext, identityKey?: string): any {
+function evaluateFeatureValue(
+    feature: FeatureContext,
+    identityKey?: string
+): { value: any; reason?: string } {
     if (!!feature.variants && feature.variants.length > 0 && !!identityKey) {
         return getMultivariateFeatureValue(feature, identityKey);
     }
 
-    return feature.value;
+    return { value: feature.value, reason: undefined };
 }
 
 /**
@@ -142,7 +148,10 @@ function evaluateFeatureValue(feature: FeatureContext, identityKey?: string): an
  * @param identityKey - The identity key used for deterministic variant selection
  * @returns The variant value if the identity falls within a variant's range, otherwise the default feature value
  */
-function getMultivariateFeatureValue(feature: FeatureContext, identityKey?: string): any {
+function getMultivariateFeatureValue(
+    feature: FeatureContext,
+    identityKey?: string
+): { value: any; reason?: string } {
     const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
 
     let startPercentage = 0;
@@ -150,11 +159,14 @@ function getMultivariateFeatureValue(feature: FeatureContext, identityKey?: stri
         const limit = startPercentage + variant.weight;
 
         if (startPercentage <= percentageValue && percentageValue < limit) {
-            return variant.value;
+            return {
+                value: variant.value,
+                reason: getTargetingMatchReason({ type: 'SPLIT', weight: variant.weight })
+            };
         }
         startPercentage = limit;
     }
-    return feature.value;
+    return { value: feature.value, reason: undefined };
 }
 
 export function shouldApplyOverride(
@@ -174,8 +186,28 @@ export function isHigherPriority(
     return (priorityA ?? Infinity) < (priorityB ?? Infinity);
 }
 
-const getTargetingMatchReason = (segmentOverride: SegmentOverride) => {
-    return segmentOverride
-        ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${segmentOverride.segmentName}`
-        : TARGETING_REASONS.DEFAULT;
+export type TargetingMatchReason =
+    | {
+          type: 'SEGMENT';
+          override: SegmentOverride;
+      }
+    | {
+          type: 'SPLIT';
+          weight: number;
+      };
+
+const getTargetingMatchReason = (matchObject: TargetingMatchReason) => {
+    const { type } = matchObject;
+
+    if (type === 'SEGMENT') {
+        return matchObject.override
+            ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${matchObject.override.segmentName}`
+            : TARGETING_REASONS.DEFAULT;
+    }
+
+    if (type === 'SPLIT') {
+        return `${TARGETING_REASONS.SPLIT}; weight=${matchObject.weight}`;
+    }
+
+    return TARGETING_REASONS.DEFAULT;
 };

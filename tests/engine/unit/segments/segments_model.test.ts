@@ -107,7 +107,6 @@ const conditionMatchCases: [string, string | number | boolean | null, string, bo
 test('test_segment_condition_matches_trait_value', () => {
     for (const testCase of conditionMatchCases) {
         const [operator, traitValue, conditionValue, expectedResult] = testCase;
-        console.log(operator, traitValue, conditionValue, expectedResult);
         expect(
             new SegmentConditionModel(operator, conditionValue, 'foo').matchesTraitValue(traitValue)
         ).toBe(expectedResult);

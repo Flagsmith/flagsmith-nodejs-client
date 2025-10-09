@@ -50,6 +50,10 @@ export class Flag extends BaseFlag {
      * The programmatic name for this feature, unique per Flagsmith project.
      */
     featureName: string;
+    /**
+     * The reason for this feature, unique per Flagsmith project.
+     */
+    reason?: string;
 
     constructor(params: {
         value: FlagValue;
@@ -62,6 +66,7 @@ export class Flag extends BaseFlag {
         super(params.value, params.enabled, !!params.isDefault);
         this.featureId = params.featureId;
         this.featureName = params.featureName;
+        this.reason = params.reason;
     }
 
     static fromFeatureStateModel(
@@ -81,7 +86,8 @@ export class Flag extends BaseFlag {
             enabled: flagResult.enabled,
             value: flagResult.value ?? null,
             featureId: Number(flagResult.feature_key),
-            featureName: flagResult.name
+            featureName: flagResult.name,
+            reason: flagResult.reason
         });
     }
 
@@ -90,7 +96,8 @@ export class Flag extends BaseFlag {
             enabled: flagData['enabled'],
             value: flagData['feature_state_value'] ?? flagData['value'],
             featureId: flagData['feature']['id'],
-            featureName: flagData['feature']['name']
+            featureName: flagData['feature']['name'],
+            reason: flagData['feature']['reason']
         });
     }
 }
