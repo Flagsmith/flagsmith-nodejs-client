@@ -223,7 +223,10 @@ export class SegmentModel {
                 segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
                     segmentContext.overrides || []
                 );
-                segmentModels.push(segment);
+
+                if (!isNaN(segment.id)) {
+                    segmentModels.push(segment);
+                }
             }
         }
 

@@ -151,6 +151,7 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
 
         featuresToIdentifiers.get(overridesHash)!.identifiers.push(identity.identifier);
     }
+
     for (const [overrideHash, { identifiers, overrides }] of featuresToIdentifiers.entries()) {
         const segmentKey = `identity_override_${overrideHash}`;
 
@@ -164,7 +165,6 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
                         {
                             property: '$.identity.identifier',
                             operator: 'IN',
-                            // TODO: Modify once new IN operator is implemented
                             value: identifiers.join(',')
                         }
                     ]

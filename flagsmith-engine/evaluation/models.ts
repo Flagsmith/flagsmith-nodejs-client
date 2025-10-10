@@ -68,5 +68,5 @@ export type EvaluationResult = {
     segments: EvaluationResultSegments;
 };
 
-export type { FlagResult } from './evaluationResult/evaluationResult.types.js';
-export type * from './evaluationContext/evaluationContext.types.js';
+export { FlagResult } from './evaluationResult/evaluationResult.types.js';
+export * from './evaluationContext/evaluationContext.types.js';

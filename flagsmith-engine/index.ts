@@ -7,7 +7,8 @@ export { EnvironmentModel } from './environments/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
-
+export { FeatureModel, FeatureStateModel } from './features/models.js';
+export { OrganisationModel } from './organisations/models.js';
 type SegmentOverride = {
     feature: FeatureContext;
     segmentName: string;
