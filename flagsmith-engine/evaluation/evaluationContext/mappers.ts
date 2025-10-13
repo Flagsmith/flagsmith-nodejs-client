@@ -4,7 +4,8 @@ import {
     Traits,
     EvaluationContext,
     EnvironmentContext,
-    IdentityContext
+    IdentityContext,
+    SegmentSource
 } from '../models.js';
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
@@ -74,7 +75,11 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
                           value: fs.getValue(),
                           priority: fs.featureSegment?.priority
                       }))
-                    : []
+                    : [],
+            metadata: {
+                source: SegmentSource.API,
+                flagsmith_id: segment.id
+            }
         };
     }
 
@@ -170,6 +175,9 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
                     ]
                 }
             ],
+            metadata: {
+                source: SegmentSource.IDENTITY_OVERRIDE
+            },
             overrides: overrides
         };
     }

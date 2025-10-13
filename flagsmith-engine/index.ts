@@ -1,4 +1,4 @@
-import { EvaluationContext, FeatureContext } from './evaluation/models.js';
+import { EvaluationContext, FeatureContext, SegmentSource } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResult, EvaluationResultFlags } from './evaluation/models.js';
 import { TARGETING_REASONS } from './features/types.js';
@@ -9,6 +9,7 @@ export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
 export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
+
 type SegmentOverride = {
     feature: FeatureContext;
     segmentName: string;
@@ -30,7 +31,7 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
     const { segments, segmentOverrides } = evaluateSegments(context);
     const flags = evaluateFeatures(context, segmentOverrides);
 
-    return { context, flags, segments };
+    return { flags, segments };
 }
 
 /**
@@ -50,7 +51,14 @@ export function evaluateSegments(context: EvaluationContext): {
 
     const segments = identitySegments.map(segment => ({
         key: segment.key,
-        name: segment.name
+        name: segment.name,
+        ...(segment.metadata
+            ? {
+                  metadata: {
+                      ...segment.metadata
+                  }
+              }
+            : {})
     }));
     const segmentOverrides = processSegmentOverrides(identitySegments);
 
@@ -103,7 +111,7 @@ export function evaluateFeatures(
     context: EvaluationContext,
     segmentOverrides: Record<string, SegmentOverride>
 ): EvaluationResultFlags {
-    const flags: EvaluationResultFlags = [];
+    const flags: EvaluationResultFlags = {};
 
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.feature_key];
@@ -114,7 +122,7 @@ export function evaluateFeatures(
             ? { value: finalFeature.value, reason: undefined }
             : evaluateFeatureValue(finalFeature, context.identity?.key);
 
-        flags.push({
+        flags[finalFeature.name] = {
             feature_key: finalFeature.feature_key,
             name: finalFeature.name,
             enabled: finalFeature.enabled,
@@ -122,7 +130,7 @@ export function evaluateFeatures(
             reason:
                 evaluatedReason ??
                 getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
-        });
+        };
     }
 
     return flags;

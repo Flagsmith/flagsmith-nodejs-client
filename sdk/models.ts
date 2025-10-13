@@ -123,7 +123,7 @@ export class Flags {
         analyticsProcessor?: AnalyticsProcessor
     ): Flags {
         const flags: { [key: string]: Flag } = {};
-        for (const flag of evaluationResult.flags) {
+        for (const flag of Object.values(evaluationResult.flags)) {
             flags[flag.name] = new Flag({
                 enabled: flag.enabled,
                 value: flag.value ?? null,

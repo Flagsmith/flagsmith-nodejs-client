@@ -27,7 +27,7 @@ test('test_get_evaluation_result_without_any_override', () => {
     const context = getEvaluationContext(environment(), identity());
     const result = getEvaluationResult(context);
 
-    const flag = result.flags.find(f => f.name === feature1().name);
+    const flag = Object.values(result.flags).find(f => f.name === feature1().name);
     expect(flag).toBeDefined();
     expect(flag?.name).toBe(feature1().name);
     expect(flag?.feature_key).toBe(feature1().id.toString());
@@ -46,9 +46,9 @@ test('test_get_evaluation_result_with_identity_override_and_no_segment_override'
     const context = getEvaluationContext(env, ident);
     const result = getEvaluationResult(context);
 
-    expect(result.flags.length).toBe(3);
+    expect(Object.keys(result.flags).length).toBe(3);
 
-    for (const flag of result.flags) {
+    for (const flag of Object.values(result.flags)) {
         const environmentFeature = Object.values(context.features || {}).find(
             f => f.name === flag.name
         );
@@ -73,7 +73,7 @@ test('test_identity_get_all_feature_states_with_traits', () => {
 
     const result = getEvaluationResult(context);
 
-    const overriddenFlag = result.flags.find(f => f.value === 'segment_override');
+    const overriddenFlag = Object.values(result.flags).find(f => f.value === 'segment_override');
     expect(overriddenFlag).toBeDefined();
     expect(overriddenFlag?.value).toBe('segment_override');
     expect(overriddenFlag?.reason).toEqual(
@@ -86,13 +86,13 @@ test('test_environment_get_all_feature_states', () => {
     const context = getEvaluationContext(env);
     const result = getEvaluationResult(context);
 
-    expect(result.flags.length).toBe(Object.keys(context.features || {}).length);
+    expect(Object.keys(result.flags).length).toBe(Object.keys(context.features || {}).length);
 
-    result.flags.forEach(flag => {
+    Object.values(result.flags).forEach(flag => {
         expect(flag.reason).toBe(TARGETING_REASONS.DEFAULT);
     });
 
-    for (const flag of result.flags) {
+    for (const flag of Object.values(result.flags)) {
         const envFeature = Object.values(context.features || {}).find(f => f.name === flag.name);
         expect(flag.enabled).toBe(envFeature?.enabled);
         expect(flag.value).toBe(envFeature?.value);
@@ -362,6 +362,6 @@ test('evaluateFeatures with multivariate evaluation', () => {
         }
     };
 
-    const result = evaluateFeatures(context, {});
-    expect(result[0].value).toBe('variant_b');
+    const flags = evaluateFeatures(context, {});
+    expect(flags['Multivariate Feature'].value).toBe('variant_b');
 });

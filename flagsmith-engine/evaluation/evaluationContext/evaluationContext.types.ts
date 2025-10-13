@@ -175,6 +175,7 @@ export interface SegmentContext {
     name: Name1;
     rules: Rules;
     overrides?: Overrides;
+    metadata?: Metadata;
     [k: string]: unknown;
 }
 /**
@@ -224,6 +225,12 @@ export interface FeatureValue {
     value: Value3;
     weight: Weight;
     [k: string]: unknown;
+}
+/**
+ * Additional metadata associated with the segment.
+ */
+export interface Metadata {
+    [k: string]: string | number | boolean | null;
 }
 /**
  * Features to be evaluated in the context.

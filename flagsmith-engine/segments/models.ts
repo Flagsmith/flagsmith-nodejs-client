@@ -23,7 +23,7 @@ import {
     Overrides
 } from '../evaluation/evaluationContext/evaluationContext.types.js';
 import { CONSTANTS } from '../features/constants.js';
-import { EvaluationResultSegments } from '../evaluation/models.js';
+import { EvaluationResultSegments, SegmentSource } from '../evaluation/models.js';
 
 export const all = (iterable: Array<any>) => iterable.filter(e => !!e).length === iterable.length;
 export const any = (iterable: Array<any>) => iterable.filter(e => !!e).length > 0;
@@ -216,6 +216,9 @@ export class SegmentModel {
         }
 
         for (const segmentResult of segmentResults) {
+            if (segmentResult.metadata?.source === SegmentSource.IDENTITY_OVERRIDE) {
+                continue;
+            }
             const segmentContext = evaluationContext.segments[segmentResult.key];
             if (segmentContext) {
                 const segment = new SegmentModel(parseInt(segmentContext.key), segmentContext.name);
@@ -223,10 +226,7 @@ export class SegmentModel {
                 segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
                     segmentContext.overrides || []
                 );
-
-                if (!isNaN(segment.id)) {
-                    segmentModels.push(segment);
-                }
+                segmentModels.push(segment);
             }
         }
 

@@ -13,8 +13,7 @@ import type {
     FeatureValue as ContextFeatureValue,
     Traits,
     Features,
-    Segments,
-    EvaluationContext
+    Segments
 } from './evaluationContext/evaluationContext.types.js';
 
 import type {
@@ -54,19 +53,27 @@ export type SegmentConditionOperator = SegmentCondition['operator'];
 export type EvaluationReason = EvaluationContextResultFlagResult['reason'];
 
 export type EvaluationResultSegments = EvaluationContextResult['segments'];
-export type EvaluationResultFlags = {
-    feature_key: FeatureKey;
-    name: FeatureName;
-    enabled: FeatureEnabled;
-    value: FeatureValue;
-    reason: EvaluationReason;
-}[];
+export type EvaluationResultFlags = Record<
+    string,
+    {
+        feature_key: FeatureKey;
+        name: FeatureName;
+        enabled: FeatureEnabled;
+        value: FeatureValue;
+        reason: EvaluationReason;
+    }
+>;
 
 export type EvaluationResult = {
-    context: EvaluationContext;
     flags: EvaluationResultFlags;
     segments: EvaluationResultSegments;
 };
 
 export { FlagResult } from './evaluationResult/evaluationResult.types.js';
+
+export enum SegmentSource {
+    API = 'api',
+    IDENTITY_OVERRIDE = 'identity_override'
+}
+
 export * from './evaluationContext/evaluationContext.types.js';

@@ -63,5 +63,12 @@ export interface FlagResult {
 export interface SegmentResult {
     key: Key;
     name: Name1;
+    metadata?: Metadata;
     [k: string]: unknown;
+}
+/**
+ * Additional metadata associated with the segment.
+ */
+export interface Metadata {
+    [k: string]: string | number | boolean | null;
 }

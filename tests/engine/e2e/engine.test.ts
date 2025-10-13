@@ -13,6 +13,7 @@ interface TestCase {
     context: EvaluationContext;
     result: {
         flags?: Record<string, any>;
+        segments?: Record<string, any>;
     };
 }
 
@@ -53,7 +54,8 @@ describe('Engine Integration Tests', () => {
             ) as any[];
 
             expect(sortedEngineFlags.length).toBe(sortedAPIFlags.length);
-
+            expect(engine_response.segments).toStrictEqual(testCase.result.segments);
+            expect(engine_response.flags).toStrictEqual(testCase.result.flags);
             for (let i = 0; i < sortedEngineFlags.length; i++) {
                 expect(sortedEngineFlags[i].value).toBe(sortedAPIFlags[i].value);
                 expect(sortedEngineFlags[i].enabled).toBe(sortedAPIFlags[i].enabled);
