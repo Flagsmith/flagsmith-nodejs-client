@@ -427,9 +427,6 @@ export class Flagsmith {
                 }
                 break;
             } catch (error) {
-                if (error instanceof FlagsmithAPIError && error.message.includes('502')) {
-                    break;
-                }
                 throw error;
             }
         }
