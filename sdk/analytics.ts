@@ -1,6 +1,7 @@
 import { pino, Logger } from 'pino';
 import { Fetch } from './types.js';
 import { FlagsmithConfig } from './types.js';
+import { getUserAgent } from './utils.js';
 
 export const ANALYTICS_ENDPOINT = './analytics/flags/';
 
@@ -69,7 +70,8 @@ export class AnalyticsProcessor {
                 signal: AbortSignal.timeout(this.requestTimeoutMs),
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Environment-Key': this.environmentKey
+                    'X-Environment-Key': this.environmentKey,
+                    'User-Agent': getUserAgent()
                 }
             });
             await this.currentFlush;

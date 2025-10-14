@@ -9,7 +9,7 @@ import {
     badFetch
 } from './utils.js';
 import { DefaultFlag, Flags } from '../../sdk/models.js';
-import { delay } from '../../sdk/utils.js';
+import { delay, getUserAgent } from '../../sdk/utils.js';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models.js';
 import { BaseOfflineHandler } from '../../sdk/offline_handlers.js';
 import { Agent } from 'undici';
@@ -511,4 +511,11 @@ test('getIdentityFlags succeeds if initial fetch failed then succeeded', async (
     await flg.getEnvironment();
     const flags2 = await flg.getIdentityFlags('test-user');
     expect(flags2.isFeatureEnabled('some_feature')).toBe(true);
+});
+
+test('get_user_agent_extracts_version_from_package_json', async () => {
+    const userAgent = getUserAgent();
+    const packageJson = require('../../package.json');
+
+    expect(userAgent).toBe(`flagsmith-nodejs-sdk/${packageJson.version}`);
 });
