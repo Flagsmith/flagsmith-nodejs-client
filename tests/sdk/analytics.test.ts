@@ -1,3 +1,4 @@
+import { getUserAgent } from '../../sdk/utils.js';
 import { analyticsProcessor, fetch } from './utils.js';
 
 test('test_analytics_processor_track_feature_updates_analytics_data', () => {
@@ -26,7 +27,11 @@ test('test_analytics_processor_flush_post_request_data_match_ananlytics_data', a
         'http://testUrl/analytics/flags/',
         expect.objectContaining({
             body: '{"myFeature1":1,"myFeature2":1}',
-            headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'test-key' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Environment-Key': 'test-key',
+                'User-Agent': getUserAgent()
+            },
             method: 'POST'
         })
     );
