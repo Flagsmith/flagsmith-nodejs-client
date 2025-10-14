@@ -9,6 +9,7 @@ import {
     badFetch
 } from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
+import { getUserAgent } from '../../sdk/utils.js';
 
 vi.mock('../../sdk/polling_manager');
 
@@ -150,7 +151,11 @@ test('test_transient_identity', async () => {
         `https://edge.api.flagsmith.com/api/v1/identities/`,
         expect.objectContaining({
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Environment-Key': 'sometestfakekey',
+                'User-Agent': getUserAgent()
+            },
             body: JSON.stringify({ identifier, traits: traitsInRequest, transient })
         })
     );
@@ -191,7 +196,11 @@ test('test_identity_with_transient_traits', async () => {
         `https://edge.api.flagsmith.com/api/v1/identities/`,
         expect.objectContaining({
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Environment-Key': 'sometestfakekey' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Environment-Key': 'sometestfakekey',
+                'User-Agent': getUserAgent()
+            },
             body: JSON.stringify({ identifier, traits: traitsInRequest })
         })
     );

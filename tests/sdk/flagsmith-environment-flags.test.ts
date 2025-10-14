@@ -1,6 +1,7 @@
 import Flagsmith from '../../sdk/index.js';
 import { environmentJSON, environmentModel, flagsJSON, flagsmith, fetch } from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
+import { getUserAgent } from '../../sdk/utils.js';
 
 vi.mock('../../sdk/polling_manager');
 
@@ -70,6 +71,33 @@ test('test_getFeatureValue', async () => {
     const featureValue = flags.getFeatureValue('some_feature');
 
     expect(featureValue).toBe('some-value');
+});
+
+test('test_user_agent_is_set_when_fetching_environment_flags', async () => {
+    const defaultFlag = new DefaultFlag('some-default-value', true);
+
+    const defaultFlagHandler = (featureName: string) => defaultFlag;
+
+    const flg = flagsmith({
+        environmentKey: 'key',
+        defaultFlagHandler: defaultFlagHandler,
+        enableAnalytics: true
+    });
+    const flags = await flg.getEnvironmentFlags();
+    const featureValue = flags.getFeatureValue('some_feature');
+
+    expect(featureValue).toBe('some-value');
+    expect(fetch).toHaveBeenCalledWith(
+        `https://edge.api.flagsmith.com/api/v1/flags/`,
+        expect.objectContaining({
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Environment-Key': 'key',
+                'User-Agent': getUserAgent()
+            }
+        })
+    );
 });
 
 test('test_throws_when_no_default_flag_handler_after_multiple_API_errors', async () => {

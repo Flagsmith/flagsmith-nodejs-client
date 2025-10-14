@@ -8,7 +8,7 @@ import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
-import { Deferred, generateIdentitiesData, retryFetch } from './utils.js';
+import { Deferred, generateIdentitiesData, getUserAgent, retryFetch } from './utils.js';
 import {
     SegmentModel,
     EnvironmentModel,
@@ -340,6 +340,8 @@ export class Flagsmith {
         if (this.environmentKey) {
             headers['X-Environment-Key'] = this.environmentKey as string;
         }
+
+        headers['User-Agent'] = getUserAgent();
 
         if (this.customHeaders) {
             for (const [k, v] of Object.entries(this.customHeaders)) {

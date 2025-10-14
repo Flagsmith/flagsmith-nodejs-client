@@ -37,8 +37,13 @@ export const matchingFunctions = {
     [CONDITION_OPERATORS.LESS_THAN_INCLUSIVE]: (thisValue: any, otherValue: any) =>
         thisValue >= otherValue,
     [CONDITION_OPERATORS.NOT_EQUAL]: (thisValue: any, otherValue: any) => thisValue != otherValue,
-    [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) =>
-        !!otherValue && otherValue.includes(thisValue)
+    [CONDITION_OPERATORS.CONTAINS]: (thisValue: any, otherValue: any) => {
+        try {
+            return !!otherValue && otherValue.includes(thisValue);
+        } catch {
+            return false;
+        }
+    }
 };
 
 // Semver library throws an error if the version is invalid, in this case, we want to catch and return false

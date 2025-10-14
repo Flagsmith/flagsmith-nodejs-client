@@ -130,11 +130,23 @@ function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): 
 
 function getTraitValue(property: string, context?: EvaluationContext): any {
     if (property.startsWith('$.')) {
-        return getContextValue(property, context);
+        const contextValue = getContextValue(property, context);
+        if (contextValue && !isNonPrimitive(contextValue)) {
+            return contextValue;
+        }
     }
 
     const traits = context?.identity?.traits || {};
     return traits[property];
+}
+
+function isNonPrimitive(value: any): boolean {
+    if (value === null || value === undefined) {
+        return false;
+    }
+
+    // Objects and arrays are non-primitive
+    return typeof value === 'object';
 }
 
 /**
