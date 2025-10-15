@@ -70,5 +70,5 @@ export interface SegmentResult {
  * Additional metadata associated with the segment.
  */
 export interface Metadata {
-    [k: string]: string | number | boolean | null;
+    [k: string]: unknown;
 }

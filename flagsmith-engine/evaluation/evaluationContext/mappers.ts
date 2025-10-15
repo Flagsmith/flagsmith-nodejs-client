@@ -43,9 +43,10 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
             fs.multivariateFeatureStateValues.length > 0
                 ? [...fs.multivariateFeatureStateValues]
                       .sort((a, b) => (a.id ?? a.mvFsValueUuid) - (b.id ?? b.mvFsValueUuid))
-                      .map(mv => ({
+                      .map((mv, index) => ({
                           value: mv.multivariateFeatureOption.value,
-                          weight: mv.percentageAllocation
+                          weight: mv.percentageAllocation,
+                          priority: index
                       }))
                 : undefined;
         features[fs.feature.name] = {

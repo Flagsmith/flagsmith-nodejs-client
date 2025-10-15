@@ -162,11 +162,13 @@ function getMultivariateFeatureValue(
     identityKey?: string
 ): { value: any; reason?: string } {
     const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
+    const sortedVariants = [...(feature?.variants || [])].sort((a, b) => {
+        return (a.priority ?? Infinity) - (b.priority ?? Infinity);
+    });
 
     let startPercentage = 0;
-    for (const variant of feature?.variants || []) {
+    for (const variant of sortedVariants) {
         const limit = startPercentage + variant.weight;
-
         if (startPercentage <= percentageValue && percentageValue < limit) {
             return {
                 value: variant.value,
@@ -175,6 +177,7 @@ function getMultivariateFeatureValue(
         }
         startPercentage = limit;
     }
+
     return { value: feature.value, reason: undefined };
 }
 
