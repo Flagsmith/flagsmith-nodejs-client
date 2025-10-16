@@ -127,7 +127,7 @@ export function evaluateFeatures(
             name: finalFeature.name,
             enabled: finalFeature.enabled,
             value: evaluatedValue,
-            ...(finalFeature.metadata ? { metadata: { ...finalFeature.metadata } } : {}),
+            ...(finalFeature.metadata ? { metadata: finalFeature.metadata } : {}),
             reason:
                 evaluatedReason ??
                 getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })

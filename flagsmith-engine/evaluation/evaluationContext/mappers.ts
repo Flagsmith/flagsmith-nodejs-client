@@ -12,7 +12,6 @@ import { IdentityModel } from '../../identities/models.js';
 import { TraitModel } from '../../identities/traits/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
-import { parse as uuidParse } from 'uuid';
 import { uuidToBigInt } from '../../features/util.js';
 
 export function getEvaluationContext(
@@ -57,7 +56,10 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
             enabled: fs.enabled,
             value: fs.getValue(),
             variants,
-            priority: fs.featureSegment?.priority
+            priority: fs.featureSegment?.priority,
+            metadata: {
+                flagsmithId: fs.feature.id
+            }
         };
     }
 

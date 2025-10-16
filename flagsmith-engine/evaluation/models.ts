@@ -54,24 +54,21 @@ export type SegmentConditionOperator = SegmentCondition['operator'];
 export type EvaluationReason = EvaluationContextResultFlagResult['reason'];
 
 export type EvaluationResultSegments = EvaluationContextResult['segments'];
-export type EvaluationResultFlags = Record<
+import type { FlagResult } from './evaluationResult/evaluationResult.types.js';
+
+export type FlagResultWithMetadata<T extends Metadata = Metadata> = FlagResult & {
+    metadata?: T;
+};
+
+export type EvaluationResultFlags<T extends Metadata = Metadata> = Record<
     string,
-    {
-        feature_key: FeatureKey;
-        name: FeatureName;
-        enabled: FeatureEnabled;
-        value: FeatureValue;
-        metadata?: Metadata;
-        reason: EvaluationReason;
-    }
+    FlagResultWithMetadata<T>
 >;
 
 export type EvaluationResult = {
     flags: EvaluationResultFlags;
     segments: EvaluationResultSegments;
 };
-
-export { FlagResult } from './evaluationResult/evaluationResult.types.js';
 
 export enum SegmentSource {
     API = 'api',

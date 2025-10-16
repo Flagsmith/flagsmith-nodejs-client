@@ -1,4 +1,4 @@
-import { EvaluationResult, FlagResult } from '../flagsmith-engine/evaluation/models.js';
+import { EvaluationResult, FlagResultWithMetadata } from '../flagsmith-engine/evaluation/models.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
 
@@ -81,11 +81,11 @@ export class Flag extends BaseFlag {
         });
     }
 
-    static fromFlagResult(flagResult: FlagResult): Flag {
+    static fromFlagResult(flagResult: FlagResultWithMetadata<{ flagsmithId?: number }>): Flag {
         return new Flag({
             enabled: flagResult.enabled,
             value: flagResult.value ?? null,
-            featureId: Number(flagResult.feature_key),
+            featureId: flagResult.metadata?.flagsmithId || Number(flagResult.feature_key),
             featureName: flagResult.name,
             reason: flagResult.reason
         });
