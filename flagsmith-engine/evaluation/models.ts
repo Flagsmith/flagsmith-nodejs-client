@@ -18,7 +18,8 @@ import type {
 
 import type {
     EvaluationResult as EvaluationContextResult,
-    FlagResult as EvaluationContextResultFlagResult
+    FlagResult as EvaluationContextResultFlagResult,
+    Metadata
 } from './evaluationResult/evaluationResult.types.js';
 
 export type EnvironmentKey = EnvironmentContext['key'];
@@ -60,6 +61,7 @@ export type EvaluationResultFlags = Record<
         name: FeatureName;
         enabled: FeatureEnabled;
         value: FeatureValue;
+        metadata?: Metadata;
         reason: EvaluationReason;
     }
 >;
