@@ -219,7 +219,7 @@ export interface FeatureContext {
     enabled: Enabled;
     value: Value2;
     variants?: Variants;
-    priority?: Priority1;
+    priority: Priority1;
     [k: string]: unknown;
 }
 /**
