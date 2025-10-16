@@ -6,9 +6,6 @@ import {
     MultivariateFeatureStateValueModel
 } from './models.js';
 
-import { FeatureContext } from '../evaluation/models.js';
-import { getHashedPercentageForObjIds as getHashedPercentageForObjIds } from '../utils/hashing/index.js';
-
 export function buildFeatureModel(featuresModelJSON: any): FeatureModel {
     return new FeatureModel(featuresModelJSON.id, featuresModelJSON.name, featuresModelJSON.type);
 }
@@ -48,4 +45,8 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
 
 export function buildFeatureSegment(featureSegmentJSON: any): FeatureSegment {
     return new FeatureSegment(featureSegmentJSON.priority);
+}
+
+export function uuidToBigInt(uuid: string): BigInt {
+    return BigInt('0x' + uuid.replace(/-/g, ''));
 }

@@ -12,6 +12,8 @@ import { IdentityModel } from '../../identities/models.js';
 import { TraitModel } from '../../identities/traits/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
+import { parse as uuidParse } from 'uuid';
+import { uuidToBigInt } from '../../features/util.js';
 
 export function getEvaluationContext(
     environment: EnvironmentModel,
@@ -40,15 +42,14 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
     const features: Features = {};
     for (const fs of environment.featureStates) {
         const variants =
-            fs.multivariateFeatureStateValues.length > 0
-                ? [...fs.multivariateFeatureStateValues]
-                      .sort((a, b) => (a.id ?? a.mvFsValueUuid) - (b.id ?? b.mvFsValueUuid))
-                      .map((mv, index) => ({
-                          value: mv.multivariateFeatureOption.value,
-                          weight: mv.percentageAllocation,
-                          priority: index
-                      }))
+            fs.multivariateFeatureStateValues?.length > 0
+                ? fs.multivariateFeatureStateValues.map(mv => ({
+                      value: mv.multivariateFeatureOption.value,
+                      weight: mv.percentageAllocation,
+                      priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid)
+                  }))
                 : undefined;
+
         features[fs.feature.name] = {
             key: fs.djangoID?.toString() || fs.featurestateUUID,
             feature_key: fs.feature.id.toString(),
