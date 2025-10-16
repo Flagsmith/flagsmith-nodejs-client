@@ -5,16 +5,14 @@ import { getEvaluationResult } from '../../../flagsmith-engine/index.js';
 import { Flags } from '../../../sdk/models.js';
 import { EvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.js';
 import { parse as parseJsonc } from 'jsonc-parser';
+import { EvaluationResult } from '../../../flagsmith-engine/evaluation/models.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const TEST_DATA_DIR = path.join(__dirname, '../engine-tests/engine-test-data/test_cases');
 interface TestCase {
     context: EvaluationContext;
-    result: {
-        flags?: Record<string, any>;
-        segments?: Record<string, any>;
-    };
+    result: EvaluationResult;
 }
 
 function getTestFiles(): string[] {
@@ -41,26 +39,8 @@ describe('Engine Integration Tests', () => {
 
         test(testName, () => {
             const testCase = loadTestFile(filePath);
-
             const engine_response = getEvaluationResult(testCase.context);
-            const flags = Flags.fromEvaluationResult(engine_response);
-            const sortedEngineFlags = flags
-                .allFlags()
-                .sort((a, b) => (a.featureName > b.featureName ? 1 : -1));
-
-            const expectedFlags = testCase.result.flags || {};
-            const sortedAPIFlags = Object.values(expectedFlags).sort((a: any, b: any) =>
-                a.name > b.name ? 1 : -1
-            ) as any[];
-
-            expect(sortedEngineFlags.length).toBe(sortedAPIFlags.length);
-            expect(engine_response.segments).toStrictEqual(testCase.result.segments);
-            expect(engine_response.flags).toStrictEqual(testCase.result.flags);
-            for (let i = 0; i < sortedEngineFlags.length; i++) {
-                expect(sortedEngineFlags[i].value).toBe(sortedAPIFlags[i].value);
-                expect(sortedEngineFlags[i].enabled).toBe(sortedAPIFlags[i].enabled);
-                expect(sortedEngineFlags[i].reason).toBe(sortedAPIFlags[i].reason);
-            }
+            expect(engine_response).toStrictEqual(testCase.result);
         });
     });
 });

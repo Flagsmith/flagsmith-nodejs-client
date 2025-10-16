@@ -179,7 +179,7 @@ export interface SegmentContext {
     name: Name1;
     rules: Rules;
     overrides?: Overrides;
-    metadata?: Metadata;
+    metadata?: Metadata1;
     [k: string]: unknown;
 }
 /**
@@ -220,6 +220,7 @@ export interface FeatureContext {
     value: Value2;
     variants?: Variants;
     priority?: Priority1;
+    metadata?: Metadata;
     [k: string]: unknown;
 }
 /**
@@ -232,9 +233,15 @@ export interface FeatureValue {
     [k: string]: unknown;
 }
 /**
- * Additional metadata associated with the segment.
+ * Additional metadata associated with the feature.
  */
 export interface Metadata {
+    [k: string]: unknown;
+}
+/**
+ * Additional metadata associated with the segment.
+ */
+export interface Metadata1 {
     [k: string]: unknown;
 }
 /**
