@@ -5,7 +5,10 @@ import { getEvaluationResult } from '../../../flagsmith-engine/index.js';
 import { Flags } from '../../../sdk/models.js';
 import { EvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.js';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { EvaluationResult } from '../../../flagsmith-engine/evaluation/models.js';
+import {
+    EvaluationContextWithMetadata,
+    EvaluationResult
+} from '../../../flagsmith-engine/evaluation/models.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +42,9 @@ describe('Engine Integration Tests', () => {
 
         test(testName, () => {
             const testCase = loadTestFile(filePath);
-            const engine_response = getEvaluationResult(testCase.context);
+            const engine_response = getEvaluationResult(
+                testCase.context as EvaluationContextWithMetadata
+            );
             expect(engine_response).toStrictEqual(testCase.result);
         });
     });

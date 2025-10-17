@@ -1,5 +1,5 @@
 import {
-    Features,
+    FeaturesWithMetadata,
     Segments,
     Traits,
     EvaluationContext,
@@ -38,7 +38,7 @@ function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): 
         name: environment.project.name
     };
 
-    const features: Features = {};
+    const features: FeaturesWithMetadata = {};
     for (const fs of environment.featureStates) {
         const variants =
             fs.multivariateFeatureStateValues?.length > 0

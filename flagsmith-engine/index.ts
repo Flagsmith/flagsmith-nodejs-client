@@ -1,6 +1,12 @@
-import { EvaluationContext, FeatureContext, SegmentSource } from './evaluation/models.js';
+import {
+    EvaluationContextWithMetadata,
+    EvaluationResultSegments,
+    EvaluationResultWithMetadata,
+    FeatureContext,
+    FeatureMetadata
+} from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
-import { EvaluationResult, EvaluationResultFlags } from './evaluation/models.js';
+import { EvaluationResultFlags } from './evaluation/models.js';
 import { TARGETING_REASONS } from './features/types.js';
 import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
 export { EnvironmentModel } from './environments/models.js';
@@ -11,7 +17,7 @@ export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
 
 type SegmentOverride = {
-    feature: FeatureContext;
+    feature: FeatureContext<FeatureMetadata>;
     segmentName: string;
 };
 
@@ -27,7 +33,9 @@ export type SegmentOverrides = Record<string, SegmentOverride>;
  * @param context - EvaluationContext containing environment, identity, and segment data
  * @returns EvaluationResult with flags, segments, and original context
  */
-export function getEvaluationResult(context: EvaluationContext): EvaluationResult {
+export function getEvaluationResult(
+    context: EvaluationContextWithMetadata
+): EvaluationResultWithMetadata {
     const { segments, segmentOverrides } = evaluateSegments(context);
     const flags = evaluateFeatures(context, segmentOverrides);
 
@@ -40,12 +48,15 @@ export function getEvaluationResult(context: EvaluationContext): EvaluationResul
  * @param context - EvaluationContext containing identity and segment definitions
  * @returns Object containing segments the identity belongs to and any feature overrides
  */
-export function evaluateSegments(context: EvaluationContext): {
-    segments: EvaluationResult['segments'];
+export function evaluateSegments(context: EvaluationContextWithMetadata): {
+    segments: EvaluationResultSegments;
     segmentOverrides: Record<string, SegmentOverride>;
 } {
     if (!context.identity || !context.segments) {
-        return { segments: [], segmentOverrides: {} };
+        return {
+            segments: [],
+            segmentOverrides: {} as Record<string, SegmentOverride>
+        };
     }
     const identitySegments = getIdentitySegments(context);
 
@@ -108,10 +119,10 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
  * @returns EvaluationResultFlags containing evaluated flag results
  */
 export function evaluateFeatures(
-    context: EvaluationContext,
+    context: EvaluationContextWithMetadata,
     segmentOverrides: Record<string, SegmentOverride>
-): EvaluationResultFlags {
-    const flags: EvaluationResultFlags = {};
+): EvaluationResultFlags<FeatureMetadata> {
+    const flags: EvaluationResultFlags<FeatureMetadata> = {};
 
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.feature_key];
