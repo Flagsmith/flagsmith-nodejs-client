@@ -1,7 +1,7 @@
 import {
-    EvaluationResult,
     CustomFeatureMetadata,
-    FlagResultWithMetadata
+    FlagResultWithMetadata,
+    EvaluationResultWithMetadata
 } from '../flagsmith-engine/evaluation/models.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
@@ -85,7 +85,7 @@ export class Flag extends BaseFlag {
         });
     }
 
-    static fromFlagResult(flagResult: FlagResultWithMetadata<CustomFeatureMetadata>): Flag {
+    static fromFlagResult(flagResult: FlagResultWithMetadata<CustomFeatureMetadata>): Flag | null {
         return new Flag({
             enabled: flagResult.enabled,
             value: flagResult.value ?? null,
@@ -122,16 +122,21 @@ export class Flags {
     }
 
     static fromEvaluationResult(
-        evaluationResult: EvaluationResult,
+        evaluationResult: EvaluationResultWithMetadata,
         defaultFlagHandler?: (v: string) => DefaultFlag,
         analyticsProcessor?: AnalyticsProcessor
     ): Flags {
         const flags: { [key: string]: Flag } = {};
         for (const flag of Object.values(evaluationResult.flags)) {
+            const flagsmithId = flag.metadata?.flagsmithId || Number(flag.feature_key);
+            if (!flagsmithId) {
+                continue;
+            }
+
             flags[flag.name] = new Flag({
                 enabled: flag.enabled,
                 value: flag.value ?? null,
-                featureId: Number(flag.feature_key),
+                featureId: flag.metadata?.flagsmithId || Number(flag.feature_key),
                 featureName: flag.name,
                 reason: flag.reason
             });

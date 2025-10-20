@@ -12,7 +12,7 @@ import type {
     FeatureContext,
     EnvironmentContext,
     IdentityContext,
-    SegmentContext
+    Segments
 } from './evaluationContext/evaluationContext.types.js';
 
 export interface CustomFeatureMetadata extends FeatureMetadata {
@@ -31,8 +31,8 @@ export type FeaturesWithMetadata<T extends FeatureMetadata = FeatureMetadata> = 
 
 export interface GenericEvaluationContext<T extends FeatureMetadata = FeatureMetadata> {
     environment: EnvironmentContext;
-    identity?: IdentityContext;
-    segments?: SegmentContext;
+    identity?: IdentityContext | null;
+    segments?: Segments;
     features?: FeaturesWithMetadata<T>;
     [k: string]: unknown;
 }
@@ -53,8 +53,8 @@ export type EvaluationResult<T extends FeatureMetadata = FeatureMetadata> = {
     segments: EvaluationResultSegments;
 };
 
-export type EvaluationResultWithMetadata = EvaluationResult<FeatureMetadata>;
-export type EvaluationContextWithMetadata = GenericEvaluationContext<FeatureMetadata>;
+export type EvaluationResultWithMetadata = EvaluationResult<CustomFeatureMetadata>;
+export type EvaluationContextWithMetadata = GenericEvaluationContext<CustomFeatureMetadata>;
 
 export enum SegmentSource {
     API = 'api',
