@@ -2,8 +2,8 @@ import {
     EvaluationContextWithMetadata,
     EvaluationResultSegments,
     EvaluationResultWithMetadata,
-    FeatureContext,
-    FeatureMetadata
+    FeatureContextWithMetadata,
+    CustomFeatureMetadata
 } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
@@ -17,7 +17,7 @@ export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
 
 type SegmentOverride = {
-    feature: FeatureContext<FeatureMetadata>;
+    feature: FeatureContextWithMetadata<CustomFeatureMetadata>;
     segmentName: string;
 };
 
@@ -121,8 +121,8 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
 export function evaluateFeatures(
     context: EvaluationContextWithMetadata,
     segmentOverrides: Record<string, SegmentOverride>
-): EvaluationResultFlags<FeatureMetadata> {
-    const flags: EvaluationResultFlags<FeatureMetadata> = {};
+): EvaluationResultFlags<CustomFeatureMetadata> {
+    const flags: EvaluationResultFlags<CustomFeatureMetadata> = {};
 
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.feature_key];
@@ -149,7 +149,7 @@ export function evaluateFeatures(
 }
 
 function evaluateFeatureValue(
-    feature: FeatureContext,
+    feature: FeatureContextWithMetadata,
     identityKey?: string
 ): { value: any; reason?: string } {
     if (!!feature.variants && feature.variants.length > 0 && !!identityKey) {
@@ -170,7 +170,7 @@ function evaluateFeatureValue(
  * @returns The variant value if the identity falls within a variant's range, otherwise the default feature value
  */
 function getMultivariateFeatureValue(
-    feature: FeatureContext,
+    feature: FeatureContextWithMetadata,
     identityKey?: string
 ): { value: any; reason?: string } {
     const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);

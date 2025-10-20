@@ -58,24 +58,24 @@ export interface FlagResult {
     enabled: Enabled;
     value: Value;
     reason: Reason;
-    metadata?: Metadata;
+    metadata?: FeatureMetadata;
     [k: string]: unknown;
 }
 /**
  * Additional metadata associated with the feature.
  */
-export interface Metadata {
+export interface FeatureMetadata {
     [k: string]: unknown;
 }
 export interface SegmentResult {
     key: Key;
     name: Name1;
-    metadata?: Metadata1;
+    metadata?: SegmentMetadata;
     [k: string]: unknown;
 }
 /**
  * Additional metadata associated with the segment.
  */
-export interface Metadata1 {
+export interface SegmentMetadata {
     [k: string]: unknown;
 }

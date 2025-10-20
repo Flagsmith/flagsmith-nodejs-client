@@ -1,6 +1,6 @@
 import {
     EvaluationResult,
-    FeatureMetadata,
+    CustomFeatureMetadata,
     FlagResultWithMetadata
 } from '../flagsmith-engine/evaluation/models.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
@@ -85,7 +85,7 @@ export class Flag extends BaseFlag {
         });
     }
 
-    static fromFlagResult(flagResult: FlagResultWithMetadata<FeatureMetadata>): Flag {
+    static fromFlagResult(flagResult: FlagResultWithMetadata<CustomFeatureMetadata>): Flag {
         return new Flag({
             enabled: flagResult.enabled,
             value: flagResult.value ?? null,

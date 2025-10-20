@@ -1,6 +1,6 @@
 import * as jsonpath from 'jsonpath';
 import {
-    EvaluationContext,
+    GenericEvaluationContext,
     InSegmentCondition,
     SegmentCondition,
     SegmentContext,
@@ -19,7 +19,7 @@ import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
  * @param context - Evaluation context containing identity and segment definitions
  * @returns Array of segments that the identity matches
  */
-export function getIdentitySegments(context: EvaluationContext): SegmentContext[] {
+export function getIdentitySegments(context: GenericEvaluationContext): SegmentContext[] {
     if (!context.identity || !context.segments) return [];
 
     return Object.values(context.segments).filter(segment => {
@@ -45,7 +45,7 @@ export function getIdentitySegments(context: EvaluationContext): SegmentContext[
 export function traitsMatchSegmentCondition(
     condition: SegmentCondition | InSegmentCondition,
     segmentKey: string,
-    context?: EvaluationContext
+    context?: GenericEvaluationContext
 ): boolean {
     if (condition.operator === PERCENTAGE_SPLIT) {
         const contextValueKey =
@@ -81,7 +81,7 @@ export function traitsMatchSegmentCondition(
 function traitsMatchSegmentRule(
     rule: SegmentRule,
     segmentKey: string,
-    context?: EvaluationContext
+    context?: GenericEvaluationContext
 ): boolean {
     const matchesConditions = evaluateConditions(rule, segmentKey, context);
     const matchesSubRules = evaluateSubRules(rule, segmentKey, context);
@@ -92,7 +92,7 @@ function traitsMatchSegmentRule(
 function evaluateConditions(
     rule: SegmentRule,
     segmentKey: string,
-    context?: EvaluationContext
+    context?: GenericEvaluationContext
 ): boolean {
     if (!rule.conditions || rule.conditions.length === 0) return true;
 
@@ -106,7 +106,7 @@ function evaluateConditions(
 function evaluateSubRules(
     rule: SegmentRule,
     segmentKey: string,
-    context?: EvaluationContext
+    context?: GenericEvaluationContext
 ): boolean {
     if (!rule.rules || rule.rules.length === 0) return true;
 
@@ -128,7 +128,7 @@ function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): 
     }
 }
 
-function getTraitValue(property: string, context?: EvaluationContext): any {
+function getTraitValue(property: string, context?: GenericEvaluationContext): any {
     if (property.startsWith('$.')) {
         const contextValue = getContextValue(property, context);
         if (contextValue && !isNonPrimitive(contextValue)) {
@@ -163,7 +163,7 @@ function isNonPrimitive(value: any): boolean {
  * @param context - Evaluation context to query against
  * @returns The resolved value, or undefined if path doesn't exist or is invalid
  */
-export function getContextValue(jsonPath: string, context?: EvaluationContext): any {
+export function getContextValue(jsonPath: string, context?: GenericEvaluationContext): any {
     if (!context || !jsonPath?.startsWith('$.')) return undefined;
 
     try {

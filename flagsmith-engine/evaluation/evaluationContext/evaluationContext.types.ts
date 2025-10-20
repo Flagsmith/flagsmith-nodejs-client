@@ -115,7 +115,7 @@ export type Weight = number;
 /**
  * Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.
  */
-export type Priority = number;
+export type VariantPriority = number;
 /**
  * An array of environment default values associated with the feature. Empty for standard features, or contains multiple values for multivariate features.
  */
@@ -123,7 +123,7 @@ export type Variants = FeatureValue[];
 /**
  * Priority of the feature context. Lower values indicate a higher priority when multiple contexts apply to the same feature.
  */
-export type Priority1 = number;
+export type FeaturePriority = number;
 /**
  * Feature overrides for the segment.
  */
@@ -179,7 +179,7 @@ export interface SegmentContext {
     name: Name1;
     rules: Rules;
     overrides?: Overrides;
-    metadata?: Metadata1;
+    metadata?: SegmentMetadata;
     [k: string]: unknown;
 }
 /**
@@ -219,8 +219,8 @@ export interface FeatureContext {
     enabled: Enabled;
     value: Value2;
     variants?: Variants;
-    priority?: Priority1;
-    metadata?: Metadata;
+    priority?: FeaturePriority;
+    metadata?: FeatureMetadata;
     [k: string]: unknown;
 }
 /**
@@ -229,19 +229,19 @@ export interface FeatureContext {
 export interface FeatureValue {
     value: Value3;
     weight: Weight;
-    priority: Priority;
+    priority: VariantPriority;
     [k: string]: unknown;
 }
 /**
  * Additional metadata associated with the feature.
  */
-export interface Metadata {
+export interface FeatureMetadata {
     [k: string]: unknown;
 }
 /**
  * Additional metadata associated with the segment.
  */
-export interface Metadata1 {
+export interface SegmentMetadata {
     [k: string]: unknown;
 }
 /**

@@ -2,7 +2,7 @@ import {
     FeaturesWithMetadata,
     Segments,
     Traits,
-    EvaluationContext,
+    GenericEvaluationContext,
     EnvironmentContext,
     IdentityContext,
     SegmentSource
@@ -18,7 +18,7 @@ export function getEvaluationContext(
     environment: EnvironmentModel,
     identity?: IdentityModel,
     overrideTraits?: TraitModel[]
-): EvaluationContext {
+): GenericEvaluationContext {
     const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
     const identityContext = identity
         ? mapIdentityModelToIdentityContext(identity, overrideTraits)
@@ -32,7 +32,9 @@ export function getEvaluationContext(
     return context;
 }
 
-function mapEnvironmentModelToEvaluationContext(environment: EnvironmentModel): EvaluationContext {
+function mapEnvironmentModelToEvaluationContext(
+    environment: EnvironmentModel
+): GenericEvaluationContext {
     const environmentContext: EnvironmentContext = {
         key: environment.apiKey,
         name: environment.project.name
