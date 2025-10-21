@@ -118,7 +118,7 @@ export class Flags {
     ): Flags {
         const flags: { [key: string]: Flag } = {};
         for (const flag of Object.values(evaluationResult.flags)) {
-            const flagsmithId = flag.metadata?.flagsmithId || Number(flag.feature_key);
+            const flagsmithId = flag.metadata?.flagsmithId;
             if (!flagsmithId) {
                 continue;
             }

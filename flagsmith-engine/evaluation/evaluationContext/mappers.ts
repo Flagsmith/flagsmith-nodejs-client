@@ -151,7 +151,10 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
-            priority: -Infinity
+            priority: -Infinity,
+            metadata: {
+                flagsmithId: fs.feature.id
+            }
         }));
 
         const overridesHash = createHash('sha1').update(JSON.stringify(overridesKey)).digest('hex');
