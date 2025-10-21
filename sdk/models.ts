@@ -85,16 +85,6 @@ export class Flag extends BaseFlag {
         });
     }
 
-    static fromFlagResult(flagResult: FlagResultWithMetadata<CustomFeatureMetadata>): Flag | null {
-        return new Flag({
-            enabled: flagResult.enabled,
-            value: flagResult.value ?? null,
-            featureId: flagResult.metadata?.flagsmithId ?? Number(flagResult.feature_key),
-            featureName: flagResult.name,
-            reason: flagResult.reason
-        });
-    }
-
     static fromAPIFlag(flagData: any): Flag {
         return new Flag({
             enabled: flagData['enabled'],
@@ -136,7 +126,7 @@ export class Flags {
             flags[flag.name] = new Flag({
                 enabled: flag.enabled,
                 value: flag.value ?? null,
-                featureId: flag.metadata?.flagsmithId || Number(flag.feature_key),
+                featureId: flagsmithId,
                 featureName: flag.name,
                 reason: flag.reason
             });

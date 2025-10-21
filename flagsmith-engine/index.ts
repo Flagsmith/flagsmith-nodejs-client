@@ -3,7 +3,8 @@ import {
     EvaluationResultSegments,
     EvaluationResultWithMetadata,
     FeatureContextWithMetadata,
-    CustomFeatureMetadata
+    CustomFeatureMetadata,
+    FlagResultWithMetadata
 } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
@@ -142,7 +143,7 @@ export function evaluateFeatures(
             reason:
                 evaluatedReason ??
                 getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
-        };
+        } as FlagResultWithMetadata<CustomFeatureMetadata>;
     }
 
     return flags;

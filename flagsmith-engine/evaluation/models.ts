@@ -21,7 +21,7 @@ export interface CustomFeatureMetadata extends FeatureMetadata {
 
 export interface FeatureContextWithMetadata<T extends FeatureMetadata = FeatureMetadata>
     extends FeatureContext {
-    metadata?: T;
+    metadata: T;
     [k: string]: unknown;
 }
 
@@ -38,7 +38,7 @@ export interface GenericEvaluationContext<T extends FeatureMetadata = FeatureMet
 }
 
 export type FlagResultWithMetadata<T extends FeatureMetadata = FeatureMetadata> = FlagResult & {
-    metadata?: T;
+    metadata: T;
 };
 
 export type EvaluationResultFlags<T extends FeatureMetadata = FeatureMetadata> = Record<
