@@ -46,3 +46,7 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
 export function buildFeatureSegment(featureSegmentJSON: any): FeatureSegment {
     return new FeatureSegment(featureSegmentJSON.priority);
 }
+
+export function uuidToBigInt(uuid: string): BigInt {
+    return BigInt('0x' + uuid.replace(/-/g, ''));
+}
