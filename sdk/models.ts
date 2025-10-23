@@ -118,15 +118,15 @@ export class Flags {
     ): Flags {
         const flags: { [key: string]: Flag } = {};
         for (const flag of Object.values(evaluationResult.flags)) {
-            const flagsmithId = flag.metadata?.flagsmithId;
-            if (!flagsmithId) {
+            const flagsmith_id = flag.metadata?.flagsmith_id;
+            if (!flagsmith_id) {
                 continue;
             }
 
             flags[flag.name] = new Flag({
                 enabled: flag.enabled,
                 value: flag.value ?? null,
-                featureId: flagsmithId,
+                featureId: flagsmith_id,
                 featureName: flag.name,
                 reason: flag.reason
             });

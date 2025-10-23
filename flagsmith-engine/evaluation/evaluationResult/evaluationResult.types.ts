@@ -6,10 +6,6 @@
  */
 
 /**
- * Unique feature identifier.
- */
-export type FeatureKey = string;
-/**
  * Feature name.
  */
 export type Name = string;
@@ -25,10 +21,6 @@ export type Value = string | number | boolean | null;
  * Reason for the feature flag evaluation.
  */
 export type Reason = string;
-/**
- * Unique segment identifier.
- */
-export type Key = string;
 /**
  * Segment name.
  */
@@ -53,7 +45,6 @@ export interface Flags {
     [k: string]: FlagResult;
 }
 export interface FlagResult {
-    feature_key: FeatureKey;
     name: Name;
     enabled: Enabled;
     value: Value;
@@ -68,7 +59,6 @@ export interface FeatureMetadata {
     [k: string]: unknown;
 }
 export interface SegmentResult {
-    key: Key;
     name: Name1;
     metadata?: SegmentMetadata;
     [k: string]: unknown;

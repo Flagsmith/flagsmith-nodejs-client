@@ -62,7 +62,6 @@ export function evaluateSegments(context: EvaluationContextWithMetadata): {
     const identitySegments = getIdentitySegments(context);
 
     const segments = identitySegments.map(segment => ({
-        key: segment.key,
         name: segment.name,
         ...(segment.metadata
             ? {
@@ -96,7 +95,7 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
 
         for (const override of overridesList) {
             if (shouldApplyOverride(override, segmentOverrides)) {
-                segmentOverrides[override.feature_key] = {
+                segmentOverrides[override.name] = {
                     feature: override,
                     segmentName: segment.name
                 };
@@ -126,7 +125,7 @@ export function evaluateFeatures(
     const flags: EvaluationResultFlags<CustomFeatureMetadata> = {};
 
     for (const feature of Object.values(context.features || {})) {
-        const segmentOverride = segmentOverrides[feature.feature_key];
+        const segmentOverride = segmentOverrides[feature.name];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
         const hasOverride = !!segmentOverride;
 
@@ -135,7 +134,6 @@ export function evaluateFeatures(
             : evaluateFeatureValue(finalFeature, context.identity?.key);
 
         flags[finalFeature.name] = {
-            feature_key: finalFeature.feature_key,
             name: finalFeature.name,
             enabled: finalFeature.enabled,
             value: evaluatedValue,
@@ -198,7 +196,7 @@ export function shouldApplyOverride(
     override: any,
     existingOverrides: Record<string, SegmentOverride>
 ): boolean {
-    const currentOverride = existingOverrides[override.feature_key];
+    const currentOverride = existingOverrides[override.name];
     return (
         !currentOverride || isHigherPriority(override.priority, currentOverride.feature.priority)
     );

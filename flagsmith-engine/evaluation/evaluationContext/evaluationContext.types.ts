@@ -6,7 +6,7 @@
  */
 
 /**
- * An environment's unique identifier.
+ * Unique environment key. May be used for selecting a value for a multivariate feature, or for % split segmentation.
  */
 export type Key = string;
 /**
@@ -14,7 +14,7 @@ export type Key = string;
  */
 export type Name = string;
 /**
- * A unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI.
+ * A unique identifier for an identity as displayed in the Flagsmith UI.
  */
 export type Identifier = string;
 /**
@@ -22,7 +22,7 @@ export type Identifier = string;
  */
 export type Key1 = string;
 /**
- * Key used for % split segmentation.
+ * Unique segment key used for % split segmentation.
  */
 export type Key2 = string;
 /**
@@ -85,13 +85,9 @@ export type SubRules = SegmentRule[];
  */
 export type Rules = SegmentRule[];
 /**
- * Key used when selecting a value for a multivariate feature. Set to an internal identifier or a UUID, depending on Flagsmith implementation.
+ * Unique feature key used when selecting a variant if the feature is multivariate. Set to an internal identifier or a UUID, depending on Flagsmith implementation.
  */
 export type Key3 = string;
-/**
- * Unique feature identifier.
- */
-export type FeatureKey = string;
 /**
  * Feature name.
  */
@@ -155,7 +151,7 @@ export interface EnvironmentContext {
  */
 export interface IdentityContext {
     identifier: Identifier;
-    key: Key1;
+    key?: Key1;
     traits?: Traits;
     [k: string]: unknown;
 }
@@ -214,7 +210,6 @@ export interface InSegmentCondition {
  */
 export interface FeatureContext {
     key: Key3;
-    feature_key: FeatureKey;
     name: Name2;
     enabled: Enabled;
     value: Value2;

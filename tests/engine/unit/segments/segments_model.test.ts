@@ -1,3 +1,4 @@
+import { SegmentSource } from '../../../../flagsmith-engine/evaluation/models';
 import { EvaluationContext } from '../../../../flagsmith-engine/evaluationContext/evaluationContext.types';
 import { CONSTANTS } from '../../../../flagsmith-engine/features/constants';
 import {
@@ -140,7 +141,7 @@ test('test_segment_rule_matching_function', () => {
 });
 
 test('test_fromSegmentResult_with_multiple_variants', () => {
-    const segmentResults = [{ key: '1', name: 'test_segment' }];
+    const segmentResults = [{ name: 'test_segment', metadata: { flagsmith_id: '1' } }];
 
     const evaluationContext: EvaluationContext = {
         identity: {
@@ -156,6 +157,10 @@ test('test_fromSegmentResult_with_multiple_variants', () => {
             '1': {
                 key: '1',
                 name: 'test_segment',
+                metadata: {
+                    source: SegmentSource.API,
+                    flagsmith_id: '1'
+                },
                 rules: [
                     {
                         type: 'ALL',
@@ -171,11 +176,13 @@ test('test_fromSegmentResult_with_multiple_variants', () => {
                 overrides: [
                     {
                         key: 'override',
-                        feature_key: '1',
                         name: 'multivariate_feature',
                         enabled: true,
                         value: 'default_value',
                         priority: 1,
+                        metadata: {
+                            flagsmith_id: 1
+                        },
                         variants: [
                             { id: 1, value: 'variant_a', weight: 30 },
                             { id: 2, value: 'variant_b', weight: 70 }

@@ -53,14 +53,13 @@ function mapEnvironmentModelToEvaluationContext(
 
         features[fs.feature.name] = {
             key: fs.djangoID?.toString() || fs.featurestateUUID,
-            feature_key: fs.feature.id.toString(),
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
             variants,
             priority: fs.featureSegment?.priority,
             metadata: {
-                flagsmithId: fs.feature.id
+                flagsmith_id: fs.feature.id
             }
         };
     }
@@ -75,11 +74,13 @@ function mapEnvironmentModelToEvaluationContext(
                 segment.featureStates.length > 0
                     ? segment.featureStates.map(fs => ({
                           key: fs.djangoID?.toString() || fs.featurestateUUID,
-                          feature_key: fs.feature.id.toString(),
                           name: fs.feature.name,
                           enabled: fs.enabled,
                           value: fs.getValue(),
-                          priority: fs.featureSegment?.priority
+                          priority: fs.featureSegment?.priority,
+                          metadata: {
+                              flagsmith_id: fs.feature.id
+                          }
                       }))
                     : [],
             metadata: {
@@ -147,13 +148,12 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
             a.feature.name.localeCompare(b.feature.name)
         );
         const overridesKey = sortedFeatures.map(fs => ({
-            feature_key: fs.feature.id.toString(),
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
             priority: -Infinity,
             metadata: {
-                flagsmithId: fs.feature.id
+                flagsmith_id: fs.feature.id
             }
         }));
 

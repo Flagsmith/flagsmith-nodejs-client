@@ -224,9 +224,13 @@ export class SegmentModel {
             if (segmentResult.metadata?.source === SegmentSource.IDENTITY_OVERRIDE) {
                 continue;
             }
-            const segmentContext = evaluationContext.segments[segmentResult.key];
+            const flagsmithId = segmentResult.metadata?.flagsmith_id;
+            if (!flagsmithId) {
+                continue;
+            }
+            const segmentContext = evaluationContext.segments[flagsmithId.toString()];
             if (segmentContext) {
-                const segment = new SegmentModel(parseInt(segmentContext.key), segmentContext.name);
+                const segment = new SegmentModel(flagsmithId, segmentContext.name);
                 segment.rules = segmentContext.rules.map(rule => new SegmentRuleModel(rule.type));
                 segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
                     segmentContext.overrides || []
@@ -240,33 +244,39 @@ export class SegmentModel {
 
     private static createFeatureStatesFromOverrides(overrides: Overrides): FeatureStateModel[] {
         if (!overrides) return [];
-        return overrides.map(override => {
-            const feature = new FeatureModel(
-                parseInt(override.feature_key),
-                override.name,
-                override.variants?.length && override.variants.length > 0
-                    ? CONSTANTS.MULTIVARIATE
-                    : CONSTANTS.STANDARD
-            );
-
-            const featureState = new FeatureStateModel(
-                feature,
-                override.enabled,
-                override.priority || 0
-            );
-
-            if (override.value !== undefined) {
-                featureState.setValue(override.value);
-            }
-
-            if (override.variants && override.variants.length > 0) {
-                featureState.multivariateFeatureStateValues = this.createMultivariateValues(
-                    override.variants
+        return overrides
+            .filter(override => {
+                const flagsmithId = override?.metadata?.flagsmith_id;
+                return typeof flagsmithId === 'number';
+            })
+            .map(override => {
+                const flagsmithId = override.metadata!.flagsmith_id as number;
+                const feature = new FeatureModel(
+                    flagsmithId,
+                    override.name,
+                    override.variants?.length && override.variants.length > 0
+                        ? CONSTANTS.MULTIVARIATE
+                        : CONSTANTS.STANDARD
                 );
-            }
 
-            return featureState;
-        });
+                const featureState = new FeatureStateModel(
+                    feature,
+                    override.enabled,
+                    override.priority || 0
+                );
+
+                if (override.value !== undefined) {
+                    featureState.setValue(override.value);
+                }
+
+                if (override.variants && override.variants.length > 0) {
+                    featureState.multivariateFeatureStateValues = this.createMultivariateValues(
+                        override.variants
+                    );
+                }
+
+                return featureState;
+            });
     }
 
     private static createMultivariateValues(variants: any[]): MultivariateFeatureStateValueModel[] {
