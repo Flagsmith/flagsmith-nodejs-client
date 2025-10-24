@@ -519,3 +519,23 @@ test('get_user_agent_extracts_version_from_package_json', async () => {
 
     expect(userAgent).toBe(`flagsmith-nodejs-sdk/${packageJson.version}`);
 });
+
+test('Flags.fromEvaluationResult throws error when metadata.flagsmithId is missing', () => {
+    const evaluationResult = {
+        flags: {
+            test_feature: {
+                enabled: true,
+                name: 'test_feature',
+                value: 'test_value',
+                reason: 'DEFAULT',
+                metadata: {}
+            }
+        },
+        segments: []
+    };
+
+    expect(() => Flags.fromEvaluationResult(evaluationResult as any)).toThrow(
+        'FlagResult metadata.flagsmithId is missing for feature "test_feature". ' +
+            'This indicates a bug in the SDK, please report it.'
+    );
+});

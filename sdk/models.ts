@@ -120,7 +120,10 @@ export class Flags {
         for (const flag of Object.values(evaluationResult.flags)) {
             const flagsmithId = flag.metadata?.flagsmithId;
             if (!flagsmithId) {
-                continue;
+                throw new Error(
+                    `FlagResult metadata.flagsmithId is missing for feature "${flag.name}". ` +
+                        `This indicates a bug in the SDK, please report it.`
+                );
             }
 
             flags[flag.name] = new Flag({
