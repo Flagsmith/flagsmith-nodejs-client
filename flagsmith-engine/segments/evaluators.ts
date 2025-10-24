@@ -49,7 +49,7 @@ export function traitsMatchSegmentCondition(
 ): boolean {
     if (condition.operator === PERCENTAGE_SPLIT) {
         const contextValueKey =
-            getContextValue(condition.property, context) || context?.identity?.key;
+            getContextValue(condition.property, context) || getIdentityKey(context);
         const hashedPercentage = getHashedPercentageForObjIds([segmentKey, contextValueKey]);
         return hashedPercentage <= parseFloat(String(condition.value));
     }
@@ -172,4 +172,10 @@ export function getContextValue(jsonPath: string, context?: GenericEvaluationCon
     } catch (error) {
         return undefined;
     }
+}
+
+export function getIdentityKey(context?: GenericEvaluationContext): string | undefined {
+    if (!context?.identity) return undefined;
+
+    return context.identity.key || `${context.environment.key}_${context.identity.identifier}`;
 }
