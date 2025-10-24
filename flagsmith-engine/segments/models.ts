@@ -224,7 +224,7 @@ export class SegmentModel {
             if (segmentResult.metadata?.source === SegmentSource.IDENTITY_OVERRIDE) {
                 continue;
             }
-            const flagsmithId = segmentResult.metadata?.flagsmith_id;
+            const flagsmithId = segmentResult.metadata?.flagsmithId;
             if (!flagsmithId) {
                 continue;
             }
@@ -246,11 +246,11 @@ export class SegmentModel {
         if (!overrides) return [];
         return overrides
             .filter(override => {
-                const flagsmithId = override?.metadata?.flagsmith_id;
+                const flagsmithId = override?.metadata?.flagsmithId;
                 return typeof flagsmithId === 'number';
             })
             .map(override => {
-                const flagsmithId = override.metadata!.flagsmith_id as number;
+                const flagsmithId = override.metadata!.flagsmithId as number;
                 const feature = new FeatureModel(
                     flagsmithId,
                     override.name,

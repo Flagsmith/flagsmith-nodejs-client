@@ -59,7 +59,7 @@ function mapEnvironmentModelToEvaluationContext(
             variants,
             priority: fs.featureSegment?.priority,
             metadata: {
-                flagsmith_id: fs.feature.id
+                flagsmithId: fs.feature.id
             }
         };
     }
@@ -79,13 +79,13 @@ function mapEnvironmentModelToEvaluationContext(
                           value: fs.getValue(),
                           priority: fs.featureSegment?.priority,
                           metadata: {
-                              flagsmith_id: fs.feature.id
+                              flagsmithId: fs.feature.id
                           }
                       }))
                     : [],
             metadata: {
                 source: SegmentSource.API,
-                flagsmith_id: segment.id
+                flagsmithId: segment.id
             }
         };
     }
@@ -153,7 +153,7 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
             value: fs.getValue(),
             priority: -Infinity,
             metadata: {
-                flagsmith_id: fs.feature.id
+                flagsmithId: fs.feature.id
             }
         }));
 

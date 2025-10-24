@@ -141,7 +141,7 @@ test('test_segment_rule_matching_function', () => {
 });
 
 test('test_fromSegmentResult_with_multiple_variants', () => {
-    const segmentResults = [{ name: 'test_segment', metadata: { flagsmith_id: '1' } }];
+    const segmentResults = [{ name: 'test_segment', metadata: { flagsmithId: '1' } }];
 
     const evaluationContext: EvaluationContext = {
         identity: {
@@ -159,7 +159,7 @@ test('test_fromSegmentResult_with_multiple_variants', () => {
                 name: 'test_segment',
                 metadata: {
                     source: SegmentSource.API,
-                    flagsmith_id: '1'
+                    flagsmithId: '1'
                 },
                 rules: [
                     {
@@ -181,7 +181,7 @@ test('test_fromSegmentResult_with_multiple_variants', () => {
                         value: 'default_value',
                         priority: 1,
                         metadata: {
-                            flagsmith_id: 1
+                            flagsmithId: 1
                         },
                         variants: [
                             { id: 1, value: 'variant_a', weight: 30 },
