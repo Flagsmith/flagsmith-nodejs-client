@@ -58,8 +58,8 @@
     "deploy": "npm i && npm run build && npm publish",
     "deploy:beta": "npm i && npm run build && npm publish --tag beta",
     "prepare": "husky install",
-    "generate-evaluation-result-types": "curl -o evaluation-result.json https://raw.githubusercontent.com/Flagsmith/flagsmith/chore%2Fevaluation-context0key/sdk/evaluation-result.json && npx json2ts -i evaluation-result.json -o flagsmith-engine/evaluation/evaluationResult/evaluationResult.types.ts && rm evaluation-result.json",
-    "generate-evaluation-context-types": "curl -o evaluation-context.json https://raw.githubusercontent.com/Flagsmith/flagsmith/chore%2Fevaluation-context0key/sdk/evaluation-context.json && npx json2ts -i evaluation-context.json -o flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.ts && rm evaluation-context.json",
+    "generate-evaluation-result-types": "curl -o evaluation-result.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-result.json && npx json2ts -i evaluation-result.json -o flagsmith-engine/evaluation/evaluationResult/evaluationResult.types.ts && rm evaluation-result.json",
+    "generate-evaluation-context-types": "curl -o evaluation-context.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json && npx json2ts -i evaluation-context.json -o flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.ts && rm evaluation-context.json",
     "generate-engine-types": "npm run generate-evaluation-result-types && npm run generate-evaluation-context-types"
   },
   "dependencies": {

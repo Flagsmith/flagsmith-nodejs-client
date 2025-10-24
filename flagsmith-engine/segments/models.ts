@@ -144,6 +144,9 @@ export class SegmentConditionModel {
                 return parsedTraitValue % divisor === remainder;
             },
             evaluateIn: (traitValue: string[] | string) => {
+                if (!traitValue || typeof traitValue === 'boolean') {
+                    return false;
+                }
                 if (Array.isArray(this.value)) {
                     return this.value.includes(traitValue.toString());
                 }
