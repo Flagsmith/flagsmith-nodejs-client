@@ -13,17 +13,19 @@ import type {
     FeatureContext,
     EnvironmentContext,
     IdentityContext,
-    Segments,
     SegmentContext
 } from './evaluationContext/evaluationContext.types.js';
 
-export interface CustomFeatureMetadata extends FeatureMetadata {
-    flagsmith_id: number;
+export * from './evaluationContext/evaluationContext.types.js';
+
+export enum SegmentSource {
+    API = 'api',
+    IDENTITY_OVERRIDE = 'identity_override'
 }
 
-export interface CustomSegmentMetadata extends SegmentMetadata {
+// Feature types
+export interface CustomFeatureMetadata extends FeatureMetadata {
     flagsmith_id: number;
-    source?: SegmentSource;
 }
 
 export interface FeatureContextWithMetadata<T extends FeatureMetadata = FeatureMetadata>
@@ -36,6 +38,21 @@ export type FeaturesWithMetadata<T extends FeatureMetadata = FeatureMetadata> = 
     [k: string]: FeatureContextWithMetadata<T>;
 };
 
+export type FlagResultWithMetadata<T extends FeatureMetadata = FeatureMetadata> = FlagResult & {
+    metadata: T;
+};
+
+export type EvaluationResultFlags<T extends FeatureMetadata = FeatureMetadata> = Record<
+    string,
+    FlagResultWithMetadata<T>
+>;
+
+// Segment types
+export interface CustomSegmentMetadata extends SegmentMetadata {
+    flagsmith_id: number;
+    source?: SegmentSource;
+}
+
 export interface SegmentContextWithMetadata<T extends SegmentMetadata = SegmentMetadata>
     extends SegmentContext {
     metadata: T;
@@ -46,6 +63,14 @@ export type SegmentsWithMetadata<T extends SegmentMetadata = SegmentMetadata> = 
     [k: string]: SegmentContextWithMetadata<T>;
 };
 
+export interface SegmentResultWithMetadata {
+    name: string;
+    metadata: CustomSegmentMetadata;
+}
+
+export type EvaluationResultSegments = EvaluationContextResult['segments'];
+
+// Evaluation context types
 export interface GenericEvaluationContext<
     T extends FeatureMetadata = FeatureMetadata,
     S extends SegmentMetadata = SegmentMetadata
@@ -57,36 +82,15 @@ export interface GenericEvaluationContext<
     [k: string]: unknown;
 }
 
-export type FlagResultWithMetadata<T extends FeatureMetadata = FeatureMetadata> = FlagResult & {
-    metadata: T;
-};
-
-export type EvaluationResultFlags<T extends FeatureMetadata = FeatureMetadata> = Record<
-    string,
-    FlagResultWithMetadata<T>
+export type EvaluationContextWithMetadata = GenericEvaluationContext<
+    CustomFeatureMetadata,
+    CustomSegmentMetadata
 >;
 
-export type EvaluationResultSegments = EvaluationContextResult['segments'];
-
+// Evaluation result types
 export type EvaluationResult<T extends FeatureMetadata = FeatureMetadata> = {
     flags: EvaluationResultFlags<T>;
     segments: EvaluationResultSegments;
 };
 
 export type EvaluationResultWithMetadata = EvaluationResult<CustomFeatureMetadata>;
-export type EvaluationContextWithMetadata = GenericEvaluationContext<
-    CustomFeatureMetadata,
-    CustomSegmentMetadata
->;
-
-export interface SegmentResultWithMetadata {
-    name: string;
-    metadata: CustomSegmentMetadata;
-}
-
-export enum SegmentSource {
-    API = 'api',
-    IDENTITY_OVERRIDE = 'identity_override'
-}
-
-export * from './evaluationContext/evaluationContext.types.js';
