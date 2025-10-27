@@ -116,11 +116,16 @@ function mapIdentityModelToIdentityContext(
         traitsContext[trait.traitKey] = trait.traitValue;
     }
 
-    return {
+    const identityContext: IdentityContext = {
         identifier: identity.identifier,
-        key: identity.djangoID?.toString() || identity.compositeKey,
         traits: traitsContext
     };
+
+    if (identity.djangoID !== undefined) {
+        identityContext.key = identity.djangoID.toString();
+    }
+
+    return identityContext;
 }
 
 function mapSegmentRuleModelToRule(rule: any): any {

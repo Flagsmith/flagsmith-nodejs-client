@@ -6,7 +6,7 @@ import {
     CustomFeatureMetadata,
     FlagResultWithMetadata
 } from './evaluation/models.js';
-import { getIdentitySegments } from './segments/evaluators.js';
+import { getIdentitySegments, getIdentityKey } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
 import { TARGETING_REASONS } from './features/types.js';
 import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
@@ -131,7 +131,7 @@ export function evaluateFeatures(
 
         const { value: evaluatedValue, reason: evaluatedReason } = hasOverride
             ? { value: finalFeature.value, reason: undefined }
-            : evaluateFeatureValue(finalFeature, context.identity?.key);
+            : evaluateFeatureValue(finalFeature, getIdentityKey(context));
 
         flags[finalFeature.name] = {
             name: finalFeature.name,
