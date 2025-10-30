@@ -25,7 +25,7 @@ export enum SegmentSource {
 
 // Feature types
 export interface CustomFeatureMetadata extends FeatureMetadata {
-    flagsmithId: number;
+    id: number;
 }
 
 export interface FeatureContextWithMetadata<T extends FeatureMetadata = FeatureMetadata>
@@ -49,7 +49,7 @@ export type EvaluationResultFlags<T extends FeatureMetadata = FeatureMetadata> =
 
 // Segment types
 export interface CustomSegmentMetadata extends SegmentMetadata {
-    flagsmithId: number;
+    id?: number;
     source?: SegmentSource;
 }
 
@@ -68,7 +68,7 @@ export interface SegmentResultWithMetadata {
     metadata: CustomSegmentMetadata;
 }
 
-export type EvaluationResultSegments = EvaluationContextResult['segments'];
+export type EvaluationResultSegments = SegmentResultWithMetadata[];
 
 // Evaluation context types
 export interface GenericEvaluationContext<

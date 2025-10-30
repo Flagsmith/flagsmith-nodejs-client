@@ -115,7 +115,7 @@ test('shouldApplyOverride with priority conflicts', () => {
                 enabled: true,
                 value: 'value',
                 priority: 5,
-                metadata: { flagsmithId: 1 }
+                metadata: { id: 1 }
             },
             segmentName: 'segment1'
         }
@@ -185,7 +185,7 @@ test('evaluateSegments handles segments with identity identifier matching', () =
                 name: 'feature1',
                 enabled: false,
                 value: 'default_value',
-                metadata: { flagsmithId: 1 }
+                metadata: { id: 1 }
             }
         }
     };
@@ -272,7 +272,7 @@ test('evaluateSegments handles priority conflicts correctly', () => {
                 name: 'feature1',
                 enabled: false,
                 value: 'default_value',
-                metadata: { flagsmithId: 1 }
+                metadata: { id: 1 }
             }
         }
     };
@@ -343,7 +343,7 @@ test('evaluateFeatures with multivariate evaluation', () => {
                     { value: 'variant_a', weight: 0, priority: 1 },
                     { value: 'variant_b', weight: 100, priority: 2 }
                 ],
-                metadata: { flagsmithId: 1 }
+                metadata: { id: 1 }
             }
         },
         identity: { key: 'test_user', identifier: 'test_user' },

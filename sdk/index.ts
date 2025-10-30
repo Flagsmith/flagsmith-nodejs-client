@@ -25,6 +25,7 @@ import {
 } from './types.js';
 import { pino, Logger } from 'pino';
 import { getEvaluationContext } from '../flagsmith-engine/evaluation/evaluationContext/mappers.js';
+import { EvaluationContextWithMetadata } from '../flagsmith-engine/evaluation/models.js';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
@@ -282,7 +283,7 @@ export class Flagsmith {
         if (!context) {
             throw new FlagsmithClientError('Local evaluation required to obtain identity segments');
         }
-        const evaluationResult = getEvaluationResult(context);
+        const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
 
         return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
     }
@@ -449,11 +450,11 @@ export class Flagsmith {
 
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
         const environment = await this.getEnvironment();
-        const context = getEvaluationContext(environment);
+        const context = getEvaluationContext(environment, undefined, undefined, true);
         if (!context) {
             throw new FlagsmithClientError('Unable to get flags. No environment present.');
         }
-        const evaluationResult = getEvaluationResult(context);
+        const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
         const flags = Flags.fromEvaluationResult(evaluationResult);
 
         if (!!this.cache) {
@@ -481,7 +482,7 @@ export class Flagsmith {
         if (!context) {
             throw new FlagsmithClientError('Unable to get flags. No environment present.');
         }
-        const evaluationResult = getEvaluationResult(context);
+        const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
 
         const flags = Flags.fromEvaluationResult(
             evaluationResult,

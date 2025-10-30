@@ -227,13 +227,13 @@ export class SegmentModel {
             if (segmentResult.metadata?.source === SegmentSource.IDENTITY_OVERRIDE) {
                 continue;
             }
-            const flagsmithId = segmentResult.metadata?.flagsmithId;
-            if (!flagsmithId) {
+            const segmentMetadataId = segmentResult.metadata?.id;
+            if (!segmentMetadataId) {
                 continue;
             }
-            const segmentContext = evaluationContext.segments[flagsmithId.toString()];
+            const segmentContext = evaluationContext.segments[segmentMetadataId.toString()];
             if (segmentContext) {
-                const segment = new SegmentModel(flagsmithId, segmentContext.name);
+                const segment = new SegmentModel(segmentMetadataId, segmentContext.name);
                 segment.rules = segmentContext.rules.map(rule => new SegmentRuleModel(rule.type));
                 segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
                     segmentContext.overrides || []
@@ -249,13 +249,13 @@ export class SegmentModel {
         if (!overrides) return [];
         return overrides
             .filter(override => {
-                const flagsmithId = override?.metadata?.flagsmithId;
-                return typeof flagsmithId === 'number';
+                const overrideMetadataId = override?.metadata?.id;
+                return typeof overrideMetadataId === 'number';
             })
             .map(override => {
-                const flagsmithId = override.metadata!.flagsmithId as number;
+                const overrideMetadataId = override.metadata!.id as number;
                 const feature = new FeatureModel(
-                    flagsmithId,
+                    overrideMetadataId,
                     override.name,
                     override.variants?.length && override.variants.length > 0
                         ? CONSTANTS.MULTIVARIATE
