@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-nodejs",
-  "version": "6.2.0",
+  "version": "7.0.0",
   "description": "Flagsmith lets you manage features flags and remote config across web, mobile and server side applications. Deliver true Continuous Integration. Get builds out faster. Control who has access to new features.",
   "main": "./build/cjs/index.js",
   "type": "module",
@@ -57,20 +57,30 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json && echo '{\"type\": \"commonjs\"}'> build/cjs/package.json",
     "deploy": "npm i && npm run build && npm publish",
     "deploy:beta": "npm i && npm run build && npm publish --tag beta",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "generate-evaluation-result-types": "curl -o evaluation-result.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-result.json && npx json2ts -i evaluation-result.json -o flagsmith-engine/evaluation/evaluationResult/evaluationResult.types.ts && rm evaluation-result.json",
+    "generate-evaluation-context-types": "curl -o evaluation-context.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json && npx json2ts -i evaluation-context.json -o flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.ts && rm evaluation-context.json",
+    "generate-engine-types": "npm run generate-evaluation-result-types && npm run generate-evaluation-context-types"
   },
   "dependencies": {
+    "jsonpath": "^1.1.1",
     "pino": "^8.8.0",
     "semver": "^7.3.7",
     "undici-types": "^6.19.8"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/jsonpath": "^0.2.4",
     "@types/node": "^20.16.10",
     "@types/semver": "^7.3.9",
     "@types/uuid": "^8.3.4",
     "@vitest/coverage-v8": "^2.1.2",
     "esbuild": "^0.25.0",
     "husky": "^7.0.4",
+    "install": "^0.13.0",
+    "json-schema-to-typescript": "^15.0.4",
+    "jsonc-parser": "^3.3.1",
+    "npm": "^11.6.1",
     "prettier": "^2.2.1",
     "typescript": "^4.9.5",
     "undici": "^6.19.8",

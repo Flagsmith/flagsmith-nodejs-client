@@ -1,46 +1,51 @@
-import { getIdentityFeatureStates } from '../../../flagsmith-engine/index.js';
-import { EnvironmentModel } from '../../../flagsmith-engine/environments/models.js';
-import { buildEnvironmentModel } from '../../../flagsmith-engine/environments/util.js';
-import { IdentityModel } from '../../../flagsmith-engine/identities/models.js';
-import { buildIdentityModel } from '../../../flagsmith-engine/identities/util.js';
-import * as testData from '../engine-tests/engine-test-data/data/environment_n9fbf9h3v4fFgH3U3ngWhb.json';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { getEvaluationResult } from '../../../flagsmith-engine/index.js';
+import { Flags } from '../../../sdk/models.js';
+import { EvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.js';
+import { parse as parseJsonc } from 'jsonc-parser';
+import {
+    EvaluationContextWithMetadata,
+    EvaluationResult
+} from '../../../flagsmith-engine/evaluation/models.js';
 
-function extractTestCases(data: any): {
-    environment: EnvironmentModel;
-    identity: IdentityModel;
-    response: any;
-}[] {
-    const environmentModel = buildEnvironmentModel(data['environment']);
-    const test_data = data['identities_and_responses'].map((test_case: any) => {
-        const identity = buildIdentityModel(test_case['identity']);
-
-        return {
-            environment: environmentModel,
-            identity: identity,
-            response: test_case['response']
-        };
-    });
-    return test_data;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const TEST_DATA_DIR = path.join(__dirname, '../engine-tests/engine-test-data/test_cases');
+interface TestCase {
+    context: EvaluationContext;
+    result: EvaluationResult;
 }
 
-test('Test Engine', () => {
-    const testCases = extractTestCases(testData);
-    for (const testCase of testCases) {
-        const engine_response = getIdentityFeatureStates(testCase.environment, testCase.identity);
-        const sortedEngineFlags = engine_response.sort((a, b) =>
-            a.feature.name > b.feature.name ? 1 : -1
-        );
-        const sortedAPIFlags = testCase.response['flags'].sort((a: any, b: any) =>
-            a.feature.name > b.feature.name ? 1 : -1
-        );
+function getTestFiles(): string[] {
+    const files = fs.readdirSync(TEST_DATA_DIR);
+    return files
+        .filter(f => f.endsWith('.json') || f.endsWith('.jsonc'))
+        .map(f => path.join(TEST_DATA_DIR, f));
+}
 
-        expect(sortedEngineFlags.length).toBe(sortedAPIFlags.length);
+function loadTestFile(filePath: string): TestCase {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return parseJsonc(content);
+}
 
-        for (let i = 0; i < sortedEngineFlags.length; i++) {
-            expect(sortedEngineFlags[i].getValue(testCase.identity.djangoID)).toBe(
-                sortedAPIFlags[i]['feature_state_value']
-            );
-            expect(sortedEngineFlags[i].enabled).toBe(sortedAPIFlags[i]['enabled']);
-        }
+describe('Engine Integration Tests', () => {
+    const testFiles = getTestFiles();
+
+    if (testFiles.length === 0) {
+        throw new Error(`No test files found in ${TEST_DATA_DIR}`);
     }
+
+    testFiles.forEach(filePath => {
+        const testName = path.basename(filePath, path.extname(filePath));
+
+        test(testName, () => {
+            const testCase = loadTestFile(filePath);
+            const engine_response = getEvaluationResult(
+                testCase.context as EvaluationContextWithMetadata
+            );
+            expect(engine_response).toStrictEqual(testCase.result);
+        });
+    });
 });
