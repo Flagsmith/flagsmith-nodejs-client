@@ -6,8 +6,6 @@
 ### Features
 
 * add user agent to requests ([#206](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/206)) ([ef2b97a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ef2b97a3022a5feeb96c3ccdb8009ae89b582d0b))
-* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203)) ([fdf86bf](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/fdf86bf1c51e4995a8b7caf1cc6054dcba0b9eed))
-
 
 ### Bug Fixes
 
