@@ -1,6 +1,38 @@
+# Changelog
+
+## [6.2.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.1.0...v6.2.0) (2025-11-04)
+
+
+### Features
+
+* add user agent to requests ([#206](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/206)) ([ef2b97a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ef2b97a3022a5feeb96c3ccdb8009ae89b582d0b))
+* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203)) ([fdf86bf](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/fdf86bf1c51e4995a8b7caf1cc6054dcba0b9eed))
+
+
+### Bug Fixes
+
+* handle environment documentation pagination ([#205](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/205)) ([a83d3a5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a83d3a5789abbc47abc2a95d07a19756ab7befbb))
+
+
+### CI
+
+* add release please configuration ([#190](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/190)) ([946f911](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/946f911e3c9d7df21bd7e5c6df5f9f92927e5e59))
+
+
+### Docs
+
+* removing hero image from SDK readme ([#194](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/194)) ([bc71d40](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/bc71d40bdfa319b5333c18f4f9eacbe90b6fad0d))
+
+
+### Other
+
+* add root CODEOWNERS ([#200](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/200)) ([e81cc00](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/e81cc00f1de35e0884b2cfc70c6cf54a75a3426c))
+* Revert "feat: implement context values" ([#214](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/214)) ([c789c23](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c789c23282aa14218001434417ea3d72e8bcf108))
+* versioned test data ([#197](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/197)) ([9fb5c12](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/9fb5c127a2b56503ba876da2466c24e5ceff1d3f))
+
 <a id="v6.1.0"></a>
 
-# [v6.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.1.0) - 2025-06-18
+## [v6.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.1.0) - 2025-06-18
 
 ## What's Changed
 
@@ -16,7 +48,7 @@
 
 <a id="v6.0.1"></a>
 
-# [v6.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.0.1) - 2025-04-24
+## [v6.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.0.1) - 2025-04-24
 
 ## What's Changed
 
@@ -34,7 +66,7 @@
 
 <a id="v6.0.0"></a>
 
-# [v6.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.0.0) - 2025-03-24
+## [v6.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v6.0.0) - 2025-03-24
 
 ## What's Changed
 
@@ -61,7 +93,7 @@
 
 <a id="v5.1.1"></a>
 
-# [v5.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.1.1) - 2025-02-10
+## [v5.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.1.1) - 2025-02-10
 
 ## What's Changed
 
@@ -75,7 +107,7 @@
 
 <a id="v5.1.0"></a>
 
-# [v5.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.1.0) - 2025-01-20
+## [v5.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.1.0) - 2025-01-20
 
 ## What's Changed
 
@@ -92,7 +124,7 @@ The [`baseApiUrl` constructor argument of `AnalyticsProcessor`](https://www.tsdo
 
 <a id="v5.0.1"></a>
 
-# [v5.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.0.1) - 2025-01-14
+## [v5.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.0.1) - 2025-01-14
 
 ## What's Changed
 
@@ -104,7 +136,7 @@ The [`baseApiUrl` constructor argument of `AnalyticsProcessor`](https://www.tsdo
 
 <a id="v5.0.0"></a>
 
-# [v5.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.0.0) - 2024-11-28
+## [v5.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v5.0.0) - 2024-11-28
 
 ## What's Changed
 
@@ -129,7 +161,7 @@ The `FlagsmithCache` interface has been simplified. In practice, this will not a
 
 <a id="v4.0.0"></a>
 
-# [v4.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v4.0.0) - 2024-11-07
+## [v4.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v4.0.0) - 2024-11-07
 
 ## What's Changed
 
@@ -173,7 +205,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.3.3"></a>
 
-# [v3.3.3](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.3) - 2024-07-12
+## [v3.3.3](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.3) - 2024-07-12
 
 ## What's Changed
 
@@ -189,7 +221,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.3.2"></a>
 
-# [v3.3.2](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.2) - 2024-05-23
+## [v3.3.2](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.2) - 2024-05-23
 
 ## What's Changed
 
@@ -201,7 +233,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.3.1"></a>
 
-# [v3.3.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.1) - 2024-05-08
+## [v3.3.1](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.1) - 2024-05-08
 
 ## What's Changed
 
@@ -219,7 +251,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.3.0"></a>
 
-# [Version 3.3.0 (v3.3.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.0) - 2024-04-19
+## [Version 3.3.0 (v3.3.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.3.0) - 2024-04-19
 
 ## What's Changed
 
@@ -238,7 +270,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.2.0"></a>
 
-# [Version 3.2.0 (v3.2.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.2.0) - 2023-10-25
+## [Version 3.2.0 (v3.2.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.2.0) - 2023-10-25
 
 ## What's Changed
 
@@ -250,7 +282,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.1.1"></a>
 
-# [Version 3.1.1 (v3.1.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.1.1) - 2023-08-21
+## [Version 3.1.1 (v3.1.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.1.1) - 2023-08-21
 
 ## What's Changed
 
@@ -262,7 +294,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.1.0"></a>
 
-# [Version 3.1.0 (v3.1.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.1.0) - 2023-08-07
+## [Version 3.1.0 (v3.1.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.1.0) - 2023-08-07
 
 ## What's Changed
 
@@ -283,7 +315,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.0.1"></a>
 
-# [Version 3.0.1 (v3.0.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.0.1) - 2023-06-27
+## [Version 3.0.1 (v3.0.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.0.1) - 2023-06-27
 
 ## What's Changed
 
@@ -296,7 +328,7 @@ const { Flagsmith } = require('flagsmith-nodejs');
 
 <a id="v3.0.0"></a>
 
-# [Version 3.0.0 (v3.0.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.0.0) - 2023-06-15
+## [Version 3.0.0 (v3.0.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v3.0.0) - 2023-06-15
 
 ## What's Changed
 
@@ -310,7 +342,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.5.2"></a>
 
-# [Version 2.5.2 (v2.5.2)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.2) - 2023-03-07
+## [Version 2.5.2 (v2.5.2)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.2) - 2023-03-07
 
 ## What's Changed
 
@@ -323,7 +355,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.5.1"></a>
 
-# [Version 2.5.1 (v2.5.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.1) - 2023-01-06
+## [Version 2.5.1 (v2.5.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.1) - 2023-01-06
 
 ## What's Changed
 
@@ -338,7 +370,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.5.0"></a>
 
-# [Version 2.5.0 (v2.5.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.0) - 2023-01-05
+## [Version 2.5.0 (v2.5.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.5.0) - 2023-01-05
 
 ## What's Changed
 
@@ -360,7 +392,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.4.1"></a>
 
-# [Version 2.4.1 (v2.4.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.4.1) - 2023-01-05
+## [Version 2.4.1 (v2.4.1)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.4.1) - 2023-01-05
 
 ## What's Changed
 
@@ -373,7 +405,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.4.0"></a>
 
-# [Version 2.4.0 (v2.4.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.4.0) - 2022-11-01
+## [Version 2.4.0 (v2.4.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.4.0) - 2022-11-01
 
 ## What's Changed
 
@@ -399,7 +431,7 @@ WARNING: We modified the local evaluation behaviour. You may see different flags
 
 <a id="v2.3.0"></a>
 
-# [2.3.0 - Allow custom fetch agents, improve examples and types (v2.3.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.3.0) - 2022-08-31
+## [2.3.0 - Allow custom fetch agents, improve examples and types (v2.3.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.3.0) - 2022-08-31
 
 Allows people to supply a custom agent when initialising Flagsmith, allowing for
 
@@ -416,7 +448,7 @@ Closes [#29](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/29), [#
 
 <a id="2.1.0"></a>
 
-# [2.1.0 ES import support](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/2.1.0) - 2022-07-22
+## [2.1.0 ES import support](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/2.1.0) - 2022-07-22
 
 Closes [#42](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/42) - you can now import Flagsmith as such
 
@@ -428,7 +460,7 @@ import Flagsmith, {...types} from 'flagsmith-nodejs'
 
 <a id="v2.0.4"></a>
 
-# [Version 2.0.4 (v2.0.4)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.0.4) - 2022-07-13
+## [Version 2.0.4 (v2.0.4)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.0.4) - 2022-07-13
 
 ## What's Changed
 
@@ -444,7 +476,7 @@ import Flagsmith, {...types} from 'flagsmith-nodejs'
 
 <a id="2.0.3"></a>
 
-# [2.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/2.0.3) - 2022-07-11
+## [2.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/2.0.3) - 2022-07-11
 
 Closes [#43](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/43)
 
@@ -452,7 +484,7 @@ Closes [#43](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/43)
 
 <a id="v2.0.0"></a>
 
-# [Version 2.0.0 (v2.0.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.0.0) - 2022-06-07
+## [Version 2.0.0 (v2.0.0)](https://github.com/Flagsmith/flagsmith-nodejs-client/releases/tag/v2.0.0) - 2022-06-07
 
 ## What's Changed
 
