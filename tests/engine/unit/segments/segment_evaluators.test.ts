@@ -3,27 +3,19 @@ import {
     CONDITION_OPERATORS,
     PERCENTAGE_SPLIT
 } from '../../../../flagsmith-engine/segments/constants.js';
-
+import { SegmentConditionModel } from '../../../../flagsmith-engine/segments/models.js';
 import {
     traitsMatchSegmentCondition,
-    getContextValue,
-    getIdentitySegments
+    evaluateIdentityInSegment
 } from '../../../../flagsmith-engine/segments/evaluators.js';
 import { TraitModel, IdentityModel } from '../../../../flagsmith-engine/index.js';
 import { environment } from '../utils.js';
 import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
-import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
-import { getEvaluationContext } from '../../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
-import {
-    EvaluationContext,
-    InSegmentCondition,
-    SegmentCondition,
-    SegmentCondition1
-} from '../../../../flagsmith-engine/evaluation/models.js';
+import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
 
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
-    getHashedPercentageForObjIds: vi.fn(() => 1)
+    getHashedPercentateForObjIds: vi.fn(() => 1)
 }));
 
 let traitExistenceTestCases: [
@@ -56,33 +48,14 @@ let traitExistenceTestCases: [
 test('test_traits_match_segment_condition_for_trait_existence_operators', () => {
     for (const testCase of traitExistenceTestCases) {
         const [operator, conditionProperty, conditionValue, traits, expectedResult] = testCase;
-        let segmentConditionModel = {
-            operator,
-            value: conditionValue,
-            property: conditionProperty
-        };
-        const traitsMap = traits.reduce((acc, trait) => {
-            acc[trait.traitKey] = trait.traitValue;
-            return acc;
-        }, {});
-        const context: EvaluationContext = {
-            environment: {
-                key: 'any',
-                name: 'any'
-            },
-            identity: {
-                traits: traitsMap,
-                key: 'any',
-                identifier: 'any'
-            }
-        };
-        expect(
-            traitsMatchSegmentCondition(segmentConditionModel as SegmentCondition, 'any', context)
-        ).toBe(expectedResult);
+        let segmentModel = new SegmentConditionModel(operator, conditionValue, conditionProperty);
+        expect(traitsMatchSegmentCondition(traits, segmentModel, 'any', 'any')).toBe(
+            expectedResult
+        );
     }
 });
 
-test('getIdentitySegments uses django ID for hashed percentage when present', () => {
+test('evaluateIdentityInSegment uses django ID for hashed percentage when present', () => {
     var identityModel = new IdentityModel(
         Date.now().toString(),
         [],
@@ -111,376 +84,13 @@ test('getIdentitySegments uses django ID for hashed percentage when present', ()
         feature_states: []
     };
     const segmentModel = buildSegmentModel(segmentDefinition);
-    const environmentModel = environment();
-    environmentModel.project.segments = [segmentModel];
-    const context = getEvaluationContext(environmentModel, identityModel);
 
-    var result = getIdentitySegments(context);
+    var result = evaluateIdentityInSegment(identityModel, segmentModel);
 
-    expect(result).toHaveLength(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledTimes(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledWith([
-        result[0].key,
-        context.identity!.key
+    expect(result).toBe(true);
+    expect(getHashedPercentateForObjIds).toHaveBeenCalledTimes(1);
+    expect(getHashedPercentateForObjIds).toHaveBeenCalledWith([
+        segmentModel.id,
+        identityModel.djangoID
     ]);
-});
-
-describe('getIdentitySegments integration', () => {
-    test('returns only matching segments', () => {
-        const context: EvaluationContext = {
-            environment: { key: 'env', name: 'test' },
-            identity: {
-                key: 'user',
-                identifier: 'premium@example.com',
-                traits: { subscription: 'premium' }
-            },
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'premium_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'premium' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                },
-                '2': {
-                    key: '2',
-                    name: 'basic_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'basic' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                }
-            },
-            features: {}
-        };
-
-        const result = getIdentitySegments(context);
-
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toBe('premium_users');
-    });
-
-    test('returns empty array when no segments match', () => {
-        const context: EvaluationContext = {
-            environment: { key: 'env', name: 'test' },
-            identity: {
-                key: 'user',
-                identifier: 'test@example.com',
-                traits: { subscription: 'free' }
-            },
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'premium_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'premium' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                }
-            },
-            features: {}
-        };
-
-        const result = getIdentitySegments(context);
-        expect(result).toEqual([]);
-    });
-});
-
-describe('IN operator', () => {
-    const mockContext: EvaluationContext = {
-        environment: { key: 'env', name: 'test' },
-        identity: {
-            key: 'test-user',
-            identifier: 'test',
-            traits: { name: 'test' }
-        },
-        segments: {},
-        features: {}
-    };
-
-    test.each([
-        // Array of strings
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: ['test', 'john-doe']
-            },
-            true
-        ],
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: ['john-doe']
-            },
-            false
-        ],
-
-        // JSON encoded
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: '["test", "john-doe"]'
-            },
-            true
-        ],
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: '["john-doe"]'
-            },
-            false
-        ],
-
-        // Legacy value string to split
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: 'test,john-doe'
-            },
-            true
-        ],
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: 'john-doe'
-            },
-            false
-        ],
-        // Fails because the value is split in middle
-        [
-            {
-                property: '$.identity.identifier',
-                operator: CONDITION_OPERATORS.IN,
-                value: 'te,st,john-doe'
-            },
-            false
-        ],
-
-        // Edge cases
-        [{ property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: '' }, false],
-        [{ property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: [] }, false],
-        [
-            { property: '$.identity.identifier', operator: CONDITION_OPERATORS.IN, value: '[]' },
-            false
-        ]
-    ] as Array<[SegmentCondition | InSegmentCondition, boolean]>)(
-        'evaluates IN condition %j to %s',
-        (condition: SegmentCondition | InSegmentCondition, expected: boolean) => {
-            const result = traitsMatchSegmentCondition(condition, 'segment', mockContext);
-            expect(result).toBe(expected);
-        }
-    );
-});
-
-describe('getIdentitySegments single segment evaluation', () => {
-    const baseContext: EvaluationContext = {
-        environment: { key: 'env', name: 'test' },
-        identity: { key: 'user', identifier: 'test@example.com', traits: { age: 25 } },
-        segments: {},
-        features: {}
-    };
-
-    test('returns empty array for segment with no rules', () => {
-        const context = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'empty_segment',
-                    rules: [],
-                    overrides: []
-                }
-            }
-        };
-
-        expect(getIdentitySegments(context)).toEqual([]);
-    });
-
-    test('returns segment when all rules match', () => {
-        const context: EvaluationContext = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'matching_segment',
-                    rules: [
-                        {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'EQUAL',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
-                        },
-                        {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'CONTAINS',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
-                        }
-                    ],
-                    overrides: []
-                }
-            }
-        };
-
-        const result = getIdentitySegments(context);
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toBe('matching_segment');
-    });
-
-    test('returns empty array when any rule fails', () => {
-        const context: EvaluationContext = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'failing_segment',
-                    rules: [
-                        {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'EQUAL',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
-                        },
-                        {
-                            type: ALL_RULE,
-                            conditions: [{ property: 'age', operator: 'EQUAL', value: '30' }],
-                            rules: []
-                        }
-                    ],
-                    overrides: []
-                }
-            }
-        };
-
-        expect(getIdentitySegments(context)).toEqual([]);
-    });
-});
-
-describe('getContextValue', () => {
-    const mockContext: EvaluationContext = {
-        environment: {
-            key: 'test-env-key',
-            name: 'Test Environment'
-        },
-        identity: {
-            key: 'user-123',
-            identifier: 'user@example.com'
-        },
-        segments: {},
-        features: {}
-    };
-
-    // Success cases
-    test.each([
-        ['$.identity.identifier', 'user@example.com'],
-        ['$.environment.name', 'Test Environment'],
-        ['$.environment.key', 'test-env-key']
-    ])('returns correct value for path %s', (jsonPath, expected) => {
-        const result = getContextValue(jsonPath, mockContext);
-        expect(result).toBe(expected);
-    });
-
-    // Undefined or invalid cases
-    test.each([
-        ['$.identity.traits.user_type', 'unsupported nested path'],
-        ['identity.identifier', 'missing $ prefix'],
-        ['$.invalid.path', 'completely invalid path'],
-        ['$.identity.nonexistent', 'valid structure but missing property'],
-        ['', 'empty string'],
-        ['$', 'just $ symbol']
-    ])('returns undefined for %s (%s)', jsonPath => {
-        const result = getContextValue(jsonPath, mockContext);
-        expect(result).toBeUndefined();
-    });
-
-    // Context error cases
-    test.each([
-        [undefined, '$.identity.identifier', 'undefined context'],
-        [{ segments: {}, features: {} }, '$.identity.identifier', 'missing identity'],
-        [
-            { identity: { key: 'test', identifier: 'test' }, segments: {}, features: {} },
-            '$.environment.name',
-            'missing environment'
-        ]
-    ])('returns undefined when %s', (context, jsonPath, _) => {
-        const result = getContextValue(jsonPath, context as EvaluationContext);
-        expect(result).toBeUndefined();
-    });
-});
-
-describe('percentage split operator', () => {
-    const mockContext: EvaluationContext = {
-        environment: { key: 'env', name: 'Test Env' },
-        identity: {
-            key: 'user-123',
-            identifier: 'test@example.com',
-            traits: {
-                age: 25,
-                subscription: 'premium',
-                active: true
-            }
-        },
-        segments: {},
-        features: {}
-    };
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    test.each([
-        [25.5, 30, true],
-        [25.5, 20, false],
-        [25.5, 25.5, true],
-        [0, 0, true],
-        [100, 99.9, false]
-    ])('percentage %d with threshold %d returns %s', (hashedValue, threshold, expected) => {
-        const mockHashFn = getHashedPercentageForObjIds;
-        mockHashFn.mockReturnValue(hashedValue);
-        const condition = {
-            property: 'any',
-            operator: 'PERCENTAGE_SPLIT',
-            value: threshold.toString()
-        } as SegmentCondition1 | InSegmentCondition;
-        const result = traitsMatchSegmentCondition(condition, 'seg1', mockContext);
-
-        expect(result).toBe(expected);
-        expect(getHashedPercentageForObjIds).toHaveBeenCalledWith(['seg1', 'user-123']);
-    });
 });

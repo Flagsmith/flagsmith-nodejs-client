@@ -1,12 +1,7 @@
-import {
-    CustomFeatureMetadata,
-    FlagResultWithMetadata,
-    EvaluationResultWithMetadata
-} from '../flagsmith-engine/evaluation/models.js';
 import { FeatureStateModel } from '../flagsmith-engine/features/models.js';
 import { AnalyticsProcessor } from './analytics.js';
 
-type FlagValue = string | number | boolean | undefined | null;
+type FlagValue = string | number | boolean | undefined;
 
 /**
  * A Flagsmith feature. It has an enabled/disabled state, and an optional {@link FlagValue}.
@@ -54,10 +49,6 @@ export class Flag extends BaseFlag {
      * The programmatic name for this feature, unique per Flagsmith project.
      */
     featureName: string;
-    /**
-     * The reason for this feature, unique per Flagsmith project.
-     */
-    reason?: string;
 
     constructor(params: {
         value: FlagValue;
@@ -65,12 +56,10 @@ export class Flag extends BaseFlag {
         isDefault?: boolean;
         featureId: number;
         featureName: string;
-        reason?: string;
     }) {
         super(params.value, params.enabled, !!params.isDefault);
         this.featureId = params.featureId;
         this.featureName = params.featureName;
-        this.reason = params.reason;
     }
 
     static fromFeatureStateModel(
@@ -90,8 +79,7 @@ export class Flag extends BaseFlag {
             enabled: flagData['enabled'],
             value: flagData['feature_state_value'] ?? flagData['value'],
             featureId: flagData['feature']['id'],
-            featureName: flagData['feature']['name'],
-            reason: flagData['feature']['reason']
+            featureName: flagData['feature']['name']
         });
     }
 }
@@ -109,33 +97,6 @@ export class Flags {
         this.flags = data.flags;
         this.defaultFlagHandler = data.defaultFlagHandler;
         this.analyticsProcessor = data.analyticsProcessor;
-    }
-
-    static fromEvaluationResult(
-        evaluationResult: EvaluationResultWithMetadata,
-        defaultFlagHandler?: (v: string) => DefaultFlag,
-        analyticsProcessor?: AnalyticsProcessor
-    ): Flags {
-        const flags: { [key: string]: Flag } = {};
-        for (const flag of Object.values(evaluationResult.flags)) {
-            const flagsmithId = flag.metadata?.flagsmithId;
-            if (!flagsmithId) {
-                continue;
-            }
-
-            flags[flag.name] = new Flag({
-                enabled: flag.enabled,
-                value: flag.value ?? null,
-                featureId: flagsmithId,
-                featureName: flag.name,
-                reason: flag.reason
-            });
-        }
-        return new Flags({
-            flags: flags,
-            defaultFlagHandler: defaultFlagHandler,
-            analyticsProcessor: analyticsProcessor
-        });
     }
 
     static fromFeatureStateModels(data: {

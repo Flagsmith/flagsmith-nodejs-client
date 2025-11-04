@@ -1,238 +1,102 @@
-import {
-    EvaluationContextWithMetadata,
-    EvaluationResultSegments,
-    EvaluationResultWithMetadata,
-    FeatureContextWithMetadata,
-    CustomFeatureMetadata,
-    FlagResultWithMetadata
-} from './evaluation/models.js';
+import { EnvironmentModel } from './environments/models.js';
+import { FeatureStateModel } from './features/models.js';
+import { IdentityModel } from './identities/models.js';
+import { TraitModel } from './identities/traits/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
-import { EvaluationResultFlags } from './evaluation/models.js';
-import { TARGETING_REASONS } from './features/types.js';
-import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
+import { SegmentModel } from './segments/models.js';
+import { FeatureStateNotFound } from './utils/errors.js';
+
 export { EnvironmentModel } from './environments/models.js';
+export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { IdentityModel } from './identities/models.js';
 export { TraitModel } from './identities/traits/models.js';
 export { SegmentModel } from './segments/models.js';
-export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
 
-type SegmentOverride = {
-    feature: FeatureContextWithMetadata<CustomFeatureMetadata>;
-    segmentName: string;
-};
-
-export type SegmentOverrides = Record<string, SegmentOverride>;
-
-/**
- * Evaluates flags and segments for the given context.
- *
- * This is the main entry point for the evaluation engine. It processes segments,
- * applies feature overrides based on segment priority, and returns the final flag states with
- * evaluation reasons.
- *
- * @param context - EvaluationContext containing environment, identity, and segment data
- * @returns EvaluationResult with flags, segments, and original context
- */
-export function getEvaluationResult(
-    context: EvaluationContextWithMetadata
-): EvaluationResultWithMetadata {
-    const { segments, segmentOverrides } = evaluateSegments(context);
-    const flags = evaluateFeatures(context, segmentOverrides);
-
-    return { flags, segments };
-}
-
-/**
- * Evaluates which segments the identity belongs to and collects feature overrides.
- *
- * @param context - EvaluationContext containing identity and segment definitions
- * @returns Object containing segments the identity belongs to and any feature overrides
- */
-export function evaluateSegments(context: EvaluationContextWithMetadata): {
-    segments: EvaluationResultSegments;
-    segmentOverrides: Record<string, SegmentOverride>;
-} {
-    if (!context.identity || !context.segments) {
-        return {
-            segments: [],
-            segmentOverrides: {} as Record<string, SegmentOverride>
-        };
-    }
-    const identitySegments = getIdentitySegments(context);
-
-    const segments = identitySegments.map(segment => ({
-        key: segment.key,
-        name: segment.name,
-        ...(segment.metadata
-            ? {
-                  metadata: {
-                      ...segment.metadata
-                  }
-              }
-            : {})
-    }));
-    const segmentOverrides = processSegmentOverrides(identitySegments);
-
-    return { segments, segmentOverrides };
-}
-
-/**
- * Processes feature overrides from segments, applying priority rules.
- *
- * When multiple segments override the same feature, the segment with
- * higher priority (lower numeric value) takes precedence.
- *
- * @param identitySegments - Segments that the identity belongs to
- * @returns Map of feature keys to their highest-priority segment overrides
- */
-export function processSegmentOverrides(identitySegments: any[]): Record<string, SegmentOverride> {
-    const segmentOverrides: Record<string, SegmentOverride> = {};
-
-    for (const segment of identitySegments) {
-        if (!segment.overrides) continue;
-
-        const overridesList = Array.isArray(segment.overrides) ? segment.overrides : [];
-
-        for (const override of overridesList) {
-            if (shouldApplyOverride(override, segmentOverrides)) {
-                segmentOverrides[override.feature_key] = {
-                    feature: override,
-                    segmentName: segment.name
-                };
-            }
-        }
+function getIdentityFeatureStatesDict(
+    environment: EnvironmentModel,
+    identity: IdentityModel,
+    overrideTraits?: TraitModel[]
+) {
+    // Get feature states from the environment
+    const featureStates: { [key: number]: FeatureStateModel } = {};
+    for (const fs of environment.featureStates) {
+        featureStates[fs.feature.id] = fs;
     }
 
-    return segmentOverrides;
-}
-
-/**
- * Evaluates all features in the context, applying segment overrides where applicable.
- * For each feature:
- * - Checks if a segment override exists
- * - Uses override values if present, otherwise evaluates the base feature
- * - Determines appropriate evaluation reason
- * - Handles multivariate evaluation for features without overrides
- *
- * @param context - EvaluationContext containing features and identity
- * @param segmentOverrides - Map of feature keys to their segment overrides
- * @returns EvaluationResultFlags containing evaluated flag results
- */
-export function evaluateFeatures(
-    context: EvaluationContextWithMetadata,
-    segmentOverrides: Record<string, SegmentOverride>
-): EvaluationResultFlags<CustomFeatureMetadata> {
-    const flags: EvaluationResultFlags<CustomFeatureMetadata> = {};
-
-    for (const feature of Object.values(context.features || {})) {
-        const segmentOverride = segmentOverrides[feature.feature_key];
-        const finalFeature = segmentOverride ? segmentOverride.feature : feature;
-        const hasOverride = !!segmentOverride;
-
-        const { value: evaluatedValue, reason: evaluatedReason } = hasOverride
-            ? { value: finalFeature.value, reason: undefined }
-            : evaluateFeatureValue(finalFeature, context.identity?.key);
-
-        flags[finalFeature.name] = {
-            feature_key: finalFeature.feature_key,
-            name: finalFeature.name,
-            enabled: finalFeature.enabled,
-            value: evaluatedValue,
-            ...(finalFeature.metadata ? { metadata: finalFeature.metadata } : {}),
-            reason:
-                evaluatedReason ??
-                getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
-        } as FlagResultWithMetadata<CustomFeatureMetadata>;
-    }
-
-    return flags;
-}
-
-function evaluateFeatureValue(
-    feature: FeatureContextWithMetadata,
-    identityKey?: string
-): { value: any; reason?: string } {
-    if (!!feature.variants && feature.variants.length > 0 && !!identityKey) {
-        return getMultivariateFeatureValue(feature, identityKey);
-    }
-
-    return { value: feature.value, reason: undefined };
-}
-
-/**
- * Evaluates a multivariate feature flag to determine which variant value to return for a given identity.
- *
- * Uses deterministic hashing to ensure the same identity always receives the same variant,
- * while distributing variants according to their configured weight percentages.
- *
- * @param feature - The feature context containing variants and their weights
- * @param identityKey - The identity key used for deterministic variant selection
- * @returns The variant value if the identity falls within a variant's range, otherwise the default feature value
- */
-function getMultivariateFeatureValue(
-    feature: FeatureContextWithMetadata,
-    identityKey?: string
-): { value: any; reason?: string } {
-    const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
-    const sortedVariants = [...(feature?.variants || [])].sort((a, b) => {
-        return (a.priority ?? Infinity) - (b.priority ?? Infinity);
-    });
-
-    let startPercentage = 0;
-    for (const variant of sortedVariants) {
-        const limit = startPercentage + variant.weight;
-        if (startPercentage <= percentageValue && percentageValue < limit) {
-            return {
-                value: variant.value,
-                reason: getTargetingMatchReason({ type: 'SPLIT', weight: variant.weight })
-            };
-        }
-        startPercentage = limit;
-    }
-
-    return { value: feature.value, reason: undefined };
-}
-
-export function shouldApplyOverride(
-    override: any,
-    existingOverrides: Record<string, SegmentOverride>
-): boolean {
-    const currentOverride = existingOverrides[override.feature_key];
-    return (
-        !currentOverride || isHigherPriority(override.priority, currentOverride.feature.priority)
+    // Override with any feature states defined by matching segments
+    const identitySegments: SegmentModel[] = getIdentitySegments(
+        environment,
+        identity,
+        overrideTraits
     );
-}
-
-export function isHigherPriority(
-    priorityA: number | undefined,
-    priorityB: number | undefined
-): boolean {
-    return (priorityA ?? Infinity) < (priorityB ?? Infinity);
-}
-
-export type TargetingMatchReason =
-    | {
-          type: 'SEGMENT';
-          override: SegmentOverride;
-      }
-    | {
-          type: 'SPLIT';
-          weight: number;
-      };
-
-const getTargetingMatchReason = (matchObject: TargetingMatchReason) => {
-    const { type } = matchObject;
-
-    if (type === 'SEGMENT') {
-        return matchObject.override
-            ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${matchObject.override.segmentName}`
-            : TARGETING_REASONS.DEFAULT;
+    for (const matchingSegment of identitySegments) {
+        for (const featureState of matchingSegment.featureStates) {
+            if (featureStates[featureState.feature.id]) {
+                if (featureStates[featureState.feature.id].isHigherSegmentPriority(featureState)) {
+                    continue;
+                }
+            }
+            featureStates[featureState.feature.id] = featureState;
+        }
     }
 
-    if (type === 'SPLIT') {
-        return `${TARGETING_REASONS.SPLIT}; weight=${matchObject.weight}`;
+    // Override with any feature states defined directly the identity
+    for (const fs of identity.identityFeatures) {
+        if (featureStates[fs.feature.id]) {
+            featureStates[fs.feature.id] = fs;
+        }
+    }
+    return featureStates;
+}
+
+export function getIdentityFeatureState(
+    environment: EnvironmentModel,
+    identity: IdentityModel,
+    featureName: string,
+    overrideTraits?: TraitModel[]
+): FeatureStateModel {
+    const featureStates = getIdentityFeatureStatesDict(environment, identity, overrideTraits);
+
+    const matchingFeature = Object.values(featureStates).filter(
+        f => f.feature.name === featureName
+    );
+
+    if (matchingFeature.length === 0) {
+        throw new FeatureStateNotFound('Feature State Not Found');
     }
 
-    return TARGETING_REASONS.DEFAULT;
-};
+    return matchingFeature[0];
+}
+
+export function getIdentityFeatureStates(
+    environment: EnvironmentModel,
+    identity: IdentityModel,
+    overrideTraits?: TraitModel[]
+): FeatureStateModel[] {
+    const featureStates = Object.values(
+        getIdentityFeatureStatesDict(environment, identity, overrideTraits)
+    );
+
+    if (environment.project.hideDisabledFlags) {
+        return featureStates.filter(fs => !!fs.enabled);
+    }
+    return featureStates;
+}
+
+export function getEnvironmentFeatureState(environment: EnvironmentModel, featureName: string) {
+    const featuresStates = environment.featureStates.filter(f => f.feature.name === featureName);
+
+    if (featuresStates.length === 0) {
+        throw new FeatureStateNotFound('Feature State Not Found');
+    }
+
+    return featuresStates[0];
+}
+
+export function getEnvironmentFeatureStates(environment: EnvironmentModel): FeatureStateModel[] {
+    if (environment.project.hideDisabledFlags) {
+        return environment.featureStates.filter(fs => !!fs.enabled);
+    }
+    return environment.featureStates;
+}

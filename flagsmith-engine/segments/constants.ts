@@ -4,7 +4,6 @@ export const ANY_RULE = 'ANY';
 export const NONE_RULE = 'NONE';
 
 export const RULE_TYPES = [ALL_RULE, ANY_RULE, NONE_RULE];
-export const IDENTITY_OVERRIDE_SEGMENT_NAME = 'identity_overrides';
 
 // Segment Condition Operators
 export const EQUAL = 'EQUAL';
