@@ -20,7 +20,7 @@ export function segmentCondition() {
 }
 
 export function traitMatchingSegment() {
-    return new TraitModel(segmentCondition().property_ as string, segmentCondition().value);
+    return new TraitModel(segmentCondition().property as string, segmentCondition().value);
 }
 
 export function organisation() {
