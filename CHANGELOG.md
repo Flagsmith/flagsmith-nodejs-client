@@ -25,7 +25,6 @@
 ### Other
 
 * add root CODEOWNERS ([#200](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/200)) ([e81cc00](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/e81cc00f1de35e0884b2cfc70c6cf54a75a3426c))
-* Revert "feat: implement context values" ([#214](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/214)) ([c789c23](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c789c23282aa14218001434417ea3d72e8bcf108))
 * versioned test data ([#197](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/197)) ([9fb5c12](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/9fb5c127a2b56503ba876da2466c24e5ceff1d3f))
 
 <a id="v6.1.0"></a>
