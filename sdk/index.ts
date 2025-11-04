@@ -1,21 +1,22 @@
 import { Dispatcher } from 'undici-types';
-
+import {
+    getEnvironmentFeatureStates,
+    getIdentityFeatureStates
+} from '../flagsmith-engine/index.js';
+import { EnvironmentModel } from '../flagsmith-engine/index.js';
 import { buildEnvironmentModel } from '../flagsmith-engine/environments/util.js';
+import { IdentityModel } from '../flagsmith-engine/index.js';
+import { TraitModel } from '../flagsmith-engine/index.js';
 
 import { ANALYTICS_ENDPOINT, AnalyticsProcessor } from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
-import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
+import { FlagsmithAPIError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
 import { Deferred, generateIdentitiesData, getUserAgent, retryFetch } from './utils.js';
-import {
-    SegmentModel,
-    EnvironmentModel,
-    IdentityModel,
-    TraitModel,
-    getEvaluationResult
-} from '../flagsmith-engine/index.js';
+import { SegmentModel } from '../flagsmith-engine/index.js';
+import { getIdentitySegments } from '../flagsmith-engine/segments/evaluators.js';
 import {
     Fetch,
     FlagsmithCache,
@@ -24,7 +25,6 @@ import {
     TraitConfig
 } from './types.js';
 import { pino, Logger } from 'pino';
-import { getEvaluationContext } from '../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
@@ -278,13 +278,7 @@ export class Flagsmith {
             }))
         );
 
-        const context = getEvaluationContext(environment, identityModel);
-        if (!context) {
-            throw new FlagsmithClientError('Local evaluation required to obtain identity segments');
-        }
-        const evaluationResult = getEvaluationResult(context);
-
-        return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
+        return getIdentitySegments(environment, identityModel);
     }
 
     private async fetchEnvironment(): Promise<EnvironmentModel> {
@@ -449,17 +443,14 @@ export class Flagsmith {
 
     private async getEnvironmentFlagsFromDocument(): Promise<Flags> {
         const environment = await this.getEnvironment();
-        const context = getEvaluationContext(environment);
-        if (!context) {
-            throw new FlagsmithClientError('Unable to get flags. No environment present.');
-        }
-        const evaluationResult = getEvaluationResult(context);
-        const flags = Flags.fromEvaluationResult(evaluationResult);
-
+        const flags = Flags.fromFeatureStateModels({
+            featureStates: getEnvironmentFeatureStates(environment),
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler
+        });
         if (!!this.cache) {
             await this.cache.set('flags', flags);
         }
-
         return flags;
     }
 
@@ -477,17 +468,14 @@ export class Flagsmith {
             }))
         );
 
-        const context = getEvaluationContext(environment, identityModel);
-        if (!context) {
-            throw new FlagsmithClientError('Unable to get flags. No environment present.');
-        }
-        const evaluationResult = getEvaluationResult(context);
+        const featureStates = getIdentityFeatureStates(environment, identityModel);
 
-        const flags = Flags.fromEvaluationResult(
-            evaluationResult,
-            this.defaultFlagHandler,
-            this.analyticsProcessor
-        );
+        const flags = Flags.fromFeatureStateModels({
+            featureStates: featureStates,
+            analyticsProcessor: this.analyticsProcessor,
+            defaultFlagHandler: this.defaultFlagHandler,
+            identityID: identityModel.djangoID || identityModel.compositeKey
+        });
 
         if (!!this.cache) {
             await this.cache.set(`flags-${identifier}`, flags);

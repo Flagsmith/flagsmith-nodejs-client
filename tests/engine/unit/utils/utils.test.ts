@@ -1,11 +1,11 @@
 import { randomUUID as uuidv4 } from 'node:crypto';
-import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
+import { getHashedPercentateForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
 
 describe('getHashedPercentageForObjIds', () => {
     it.each([[[12, 93]], [[uuidv4(), 99]], [[99, uuidv4()]], [[uuidv4(), uuidv4()]]])(
         'returns x where 0 <= x < 100',
         (objIds: (string | number)[]) => {
-            let result = getHashedPercentageForObjIds(objIds);
+            let result = getHashedPercentateForObjIds(objIds);
             expect(result).toBeLessThan(100);
             expect(result).toBeGreaterThanOrEqual(0);
         }
@@ -14,15 +14,15 @@ describe('getHashedPercentageForObjIds', () => {
     it.each([[[12, 93]], [[uuidv4(), 99]], [[99, uuidv4()]], [[uuidv4(), uuidv4()]]])(
         'returns the same value each time',
         (objIds: (string | number)[]) => {
-            let resultOne = getHashedPercentageForObjIds(objIds);
-            let resultTwo = getHashedPercentageForObjIds(objIds);
+            let resultOne = getHashedPercentateForObjIds(objIds);
+            let resultTwo = getHashedPercentateForObjIds(objIds);
             expect(resultOne).toEqual(resultTwo);
         }
     );
 
     it('is unique for different object ids', () => {
-        let resultOne = getHashedPercentageForObjIds([14, 106]);
-        let resultTwo = getHashedPercentageForObjIds([53, 200]);
+        let resultOne = getHashedPercentateForObjIds([14, 106]);
+        let resultTwo = getHashedPercentateForObjIds([53, 200]);
         expect(resultOne).not.toEqual(resultTwo);
     });
 
@@ -40,7 +40,7 @@ describe('getHashedPercentageForObjIds', () => {
         );
 
         // When
-        let values = objectIdPairs.map(objIds => getHashedPercentageForObjIds(objIds));
+        let values = objectIdPairs.map(objIds => getHashedPercentateForObjIds(objIds));
 
         // Then
         for (let i = 0; i++; i < numTestBuckets) {

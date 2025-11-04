@@ -1,5 +1,5 @@
 import { randomUUID as uuidv4 } from 'node:crypto';
-import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
+import { getHashedPercentateForObjIds } from '../utils/hashing/index.js';
 
 export class FeatureModel {
     id: number;
@@ -103,7 +103,6 @@ export class FeatureStateModel {
         const sortedF = this.multivariateFeatureStateValues.sort((a, b) => {
             return a.id - b.id;
         });
-
         for (const myValue of sortedF) {
             switch (myValue.percentageAllocation) {
                 case 0:
@@ -112,7 +111,7 @@ export class FeatureStateModel {
                     return myValue.multivariateFeatureOption.value;
                 default:
                     if (percentageValue === undefined) {
-                        percentageValue = getHashedPercentageForObjIds([
+                        percentageValue = getHashedPercentateForObjIds([
                             this.djangoID || this.featurestateUUID,
                             identityID
                         ]);

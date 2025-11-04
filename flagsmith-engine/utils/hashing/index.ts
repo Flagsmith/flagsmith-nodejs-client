@@ -14,7 +14,7 @@ const makeRepeated = (arr: Array<any>, repeats: number) =>
  * @param  {} iterations=1 num times to include each id in the generated string to hash
  * @returns number number between 0 (inclusive) and 100 (exclusive)
  */
-export function getHashedPercentageForObjIds(objectIds: Array<any>, iterations = 1): number {
+export function getHashedPercentateForObjIds(objectIds: Array<any>, iterations = 1): number {
     let toHash = makeRepeated(objectIds, iterations).join(',');
     const hashedValue = md5(toHash);
     const hashedInt = BigInt('0x' + hashedValue);
@@ -24,7 +24,7 @@ export function getHashedPercentageForObjIds(objectIds: Array<any>, iterations =
     /* istanbul ignore next */
     if (value === 100) {
         /* istanbul ignore next */
-        return getHashedPercentageForObjIds(objectIds, iterations + 1);
+        return getHashedPercentateForObjIds(objectIds, iterations + 1);
     }
 
     return value;
