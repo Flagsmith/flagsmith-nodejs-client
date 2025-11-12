@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.2.0...v7.0.0) (2025-11-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203))
+
+### Features
+
+* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203)) ([41258f2](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/41258f2e24ef7e89207a0f10116ffbd1229c0a30))
+* removed-feature-key-and-segment-key-from-schema ([#210](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/210)) ([014f38b](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/014f38bf33af77fb706e4e130e8a571914632408))
+
+
+### CI
+
+* use NPM trusted publishing ([#217](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/217)) ([7d01563](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7d015635f4bc41246519799dddaea7ff8da2c50a))
+
 ## [6.2.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.1.0...v6.2.0) (2025-11-04)
 
 
