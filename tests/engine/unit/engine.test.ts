@@ -30,7 +30,6 @@ test('test_get_evaluation_result_without_any_override', () => {
     const flag = Object.values(result.flags).find(f => f.name === feature1().name);
     expect(flag).toBeDefined();
     expect(flag?.name).toBe(feature1().name);
-    expect(flag?.feature_key).toBe(feature1().id.toString());
     expect(flag?.reason).toBe(TARGETING_REASONS.DEFAULT);
 });
 
@@ -112,22 +111,18 @@ test('shouldApplyOverride with priority conflicts', () => {
         feature1: {
             feature: {
                 key: 'key',
-                feature_key: 'feature1',
-                name: 'name',
+                name: 'feature1',
                 enabled: true,
                 value: 'value',
-                priority: 5
+                priority: 5,
+                metadata: { id: 1 }
             },
             segmentName: 'segment1'
         }
     };
 
-    expect(shouldApplyOverride({ feature_key: 'feature1', priority: 2 }, existingOverrides)).toBe(
-        true
-    );
-    expect(shouldApplyOverride({ feature_key: 'feature1', priority: 10 }, existingOverrides)).toBe(
-        false
-    );
+    expect(shouldApplyOverride({ name: 'feature1', priority: 2 }, existingOverrides)).toBe(true);
+    expect(shouldApplyOverride({ name: 'feature1', priority: 10 }, existingOverrides)).toBe(false);
 });
 
 test('evaluateSegments handles segments with identity identifier matching', () => {
@@ -176,7 +171,6 @@ test('evaluateSegments handles segments with identity identifier matching', () =
                 overrides: [
                     {
                         key: 'override1',
-                        feature_key: 'feature1',
                         name: 'feature1',
                         enabled: true,
                         value: 'overridden_value',
@@ -188,21 +182,21 @@ test('evaluateSegments handles segments with identity identifier matching', () =
         features: {
             feature1: {
                 key: 'fs1',
-                feature_key: 'feature1',
                 name: 'feature1',
                 enabled: false,
-                value: 'default_value'
+                value: 'default_value',
+                metadata: { id: 1 }
             }
         }
     };
 
-    const result = evaluateSegments(context);
+    const result = evaluateSegments(context as any);
 
     expect(result.segments).toHaveLength(2);
     expect(result.segments).toEqual(
         expect.arrayContaining([
-            { key: '1', name: 'segment_with_no_overrides' },
-            { key: '2', name: 'segment_with_overrides' }
+            { name: 'segment_with_no_overrides' },
+            { name: 'segment_with_overrides' }
         ])
     );
 
@@ -239,7 +233,6 @@ test('evaluateSegments handles priority conflicts correctly', () => {
                 overrides: [
                     {
                         key: 'override1',
-                        feature_key: 'feature1',
                         name: 'feature1',
                         enabled: true,
                         value: 'low_priority_value',
@@ -265,7 +258,6 @@ test('evaluateSegments handles priority conflicts correctly', () => {
                 overrides: [
                     {
                         key: 'override2',
-                        feature_key: 'feature1',
                         name: 'feature1',
                         enabled: false,
                         value: 'high_priority_value',
@@ -277,15 +269,15 @@ test('evaluateSegments handles priority conflicts correctly', () => {
         features: {
             feature1: {
                 key: 'fs1',
-                feature_key: 'feature1',
                 name: 'feature1',
                 enabled: false,
-                value: 'default_value'
+                value: 'default_value',
+                metadata: { id: 1 }
             }
         }
     };
 
-    const result = evaluateSegments(context);
+    const result = evaluateSegments(context as any);
 
     expect(result.segments).toHaveLength(2);
 
@@ -323,7 +315,6 @@ test('evaluateSegments with non-matching identity returns empty', () => {
                 overrides: [
                     {
                         key: 'override1',
-                        feature_key: 'feature1',
                         name: 'feature1',
                         enabled: true,
                         value: 'overridden_value'
@@ -334,7 +325,7 @@ test('evaluateSegments with non-matching identity returns empty', () => {
         features: {}
     };
 
-    const result = evaluateSegments(context);
+    const result = evaluateSegments(context as any);
 
     expect(result.segments).toEqual([]);
     expect(result.segmentOverrides).toEqual({});
@@ -345,14 +336,14 @@ test('evaluateFeatures with multivariate evaluation', () => {
         features: {
             mv_feature: {
                 key: 'mv',
-                feature_key: 'mv_feature',
                 name: 'Multivariate Feature',
                 enabled: true,
                 value: 'default',
                 variants: [
-                    { value: 'variant_a', weight: 0 },
-                    { value: 'variant_b', weight: 100 }
-                ]
+                    { value: 'variant_a', weight: 0, priority: 1 },
+                    { value: 'variant_b', weight: 100, priority: 2 }
+                ],
+                metadata: { id: 1 }
             }
         },
         identity: { key: 'test_user', identifier: 'test_user' },
@@ -362,6 +353,6 @@ test('evaluateFeatures with multivariate evaluation', () => {
         }
     };
 
-    const flags = evaluateFeatures(context, {});
+    const flags = evaluateFeatures(context as any, {});
     expect(flags['Multivariate Feature'].value).toBe('variant_b');
 });

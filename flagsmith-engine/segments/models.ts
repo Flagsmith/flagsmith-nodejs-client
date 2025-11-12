@@ -144,6 +144,9 @@ export class SegmentConditionModel {
                 return parsedTraitValue % divisor === remainder;
             },
             evaluateIn: (traitValue: string[] | string) => {
+                if (!traitValue || typeof traitValue === 'boolean') {
+                    return false;
+                }
                 if (Array.isArray(this.value)) {
                     return this.value.includes(traitValue.toString());
                 }
@@ -224,9 +227,13 @@ export class SegmentModel {
             if (segmentResult.metadata?.source === SegmentSource.IDENTITY_OVERRIDE) {
                 continue;
             }
-            const segmentContext = evaluationContext.segments[segmentResult.key];
+            const segmentMetadataId = segmentResult.metadata?.id;
+            if (!segmentMetadataId) {
+                continue;
+            }
+            const segmentContext = evaluationContext.segments[segmentMetadataId.toString()];
             if (segmentContext) {
-                const segment = new SegmentModel(parseInt(segmentContext.key), segmentContext.name);
+                const segment = new SegmentModel(segmentMetadataId, segmentContext.name);
                 segment.rules = segmentContext.rules.map(rule => new SegmentRuleModel(rule.type));
                 segment.featureStates = SegmentModel.createFeatureStatesFromOverrides(
                     segmentContext.overrides || []
@@ -240,33 +247,39 @@ export class SegmentModel {
 
     private static createFeatureStatesFromOverrides(overrides: Overrides): FeatureStateModel[] {
         if (!overrides) return [];
-        return overrides.map(override => {
-            const feature = new FeatureModel(
-                parseInt(override.feature_key),
-                override.name,
-                override.variants?.length && override.variants.length > 0
-                    ? CONSTANTS.MULTIVARIATE
-                    : CONSTANTS.STANDARD
-            );
-
-            const featureState = new FeatureStateModel(
-                feature,
-                override.enabled,
-                override.priority || 0
-            );
-
-            if (override.value !== undefined) {
-                featureState.setValue(override.value);
-            }
-
-            if (override.variants && override.variants.length > 0) {
-                featureState.multivariateFeatureStateValues = this.createMultivariateValues(
-                    override.variants
+        return overrides
+            .filter(override => {
+                const overrideMetadataId = override?.metadata?.id;
+                return typeof overrideMetadataId === 'number';
+            })
+            .map(override => {
+                const overrideMetadataId = override.metadata!.id as number;
+                const feature = new FeatureModel(
+                    overrideMetadataId,
+                    override.name,
+                    override.variants?.length && override.variants.length > 0
+                        ? CONSTANTS.MULTIVARIATE
+                        : CONSTANTS.STANDARD
                 );
-            }
 
-            return featureState;
-        });
+                const featureState = new FeatureStateModel(
+                    feature,
+                    override.enabled,
+                    override.priority || 0
+                );
+
+                if (override.value !== undefined) {
+                    featureState.setValue(override.value);
+                }
+
+                if (override.variants && override.variants.length > 0) {
+                    featureState.multivariateFeatureStateValues = this.createMultivariateValues(
+                        override.variants
+                    );
+                }
+
+                return featureState;
+            });
     }
 
     private static createMultivariateValues(variants: any[]): MultivariateFeatureStateValueModel[] {
