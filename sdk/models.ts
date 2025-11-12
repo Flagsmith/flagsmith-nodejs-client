@@ -1,5 +1,5 @@
 import {
-    CustomFeatureMetadata,
+    SDKFeatureMetadata,
     FlagResultWithMetadata,
     EvaluationResultWithMetadata
 } from '../flagsmith-engine/evaluation/models.js';
@@ -118,10 +118,10 @@ export class Flags {
     ): Flags {
         const flags: { [key: string]: Flag } = {};
         for (const flag of Object.values(evaluationResult.flags)) {
-            const flagsmithId = flag.metadata?.flagsmithId;
-            if (!flagsmithId) {
+            const flagMetadataId = flag.metadata?.id;
+            if (!flagMetadataId) {
                 throw new Error(
-                    `FlagResult metadata.flagsmithId is missing for feature "${flag.name}". ` +
+                    `FlagResult metadata.id is missing for feature "${flag.name}". ` +
                         `This indicates a bug in the SDK, please report it.`
                 );
             }
@@ -129,7 +129,7 @@ export class Flags {
             flags[flag.name] = new Flag({
                 enabled: flag.enabled,
                 value: flag.value ?? null,
-                featureId: flagsmithId,
+                featureId: flagMetadataId,
                 featureName: flag.name,
                 reason: flag.reason
             });
