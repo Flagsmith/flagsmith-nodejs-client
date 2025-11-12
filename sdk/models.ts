@@ -1,5 +1,5 @@
 import {
-    CustomFeatureMetadata,
+    SDKFeatureMetadata,
     FlagResultWithMetadata,
     EvaluationResultWithMetadata
 } from '../flagsmith-engine/evaluation/models.js';

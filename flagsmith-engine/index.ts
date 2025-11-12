@@ -3,7 +3,7 @@ import {
     EvaluationResultSegments,
     EvaluationResultWithMetadata,
     FeatureContextWithMetadata,
-    CustomFeatureMetadata,
+    SDKFeatureMetadata,
     FlagResultWithMetadata
 } from './evaluation/models.js';
 import { getIdentitySegments, getIdentityKey } from './segments/evaluators.js';
@@ -18,7 +18,7 @@ export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
 
 type SegmentOverride = {
-    feature: FeatureContextWithMetadata<CustomFeatureMetadata>;
+    feature: FeatureContextWithMetadata<SDKFeatureMetadata>;
     segmentName: string;
 };
 
@@ -121,8 +121,8 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
 export function evaluateFeatures(
     context: EvaluationContextWithMetadata,
     segmentOverrides: Record<string, SegmentOverride>
-): EvaluationResultFlags<CustomFeatureMetadata> {
-    const flags: EvaluationResultFlags<CustomFeatureMetadata> = {};
+): EvaluationResultFlags<SDKFeatureMetadata> {
+    const flags: EvaluationResultFlags<SDKFeatureMetadata> = {};
 
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.name];
@@ -141,7 +141,7 @@ export function evaluateFeatures(
             reason:
                 evaluatedReason ??
                 getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
-        } as FlagResultWithMetadata<CustomFeatureMetadata>;
+        } as FlagResultWithMetadata<SDKFeatureMetadata>;
     }
 
     return flags;

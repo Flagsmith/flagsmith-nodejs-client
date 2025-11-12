@@ -1,14 +1,13 @@
 import {
     FeaturesWithMetadata,
-    Segments,
     Traits,
     GenericEvaluationContext,
     EnvironmentContext,
     IdentityContext,
     SegmentSource,
-    CustomFeatureMetadata,
+    SDKFeatureMetadata,
     SegmentsWithMetadata,
-    CustomSegmentMetadata
+    SDKSegmentMetadata
 } from '../models.js';
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
@@ -47,7 +46,7 @@ function mapEnvironmentModelToEvaluationContext(
         name: environment.project.name
     };
 
-    const features: FeaturesWithMetadata<CustomFeatureMetadata> = {};
+    const features: FeaturesWithMetadata<SDKFeatureMetadata> = {};
     for (const fs of environment.featureStates) {
         const variants =
             fs.multivariateFeatureStateValues?.length > 0
@@ -71,7 +70,7 @@ function mapEnvironmentModelToEvaluationContext(
         };
     }
 
-    const segmentOverrides: SegmentsWithMetadata<CustomSegmentMetadata> = {};
+    const segmentOverrides: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     for (const segment of environment.project.segments) {
         segmentOverrides[segment.id.toString()] = {
             key: segment.id.toString(),
@@ -97,7 +96,7 @@ function mapEnvironmentModelToEvaluationContext(
         };
     }
 
-    let identityOverrideSegments: SegmentsWithMetadata<CustomSegmentMetadata> = {};
+    let identityOverrideSegments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     if (environment.identityOverrides && environment.identityOverrides.length > 0) {
         identityOverrideSegments = mapIdentityOverridesToSegments(environment.identityOverrides);
     }
@@ -149,8 +148,8 @@ function mapSegmentRuleModelToRule(rule: any): any {
 
 function mapIdentityOverridesToSegments(
     identityOverrides: IdentityModel[]
-): SegmentsWithMetadata<CustomSegmentMetadata> {
-    const segments: SegmentsWithMetadata<CustomSegmentMetadata> = {};
+): SegmentsWithMetadata<SDKSegmentMetadata> {
+    const segments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     const featuresToIdentifiers = new Map<string, { identifiers: string[]; overrides: any[] }>();
 
     for (const identity of identityOverrides) {

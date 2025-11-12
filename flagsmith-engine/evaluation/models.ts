@@ -24,7 +24,7 @@ export enum SegmentSource {
 }
 
 // Feature types
-export interface CustomFeatureMetadata extends FeatureMetadata {
+export interface SDKFeatureMetadata extends FeatureMetadata {
     id: number;
 }
 
@@ -48,7 +48,7 @@ export type EvaluationResultFlags<T extends FeatureMetadata = FeatureMetadata> =
 >;
 
 // Segment types
-export interface CustomSegmentMetadata extends SegmentMetadata {
+export interface SDKSegmentMetadata extends SegmentMetadata {
     id?: number;
     source?: SegmentSource;
 }
@@ -65,7 +65,7 @@ export type SegmentsWithMetadata<T extends SegmentMetadata = SegmentMetadata> = 
 
 export interface SegmentResultWithMetadata {
     name: string;
-    metadata: CustomSegmentMetadata;
+    metadata: SDKSegmentMetadata;
 }
 
 export type EvaluationResultSegments = SegmentResultWithMetadata[];
@@ -83,8 +83,8 @@ export interface GenericEvaluationContext<
 }
 
 export type EvaluationContextWithMetadata = GenericEvaluationContext<
-    CustomFeatureMetadata,
-    CustomSegmentMetadata
+    SDKFeatureMetadata,
+    SDKSegmentMetadata
 >;
 
 // Evaluation result types
@@ -93,4 +93,4 @@ export type EvaluationResult<T extends FeatureMetadata = FeatureMetadata> = {
     segments: EvaluationResultSegments;
 };
 
-export type EvaluationResultWithMetadata = EvaluationResult<CustomFeatureMetadata>;
+export type EvaluationResultWithMetadata = EvaluationResult<SDKFeatureMetadata>;
