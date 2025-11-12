@@ -6,7 +6,7 @@ on:
       - '*'
 
 permissions:
-  id-token: write  # Required for OIDC
+  id-token: write # Required for OIDC
   contents: read
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '18.x'
+          node-version-file: .nvmrc
           registry-url: 'https://registry.npmjs.org'
 
       - run: npm ci
