@@ -70,7 +70,7 @@ export function evaluateSegments(context: EvaluationContextWithMetadata): {
                   }
               }
             : {})
-    }));
+    })) as EvaluationResultSegments;
     const segmentOverrides = processSegmentOverrides(identitySegments);
 
     return { segments, segmentOverrides };
@@ -127,11 +127,11 @@ export function evaluateFeatures(
     for (const feature of Object.values(context.features || {})) {
         const segmentOverride = segmentOverrides[feature.name];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
-        const hasOverride = !!segmentOverride;
 
-        const { value: evaluatedValue, reason: evaluatedReason } = hasOverride
-            ? { value: finalFeature.value, reason: undefined }
-            : evaluateFeatureValue(finalFeature, getIdentityKey(context));
+        const { value: evaluatedValue, reason: evaluatedReason } = evaluateFeatureValue(
+            finalFeature,
+            getIdentityKey(context)
+        );
 
         flags[finalFeature.name] = {
             name: finalFeature.name,
