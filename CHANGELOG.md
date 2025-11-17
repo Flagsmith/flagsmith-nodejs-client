@@ -2,26 +2,30 @@
 
 ## [6.2.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.1.0...v6.2.0) (2025-11-04)
 
+
 ### Features
 
--   add user agent to requests ([#206](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/206)) ([ef2b97a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ef2b97a3022a5feeb96c3ccdb8009ae89b582d0b))
+* add user agent to requests ([#206](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/206)) ([ef2b97a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ef2b97a3022a5feeb96c3ccdb8009ae89b582d0b))
 
 ### Bug Fixes
 
--   handle environment documentation pagination ([#205](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/205)) ([a83d3a5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a83d3a5789abbc47abc2a95d07a19756ab7befbb))
+* handle environment documentation pagination ([#205](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/205)) ([a83d3a5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a83d3a5789abbc47abc2a95d07a19756ab7befbb))
+
 
 ### CI
 
--   add release please configuration ([#190](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/190)) ([946f911](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/946f911e3c9d7df21bd7e5c6df5f9f92927e5e59))
+* add release please configuration ([#190](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/190)) ([946f911](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/946f911e3c9d7df21bd7e5c6df5f9f92927e5e59))
+
 
 ### Docs
 
--   removing hero image from SDK readme ([#194](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/194)) ([bc71d40](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/bc71d40bdfa319b5333c18f4f9eacbe90b6fad0d))
+* removing hero image from SDK readme ([#194](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/194)) ([bc71d40](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/bc71d40bdfa319b5333c18f4f9eacbe90b6fad0d))
+
 
 ### Other
 
--   add root CODEOWNERS ([#200](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/200)) ([e81cc00](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/e81cc00f1de35e0884b2cfc70c6cf54a75a3426c))
--   versioned test data ([#197](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/197)) ([9fb5c12](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/9fb5c127a2b56503ba876da2466c24e5ceff1d3f))
+* add root CODEOWNERS ([#200](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/200)) ([e81cc00](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/e81cc00f1de35e0884b2cfc70c6cf54a75a3426c))
+* versioned test data ([#197](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/197)) ([9fb5c12](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/9fb5c127a2b56503ba876da2466c24e5ceff1d3f))
 
 <a id="v6.1.0"></a>
 
