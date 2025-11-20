@@ -38,10 +38,12 @@ export class EnvironmentModel {
     project: ProjectModel;
     featureStates: FeatureStateModel[] = [];
     identityOverrides: IdentityModel[] = [];
+    name: string;
 
-    constructor(id: number, apiKey: string, project: ProjectModel) {
+    constructor(id: number, apiKey: string, project: ProjectModel, name: string) {
         this.id = id;
         this.apiKey = apiKey;
         this.project = project;
+        this.name = name;
     }
 }

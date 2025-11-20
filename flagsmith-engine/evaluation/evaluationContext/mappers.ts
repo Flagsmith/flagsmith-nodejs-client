@@ -43,7 +43,7 @@ function mapEnvironmentModelToEvaluationContext(
 ): GenericEvaluationContext {
     const environmentContext: EnvironmentContext = {
         key: environment.apiKey,
-        name: environment.project.name
+        name: environment.name
     };
 
     const features: FeaturesWithMetadata<SDKFeatureMetadata> = {};
