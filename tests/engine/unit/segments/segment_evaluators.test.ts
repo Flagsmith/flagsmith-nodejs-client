@@ -82,49 +82,6 @@ test('test_traits_match_segment_condition_for_trait_existence_operators', () => 
     }
 });
 
-test('getIdentitySegments uses django ID for hashed percentage when present', () => {
-    var identityModel = new IdentityModel(
-        Date.now().toString(),
-        [],
-        [],
-        environment().apiKey,
-        'identity_1',
-        undefined,
-        1
-    );
-    const segmentDefinition = {
-        id: 1,
-        name: 'percentage_split_segment',
-        rules: [
-            {
-                type: ALL_RULE,
-                conditions: [
-                    {
-                        operator: PERCENTAGE_SPLIT,
-                        property_: null,
-                        value: '10'
-                    }
-                ],
-                rules: []
-            }
-        ],
-        feature_states: []
-    };
-    const segmentModel = buildSegmentModel(segmentDefinition);
-    const environmentModel = environment();
-    environmentModel.project.segments = [segmentModel];
-    const context = getEvaluationContext(environmentModel, identityModel);
-
-    var result = getIdentitySegments(context);
-
-    expect(result).toHaveLength(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledTimes(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledWith([
-        result[0].key,
-        context.identity!.key
-    ]);
-});
-
 describe('getIdentitySegments integration', () => {
     test('returns only matching segments', () => {
         const context: EvaluationContext = {

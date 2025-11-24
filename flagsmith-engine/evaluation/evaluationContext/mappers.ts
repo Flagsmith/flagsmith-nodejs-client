@@ -127,10 +127,6 @@ function mapIdentityModelToIdentityContext(
         traits: traitsContext
     };
 
-    if (identity.djangoID !== undefined) {
-        identityContext.key = identity.djangoID.toString();
-    }
-
     return identityContext;
 }
 

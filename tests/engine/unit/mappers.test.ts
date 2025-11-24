@@ -236,9 +236,7 @@ describe('getEvaluationContext', () => {
             [new TraitModel('email', 'test@example.com'), new TraitModel('age', 25)],
             [],
             'B62qaMZNwfiqT76p38ggrQ',
-            'test_user',
-            undefined,
-            123
+            'test_user'
         );
 
         // When
@@ -247,7 +245,6 @@ describe('getEvaluationContext', () => {
         // Then
         expect(context.identity).toBeDefined();
         expect(context.identity?.identifier).toBe('test_user');
-        expect(context.identity?.key).toBe('123');
         expect(context.identity?.traits).toEqual({
             email: 'test@example.com',
             age: 25
