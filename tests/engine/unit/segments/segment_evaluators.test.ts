@@ -1,19 +1,12 @@
-import {
-    ALL_RULE,
-    CONDITION_OPERATORS,
-    PERCENTAGE_SPLIT
-} from '../../../../flagsmith-engine/segments/constants.js';
+import { ALL_RULE, CONDITION_OPERATORS } from '../../../../flagsmith-engine/segments/constants.js';
 
 import {
     traitsMatchSegmentCondition,
     getContextValue,
     getIdentitySegments
 } from '../../../../flagsmith-engine/segments/evaluators.js';
-import { TraitModel, IdentityModel } from '../../../../flagsmith-engine/index.js';
-import { environment } from '../utils.js';
-import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
+import { TraitModel } from '../../../../flagsmith-engine/index.js';
 import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
-import { getEvaluationContext } from '../../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 import {
     EvaluationContext,
     InSegmentCondition,
