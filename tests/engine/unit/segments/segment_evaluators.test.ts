@@ -431,7 +431,6 @@ describe('percentage split operator', () => {
         const mockHashFn = getHashedPercentageForObjIds;
         mockHashFn.mockReturnValue(hashedValue);
         const condition = {
-            property: 'any',
             operator: 'PERCENTAGE_SPLIT',
             value: threshold.toString()
         } as SegmentCondition1 | InSegmentCondition;

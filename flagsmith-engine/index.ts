@@ -4,9 +4,10 @@ import {
     EvaluationResultWithMetadata,
     FeatureContextWithMetadata,
     SDKFeatureMetadata,
-    FlagResultWithMetadata
+    FlagResultWithMetadata,
+    GenericEvaluationContext
 } from './evaluation/models.js';
-import { getIdentitySegments, getIdentityKey } from './segments/evaluators.js';
+import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
 import { TARGETING_REASONS } from './features/types.js';
 import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
@@ -37,10 +38,27 @@ export type SegmentOverrides = Record<string, SegmentOverride>;
 export function getEvaluationResult(
     context: EvaluationContextWithMetadata
 ): EvaluationResultWithMetadata {
-    const { segments, segmentOverrides } = evaluateSegments(context);
-    const flags = evaluateFeatures(context, segmentOverrides);
+    const enrichedContext = getEnrichedContext(context);
+    const { segments, segmentOverrides } = evaluateSegments(enrichedContext);
+    const flags = evaluateFeatures(enrichedContext, segmentOverrides);
 
     return { flags, segments };
+}
+
+function getEnrichedContext(context: EvaluationContextWithMetadata): EvaluationContextWithMetadata {
+    const identityKey = getIdentityKey(context);
+    if (!identityKey) return context;
+
+    return {
+        ...context,
+        ...(context.identity && {
+            identity: {
+                identifier: context.identity.identifier,
+                key: identityKey,
+                traits: context.identity.traits || {}
+            }
+        })
+    };
 }
 
 /**
@@ -233,4 +251,9 @@ const getTargetingMatchReason = (matchObject: TargetingMatchReason) => {
     }
 
     return TARGETING_REASONS.DEFAULT;
+};
+
+const getIdentityKey = (context: GenericEvaluationContext): string | undefined => {
+    if (!context.identity) return undefined;
+    return context.identity.key || `${context.environment.key}_${context.identity?.identifier}`;
 };
