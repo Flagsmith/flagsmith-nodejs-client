@@ -28,7 +28,7 @@ export default defineConfig({
             '../../../sdk': path.resolve(__dirname, 'build/esm/sdk'),
             '../../../../sdk': path.resolve(__dirname, 'build/esm/sdk'),
             '../../sdk': path.resolve(__dirname, 'build/esm/sdk'),
-            '../sdk': path.resolve(__dirname, 'build/esm/sdk'),
+            '../sdk': path.resolve(__dirname, 'build/esm/sdk')
         }
     }
 });
