@@ -1,4 +1,4 @@
-import * as jsonpath from 'jsonpath';
+import * as jsonpathModule from 'jsonpath';
 import {
     GenericEvaluationContext,
     InSegmentCondition,
@@ -9,6 +9,9 @@ import {
 import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
+
+// Handle ESM/CJS interop - jsonpath exports default in ESM
+const jsonpath = (jsonpathModule as any).default || jsonpathModule;
 
 /**
  * Returns all segments that the identity belongs to based on segment rules evaluation.
