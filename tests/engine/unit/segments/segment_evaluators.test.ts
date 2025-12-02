@@ -14,6 +14,8 @@ import {
     SegmentCondition1
 } from '../../../../flagsmith-engine/evaluation/models.js';
 
+const isEsmBuild = process.env.ESM_BUILD === 'true';
+
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
     getHashedPercentageForObjIds: vi.fn(() => 1)
@@ -395,7 +397,8 @@ describe('getContextValue', () => {
     });
 });
 
-describe('percentage split operator', () => {
+// Skip in ESM build: vi.mock doesn't work with external modules
+describe.skipIf(isEsmBuild)('percentage split operator', () => {
     const mockContext: EvaluationContext = {
         environment: { key: 'env', name: 'Test Env' },
         identity: {

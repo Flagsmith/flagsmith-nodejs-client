@@ -14,8 +14,12 @@ import { EnvironmentModel } from '../../flagsmith-engine/environments/models.js'
 import { BaseOfflineHandler } from '../../sdk/offline_handlers.js';
 import { Agent } from 'undici';
 
+const isEsmBuild = process.env.ESM_BUILD === 'true';
+
 vi.mock('../../sdk/polling_manager');
-test('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
+
+// Skip in ESM build: vi.mock doesn't work with external modules
+test.skipIf(isEsmBuild)('test_flagsmith_starts_polling_manager_on_init_if_enabled', () => {
     new Flagsmith({
         environmentKey: 'ser.key',
         enableLocalEvaluation: true
@@ -32,7 +36,8 @@ test('test_flagsmith_local_evaluation_key_required', () => {
     }).toThrow('Using local evaluation requires a server-side environment key');
 });
 
-test('test_update_environment_sets_environment', async () => {
+// Skip in ESM build: instanceof fails across module boundaries
+test.skipIf(isEsmBuild)('test_update_environment_sets_environment', async () => {
     const flg = flagsmith({
         environmentKey: 'ser.key'
     });
@@ -513,7 +518,8 @@ test('getIdentityFlags succeeds if initial fetch failed then succeeded', async (
     expect(flags2.isFeatureEnabled('some_feature')).toBe(true);
 });
 
-test('get_user_agent_extracts_version_from_package_json', async () => {
+// Skip in ESM build: require() path resolution differs
+test.skipIf(isEsmBuild)('get_user_agent_extracts_version_from_package_json', async () => {
     const userAgent = getUserAgent();
     const packageJson = require('../../package.json');
 
