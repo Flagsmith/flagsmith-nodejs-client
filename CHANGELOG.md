@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.0...v7.0.1) (2025-12-02)
+
+
+### CI
+
+* use-latest-npm ([#234](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/234)) ([6a741f3](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/6a741f3b12af3bea31150561dee1e6f7c7045e56))
+
 ## [7.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.2.0...v7.0.0) (2025-12-02)
 
 
