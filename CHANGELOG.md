@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.1...v7.0.2) (2025-12-02)
+
+
+### CI
+
+* use-nvmrc-for-version ([#236](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/236)) ([a56f073](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a56f0736f6c31d3c273932ede8204710de7cf853))
+
 ## [7.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.0...v7.0.1) (2025-12-02)
 
 
