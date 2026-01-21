@@ -1,6 +1,6 @@
 {
   "name": "flagsmith-nodejs",
-  "version": "7.0.0",
+  "version": "7.0.2",
   "description": "Flagsmith lets you manage features flags and remote config across web, mobile and server side applications. Deliver true Continuous Integration. Get builds out faster. Control who has access to new features.",
   "main": "./build/cjs/index.js",
   "type": "module",
@@ -51,6 +51,7 @@
   "scripts": {
     "lint": "prettier --write .",
     "test": "vitest --coverage --run",
+    "test:esm-build": "npm run build && ESM_BUILD=true vitest --config vitest.config.esm.ts --run",
     "test:watch": "vitest",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --coverage",
     "prebuild": "rm -rf ./build",

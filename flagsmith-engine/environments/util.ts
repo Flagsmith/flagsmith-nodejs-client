@@ -11,7 +11,8 @@ export function buildEnvironmentModel(environmentJSON: any) {
     const environmentModel = new EnvironmentModel(
         environmentJSON.id,
         environmentJSON.api_key,
-        project
+        project,
+        environmentJSON.name
     );
     environmentModel.featureStates = featureStates;
     if (!!environmentJSON.identity_overrides) {

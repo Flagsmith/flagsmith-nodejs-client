@@ -1,11 +1,13 @@
 import {
     FeaturesWithMetadata,
-    Segments,
     Traits,
     GenericEvaluationContext,
     EnvironmentContext,
     IdentityContext,
-    SegmentSource
+    SegmentSource,
+    SDKFeatureMetadata,
+    SegmentsWithMetadata,
+    SDKSegmentMetadata
 } from '../models.js';
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
@@ -17,9 +19,13 @@ import { uuidToBigInt } from '../../features/util.js';
 export function getEvaluationContext(
     environment: EnvironmentModel,
     identity?: IdentityModel,
-    overrideTraits?: TraitModel[]
+    overrideTraits?: TraitModel[],
+    isEnvironmentEvaluation: boolean = false
 ): GenericEvaluationContext {
     const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
+    if (isEnvironmentEvaluation) {
+        return environmentContext;
+    }
     const identityContext = identity
         ? mapIdentityModelToIdentityContext(identity, overrideTraits)
         : undefined;
@@ -37,10 +43,10 @@ function mapEnvironmentModelToEvaluationContext(
 ): GenericEvaluationContext {
     const environmentContext: EnvironmentContext = {
         key: environment.apiKey,
-        name: environment.project.name
+        name: environment.name
     };
 
-    const features: FeaturesWithMetadata = {};
+    const features: FeaturesWithMetadata<SDKFeatureMetadata> = {};
     for (const fs of environment.featureStates) {
         const variants =
             fs.multivariateFeatureStateValues?.length > 0
@@ -53,19 +59,18 @@ function mapEnvironmentModelToEvaluationContext(
 
         features[fs.feature.name] = {
             key: fs.djangoID?.toString() || fs.featurestateUUID,
-            feature_key: fs.feature.id.toString(),
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
             variants,
             priority: fs.featureSegment?.priority,
             metadata: {
-                flagsmithId: fs.feature.id
+                id: fs.feature.id
             }
         };
     }
 
-    const segmentOverrides: Segments = {};
+    const segmentOverrides: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     for (const segment of environment.project.segments) {
         segmentOverrides[segment.id.toString()] = {
             key: segment.id.toString(),
@@ -75,21 +80,23 @@ function mapEnvironmentModelToEvaluationContext(
                 segment.featureStates.length > 0
                     ? segment.featureStates.map(fs => ({
                           key: fs.djangoID?.toString() || fs.featurestateUUID,
-                          feature_key: fs.feature.id.toString(),
                           name: fs.feature.name,
                           enabled: fs.enabled,
                           value: fs.getValue(),
-                          priority: fs.featureSegment?.priority
+                          priority: fs.featureSegment?.priority,
+                          metadata: {
+                              id: fs.feature.id
+                          }
                       }))
                     : [],
             metadata: {
                 source: SegmentSource.API,
-                flagsmith_id: segment.id
+                id: segment.id
             }
         };
     }
 
-    let identityOverrideSegments: Segments = {};
+    let identityOverrideSegments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     if (environment.identityOverrides && environment.identityOverrides.length > 0) {
         identityOverrideSegments = mapIdentityOverridesToSegments(environment.identityOverrides);
     }
@@ -115,11 +122,12 @@ function mapIdentityModelToIdentityContext(
         traitsContext[trait.traitKey] = trait.traitValue;
     }
 
-    return {
+    const identityContext: IdentityContext = {
         identifier: identity.identifier,
-        key: identity.djangoID?.toString() || identity.compositeKey,
         traits: traitsContext
     };
+
+    return identityContext;
 }
 
 function mapSegmentRuleModelToRule(rule: any): any {
@@ -134,8 +142,10 @@ function mapSegmentRuleModelToRule(rule: any): any {
     };
 }
 
-function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Segments {
-    const segments: Segments = {};
+function mapIdentityOverridesToSegments(
+    identityOverrides: IdentityModel[]
+): SegmentsWithMetadata<SDKSegmentMetadata> {
+    const segments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     const featuresToIdentifiers = new Map<string, { identifiers: string[]; overrides: any[] }>();
 
     for (const identity of identityOverrides) {
@@ -147,13 +157,12 @@ function mapIdentityOverridesToSegments(identityOverrides: IdentityModel[]): Seg
             a.feature.name.localeCompare(b.feature.name)
         );
         const overridesKey = sortedFeatures.map(fs => ({
-            feature_key: fs.feature.id.toString(),
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
             priority: -Infinity,
             metadata: {
-                flagsmithId: fs.feature.id
+                id: fs.feature.id
             }
         }));
 

@@ -3,8 +3,9 @@ import {
     EvaluationResultSegments,
     EvaluationResultWithMetadata,
     FeatureContextWithMetadata,
-    CustomFeatureMetadata,
-    FlagResultWithMetadata
+    SDKFeatureMetadata,
+    FlagResultWithMetadata,
+    GenericEvaluationContext
 } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
@@ -18,7 +19,7 @@ export { FeatureModel, FeatureStateModel } from './features/models.js';
 export { OrganisationModel } from './organisations/models.js';
 
 type SegmentOverride = {
-    feature: FeatureContextWithMetadata<CustomFeatureMetadata>;
+    feature: FeatureContextWithMetadata<SDKFeatureMetadata>;
     segmentName: string;
 };
 
@@ -37,10 +38,27 @@ export type SegmentOverrides = Record<string, SegmentOverride>;
 export function getEvaluationResult(
     context: EvaluationContextWithMetadata
 ): EvaluationResultWithMetadata {
-    const { segments, segmentOverrides } = evaluateSegments(context);
-    const flags = evaluateFeatures(context, segmentOverrides);
+    const enrichedContext = getEnrichedContext(context);
+    const { segments, segmentOverrides } = evaluateSegments(enrichedContext);
+    const flags = evaluateFeatures(enrichedContext, segmentOverrides);
 
     return { flags, segments };
+}
+
+function getEnrichedContext(context: EvaluationContextWithMetadata): EvaluationContextWithMetadata {
+    const identityKey = getIdentityKey(context);
+    if (!identityKey) return context;
+
+    return {
+        ...context,
+        ...(context.identity && {
+            identity: {
+                identifier: context.identity.identifier,
+                key: identityKey,
+                traits: context.identity.traits || {}
+            }
+        })
+    };
 }
 
 /**
@@ -62,7 +80,6 @@ export function evaluateSegments(context: EvaluationContextWithMetadata): {
     const identitySegments = getIdentitySegments(context);
 
     const segments = identitySegments.map(segment => ({
-        key: segment.key,
         name: segment.name,
         ...(segment.metadata
             ? {
@@ -71,7 +88,7 @@ export function evaluateSegments(context: EvaluationContextWithMetadata): {
                   }
               }
             : {})
-    }));
+    })) as EvaluationResultSegments;
     const segmentOverrides = processSegmentOverrides(identitySegments);
 
     return { segments, segmentOverrides };
@@ -96,7 +113,7 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
 
         for (const override of overridesList) {
             if (shouldApplyOverride(override, segmentOverrides)) {
-                segmentOverrides[override.feature_key] = {
+                segmentOverrides[override.name] = {
                     feature: override,
                     segmentName: segment.name
                 };
@@ -122,20 +139,19 @@ export function processSegmentOverrides(identitySegments: any[]): Record<string,
 export function evaluateFeatures(
     context: EvaluationContextWithMetadata,
     segmentOverrides: Record<string, SegmentOverride>
-): EvaluationResultFlags<CustomFeatureMetadata> {
-    const flags: EvaluationResultFlags<CustomFeatureMetadata> = {};
+): EvaluationResultFlags<SDKFeatureMetadata> {
+    const flags: EvaluationResultFlags<SDKFeatureMetadata> = {};
 
     for (const feature of Object.values(context.features || {})) {
-        const segmentOverride = segmentOverrides[feature.feature_key];
+        const segmentOverride = segmentOverrides[feature.name];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
-        const hasOverride = !!segmentOverride;
 
-        const { value: evaluatedValue, reason: evaluatedReason } = hasOverride
-            ? { value: finalFeature.value, reason: undefined }
-            : evaluateFeatureValue(finalFeature, context.identity?.key);
+        const { value: evaluatedValue, reason: evaluatedReason } = evaluateFeatureValue(
+            finalFeature,
+            getIdentityKey(context)
+        );
 
         flags[finalFeature.name] = {
-            feature_key: finalFeature.feature_key,
             name: finalFeature.name,
             enabled: finalFeature.enabled,
             value: evaluatedValue,
@@ -143,7 +159,7 @@ export function evaluateFeatures(
             reason:
                 evaluatedReason ??
                 getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
-        } as FlagResultWithMetadata<CustomFeatureMetadata>;
+        } as FlagResultWithMetadata<SDKFeatureMetadata>;
     }
 
     return flags;
@@ -198,7 +214,7 @@ export function shouldApplyOverride(
     override: any,
     existingOverrides: Record<string, SegmentOverride>
 ): boolean {
-    const currentOverride = existingOverrides[override.feature_key];
+    const currentOverride = existingOverrides[override.name];
     return (
         !currentOverride || isHigherPriority(override.priority, currentOverride.feature.priority)
     );
@@ -235,4 +251,9 @@ const getTargetingMatchReason = (matchObject: TargetingMatchReason) => {
     }
 
     return TARGETING_REASONS.DEFAULT;
+};
+
+const getIdentityKey = (context: GenericEvaluationContext): string | undefined => {
+    if (!context.identity) return undefined;
+    return context.identity.key || `${context.environment.key}_${context.identity?.identifier}`;
 };

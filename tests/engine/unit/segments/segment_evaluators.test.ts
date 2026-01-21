@@ -1,25 +1,20 @@
-import {
-    ALL_RULE,
-    CONDITION_OPERATORS,
-    PERCENTAGE_SPLIT
-} from '../../../../flagsmith-engine/segments/constants.js';
+import { ALL_RULE, CONDITION_OPERATORS } from '../../../../flagsmith-engine/segments/constants.js';
 
 import {
     traitsMatchSegmentCondition,
     getContextValue,
     getIdentitySegments
 } from '../../../../flagsmith-engine/segments/evaluators.js';
-import { TraitModel, IdentityModel } from '../../../../flagsmith-engine/index.js';
-import { environment } from '../utils.js';
-import { buildSegmentModel } from '../../../../flagsmith-engine/segments/util.js';
+import { TraitModel } from '../../../../flagsmith-engine/index.js';
 import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
-import { getEvaluationContext } from '../../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 import {
     EvaluationContext,
     InSegmentCondition,
     SegmentCondition,
     SegmentCondition1
 } from '../../../../flagsmith-engine/evaluation/models.js';
+
+const isEsmBuild = process.env.ESM_BUILD === 'true';
 
 // todo: work out how to implement this in a test function or before hook
 vi.mock('../../../../flagsmith-engine/utils/hashing', () => ({
@@ -80,49 +75,6 @@ test('test_traits_match_segment_condition_for_trait_existence_operators', () => 
             traitsMatchSegmentCondition(segmentConditionModel as SegmentCondition, 'any', context)
         ).toBe(expectedResult);
     }
-});
-
-test('getIdentitySegments uses django ID for hashed percentage when present', () => {
-    var identityModel = new IdentityModel(
-        Date.now().toString(),
-        [],
-        [],
-        environment().apiKey,
-        'identity_1',
-        undefined,
-        1
-    );
-    const segmentDefinition = {
-        id: 1,
-        name: 'percentage_split_segment',
-        rules: [
-            {
-                type: ALL_RULE,
-                conditions: [
-                    {
-                        operator: PERCENTAGE_SPLIT,
-                        property_: null,
-                        value: '10'
-                    }
-                ],
-                rules: []
-            }
-        ],
-        feature_states: []
-    };
-    const segmentModel = buildSegmentModel(segmentDefinition);
-    const environmentModel = environment();
-    environmentModel.project.segments = [segmentModel];
-    const context = getEvaluationContext(environmentModel, identityModel);
-
-    var result = getIdentitySegments(context);
-
-    expect(result).toHaveLength(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledTimes(1);
-    expect(getHashedPercentageForObjIds).toHaveBeenCalledWith([
-        result[0].key,
-        context.identity!.key
-    ]);
 });
 
 describe('getIdentitySegments integration', () => {
@@ -445,7 +397,8 @@ describe('getContextValue', () => {
     });
 });
 
-describe('percentage split operator', () => {
+// Skip in ESM build: vi.mock doesn't work with external modules
+describe.skipIf(isEsmBuild)('percentage split operator', () => {
     const mockContext: EvaluationContext = {
         environment: { key: 'env', name: 'Test Env' },
         identity: {
@@ -474,7 +427,6 @@ describe('percentage split operator', () => {
         const mockHashFn = getHashedPercentageForObjIds;
         mockHashFn.mockReturnValue(hashedValue);
         const condition = {
-            property: 'any',
             operator: 'PERCENTAGE_SPLIT',
             value: threshold.toString()
         } as SegmentCondition1 | InSegmentCondition;

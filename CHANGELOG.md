@@ -1,5 +1,45 @@
 # Changelog
 
+## [7.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.1...v7.0.2) (2025-12-02)
+
+
+### CI
+
+* use-nvmrc-for-version ([#236](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/236)) ([a56f073](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a56f0736f6c31d3c273932ede8204710de7cf853))
+
+## [7.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.0...v7.0.1) (2025-12-02)
+
+
+### CI
+
+* use-latest-npm ([#234](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/234)) ([6a741f3](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/6a741f3b12af3bea31150561dee1e6f7c7045e56))
+
+## [7.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.2.0...v7.0.0) (2025-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203))
+
+### Features
+
+* implement context values ([#203](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/203)) ([41258f2](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/41258f2e24ef7e89207a0f10116ffbd1229c0a30))
+* removed-feature-key-and-segment-key-from-schema ([#210](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/210)) ([014f38b](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/014f38bf33af77fb706e4e130e8a571914632408))
+
+
+### Bug Fixes
+
+* exclude-identities-when-traits-is-undefined ([#230](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/230)) ([f7488e1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/f7488e17fe524111dd18c06a30be1c44ae15ec5d))
+* fix-mv-evaluation ([#222](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/222)) ([ae1fb7e](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ae1fb7eb0551defd0823c94d37b860be7eb88a5d))
+* properly-map-environment-name ([#226](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/226)) ([3c1d200](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/3c1d200e656ec9926fdc6d4627bb259963d06a2e))
+* removed-dango-id-usage-in-mapper ([#229](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/229)) ([29c7613](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/29c761370a7e8d6d733a45293c60297843e7e1e7))
+* use-default-on-jsonpath-import ([#231](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/231)) ([7a8d949](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7a8d9498fbc0297c881b3f32fc8d0d024fe8366f))
+
+
+### CI
+
+* use NPM trusted publishing ([#217](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/217)) ([7d01563](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7d015635f4bc41246519799dddaea7ff8da2c50a))
+
 ## [6.2.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v6.1.0...v6.2.0) (2025-11-04)
 
 
