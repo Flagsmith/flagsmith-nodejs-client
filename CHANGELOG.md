@@ -1,5 +1,14 @@
 # Changelog
 
+## [7.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.2...v7.0.3) (2026-01-21)
+
+
+### Dependency Updates
+
+* bump glob and npm ([#233](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/233)) ([17802df](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/17802dfafc10874a17dbb3804c0a4e91722864d8))
+* bump js-yaml from 4.1.0 to 4.1.1 ([#223](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/223)) ([7235792](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7235792a10bb1a8ca3ffc1144697cd7654ec5c4e))
+* bump tar and npm ([#232](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/232)) ([bb34fb5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/bb34fb5e53dff9003794df9d476674bf9fbb2e10))
+
 ## [7.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.1...v7.0.2) (2025-12-02)
 
 
