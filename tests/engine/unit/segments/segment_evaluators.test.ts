@@ -345,6 +345,71 @@ describe('getIdentitySegments single segment evaluation', () => {
     });
 });
 
+describe('traitsMatchSegmentCondition with $.identity.traits.* properties', () => {
+    const mockContext: EvaluationContext = {
+        environment: { key: 'env', name: 'test' },
+        identity: {
+            key: 'user',
+            identifier: 'user@example.com',
+            traits: {
+                age: 25,
+                tamaño: 'grande',
+                サイズ: 'medium',
+                '[$the.size$]': 'small'
+            }
+        },
+        segments: {},
+        features: {}
+    };
+
+    test.each([
+        // dot notation – normal trait name
+        [{ property: '$.identity.traits.age', operator: 'EQUAL', value: '25' }, true],
+        [{ property: '$.identity.traits.age', operator: 'EQUAL', value: '30' }, false],
+        // dot notation – unicode trait name
+        [{ property: '$.identity.traits.tamaño', operator: 'EQUAL', value: 'grande' }, true],
+        [{ property: '$.identity.traits.サイズ', operator: 'EQUAL', value: 'medium' }, true],
+        // bracket notation – special characters in trait name that break jsonpath-plus
+        [
+            { property: "$.identity.traits['[$the.size$]']", operator: 'EQUAL', value: 'small' },
+            true
+        ],
+        [
+            { property: "$.identity.traits['[$the.size$]']", operator: 'EQUAL', value: 'large' },
+            false
+        ],
+        // non-existent trait
+        [{ property: '$.identity.traits.nonexistent', operator: 'EQUAL', value: 'any' }, false],
+        // IS_SET / IS_NOT_SET
+        [{ property: '$.identity.traits.age', operator: 'IS_SET', value: null }, true],
+        [{ property: '$.identity.traits.nonexistent', operator: 'IS_SET', value: null }, false],
+        [{ property: '$.identity.traits.nonexistent', operator: 'IS_NOT_SET', value: null }, true],
+        [{ property: '$.identity.traits.age', operator: 'IS_NOT_SET', value: null }, false],
+        // IN operator
+        [
+            {
+                property: '$.identity.traits.tamaño',
+                operator: CONDITION_OPERATORS.IN,
+                value: ['grande', 'pequeño']
+            },
+            true
+        ],
+        [
+            {
+                property: '$.identity.traits.tamaño',
+                operator: CONDITION_OPERATORS.IN,
+                value: ['pequeño']
+            },
+            false
+        ]
+    ] as Array<[SegmentCondition | InSegmentCondition, boolean]>)(
+        'evaluates %j to %s',
+        (condition, expected) => {
+            expect(traitsMatchSegmentCondition(condition, 'seg', mockContext)).toBe(expected);
+        }
+    );
+});
+
 describe('getContextValue', () => {
     const mockContext: EvaluationContext = {
         environment: {
@@ -354,6 +419,7 @@ describe('getContextValue', () => {
         identity: {
             key: 'user-123',
             identifier: 'user@example.com'
+            // intentionally no traits – tests below confirm paths that require traits return undefined
         },
         segments: {},
         features: {}
@@ -371,7 +437,7 @@ describe('getContextValue', () => {
 
     // Undefined or invalid cases
     test.each([
-        ['$.identity.traits.user_type', 'unsupported nested path'],
+        ['$.identity.traits.user_type', 'no traits in context'],
         ['identity.identifier', 'missing $ prefix'],
         ['$.invalid.path', 'completely invalid path'],
         ['$.identity.nonexistent', 'valid structure but missing property'],
