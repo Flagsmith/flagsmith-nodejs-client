@@ -1,5 +1,26 @@
 # Changelog
 
+## [8.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.3...v8.0.0) (2026-02-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove node18 support and update pino ([#220](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/220))
+
+### Bug Fixes
+
+* **CVE-2026-1615:** Replace jsonpath with jsonpath-plus to fix security vulnerability ([#247](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/247)) ([56a285c](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/56a285c610a51f1fe3f7d2cd561566d3aa1c6018))
+
+
+### Dependency Updates
+
+* remove node18 support and update pino ([#220](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/220)) ([a246c06](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a246c066b062d5897abead34c0f1b8ee1d687d20))
+
+
+### Other
+
+* Remove amannn/action-semantic-pull-request workflow ([#243](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/243)) ([980728a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/980728a380518e123e7ce8f6ede98842c915fcae))
+
 ## [7.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.2...v7.0.3) (2026-01-21)
 
 
