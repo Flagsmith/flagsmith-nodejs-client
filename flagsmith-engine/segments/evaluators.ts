@@ -1,4 +1,4 @@
-import * as jsonpathModule from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import {
     GenericEvaluationContext,
     InSegmentCondition,
@@ -9,9 +9,6 @@ import {
 import { getHashedPercentageForObjIds } from '../utils/hashing/index.js';
 import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
-
-// Handle ESM/CJS interop - jsonpath exports default in ESM
-const jsonpath = (jsonpathModule as any).default || jsonpathModule;
 
 /**
  * Returns all segments that the identity belongs to based on segment rules evaluation.
@@ -140,8 +137,22 @@ function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): 
     }
 }
 
+const TRAITS_DOT_PATTERN = /^\$\.identity\.traits\.(.+)$/;
+const TRAITS_BRACKET_PATTERN = /^\$\.identity\.traits\['(.+)'\]$/;
+
+function extractTraitNameFromPath(property: string): string | undefined {
+    return TRAITS_DOT_PATTERN.exec(property)?.[1] ?? TRAITS_BRACKET_PATTERN.exec(property)?.[1];
+}
+
 function getTraitValue(property: string, context?: GenericEvaluationContext): any {
     if (property.startsWith('$.')) {
+        // Look up $.identity.traits.X and $.identity.traits['X'] paths directly
+        // to avoid jsonpath-plus mis-parsing special characters (e.g. $, [, ]) in
+        // trait names that appear inside bracket-notation strings.
+        const traitName = extractTraitNameFromPath(property);
+        if (traitName !== undefined) {
+            return context?.identity?.traits?.[traitName];
+        }
         const contextValue = getContextValue(property, context);
         if (contextValue !== undefined && isPrimitive(contextValue)) {
             return contextValue;
@@ -179,14 +190,9 @@ export function getContextValue(jsonPath: string, context?: GenericEvaluationCon
     if (!context || !jsonPath?.startsWith('$.')) return undefined;
 
     try {
-        const normalizedPath = normalizeJsonPath(jsonPath);
-        const results = jsonpath.query(context, normalizedPath);
+        const results = JSONPath({ path: jsonPath, json: context });
         return results.length > 0 ? results[0] : undefined;
     } catch (error) {
         return undefined;
     }
-}
-
-function normalizeJsonPath(jsonPath: string): string {
-    return jsonPath.replace(/\.([^.\[\]]+)$/, "['$1']");
 }

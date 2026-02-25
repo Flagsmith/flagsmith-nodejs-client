@@ -64,7 +64,7 @@
     "generate-engine-types": "npm run generate-evaluation-result-types && npm run generate-evaluation-context-types"
   },
   "dependencies": {
-    "jsonpath": "^1.1.1",
+    "jsonpath-plus": "^10.4.0",
     "pino": "^10",
     "semver": "^7.3.7",
     "undici-types": "^6.19.8"
