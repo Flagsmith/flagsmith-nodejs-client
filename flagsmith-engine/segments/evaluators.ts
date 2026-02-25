@@ -137,7 +137,7 @@ function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): 
     }
 }
 
-const TRAITS_DOT_PATTERN = /^\$\.identity\.traits\.([^.]+)$/;
+const TRAITS_DOT_PATTERN = /^\$\.identity\.traits\.(.+)$/;
 const TRAITS_BRACKET_PATTERN = /^\$\.identity\.traits\['(.+)'\]$/;
 
 function extractTraitNameFromPath(property: string): string | undefined {
@@ -190,14 +190,9 @@ export function getContextValue(jsonPath: string, context?: GenericEvaluationCon
     if (!context || !jsonPath?.startsWith('$.')) return undefined;
 
     try {
-        const normalizedPath = normalizeJsonPath(jsonPath);
-        const results = JSONPath({ path: normalizedPath, json: context });
+        const results = JSONPath({ path: jsonPath, json: context });
         return results.length > 0 ? results[0] : undefined;
     } catch (error) {
         return undefined;
     }
-}
-
-function normalizeJsonPath(jsonPath: string): string {
-    return jsonPath.replace(/\.([^.\[\]]+)$/, "['$1']");
 }

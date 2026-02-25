@@ -355,7 +355,8 @@ describe('traitsMatchSegmentCondition with $.identity.traits.* properties', () =
                 age: 25,
                 tamaño: 'grande',
                 サイズ: 'medium',
-                '[$the.size$]': 'small'
+                '[$the.size$]': 'small',
+                'my.foo.bar': 'dotted'
             }
         },
         segments: {},
@@ -369,6 +370,9 @@ describe('traitsMatchSegmentCondition with $.identity.traits.* properties', () =
         // dot notation – unicode trait name
         [{ property: '$.identity.traits.tamaño', operator: 'EQUAL', value: 'grande' }, true],
         [{ property: '$.identity.traits.サイズ', operator: 'EQUAL', value: 'medium' }, true],
+        // dot notation – trait name that itself contains dots (everything after $.identity.traits. is the key)
+        [{ property: '$.identity.traits.my.foo.bar', operator: 'EQUAL', value: 'dotted' }, true],
+        [{ property: '$.identity.traits.my.foo.bar', operator: 'EQUAL', value: 'other' }, false],
         // bracket notation – special characters in trait name that break jsonpath-plus
         [
             { property: "$.identity.traits['[$the.size$]']", operator: 'EQUAL', value: 'small' },
