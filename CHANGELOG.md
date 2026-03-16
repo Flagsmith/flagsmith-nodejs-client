@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.0...v8.0.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* unwrap TraitConfig values in local evaluation before segment matching ([#252](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/252)) ([4e37994](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/4e37994829bb741665a26aa38d543bebe51231d8))
+
 ## [8.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v7.0.3...v8.0.0) (2026-02-25)
 
 
