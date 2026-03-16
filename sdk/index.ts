@@ -8,7 +8,13 @@ import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
 import { DefaultFlag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
-import { Deferred, generateIdentitiesData, getUserAgent, retryFetch } from './utils.js';
+import {
+    Deferred,
+    generateIdentitiesData,
+    getUserAgent,
+    isTraitConfig,
+    retryFetch
+} from './utils.js';
 import {
     SegmentModel,
     EnvironmentModel,
@@ -275,7 +281,7 @@ export class Flagsmith {
             identifier,
             Object.keys(traits || {}).map(key => ({
                 key,
-                value: traits?.[key]
+                value: isTraitConfig(traits?.[key]) ? traits![key].value : traits?.[key]
             }))
         );
 
@@ -474,7 +480,7 @@ export class Flagsmith {
             identifier,
             Object.keys(traits).map(key => ({
                 key,
-                value: traits[key]
+                value: isTraitConfig(traits[key]) ? traits[key].value : traits[key]
             }))
         );
 
