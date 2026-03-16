@@ -209,6 +209,76 @@ test('test_identity_with_transient_traits', async () => {
     expect(identityFlags[0].featureName).toBe('some_feature');
 });
 
+test('getIdentityFlags local evaluation with plain traits matches segment', async () => {
+    const identifier = 'identifier';
+    // Plain trait format: age=30 should match segment rule "age LESS_THAN 40"
+    const traits = { age: 30 };
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    const flags = await flg.getIdentityFlags(identifier, traits);
+
+    // Should get segment override value, not the default
+    expect(flags.getFeatureValue('some_feature')).toBe('segment_override');
+    expect(flags.isFeatureEnabled('some_feature')).toBe(false);
+});
+
+test('getIdentityFlags local evaluation with TraitConfig format matches segment', async () => {
+    const identifier = 'identifier';
+    // TraitConfig format: same trait value wrapped with transient metadata
+    const traits = { age: { value: 30, transient: true } };
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    const flags = await flg.getIdentityFlags(identifier, traits);
+
+    // Should get segment override value — same result as plain trait format
+    expect(flags.getFeatureValue('some_feature')).toBe('segment_override');
+    expect(flags.isFeatureEnabled('some_feature')).toBe(false);
+});
+
+test('getIdentityFlags local evaluation with mixed trait formats matches segment', async () => {
+    const identifier = 'identifier';
+    // Mix of plain and TraitConfig formats
+    const traits = {
+        age: { value: 30, transient: true },
+        some_other_trait: 'plain_value'
+    };
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    const flags = await flg.getIdentityFlags(identifier, traits);
+
+    // Should get segment override value
+    expect(flags.getFeatureValue('some_feature')).toBe('segment_override');
+    expect(flags.isFeatureEnabled('some_feature')).toBe(false);
+});
+
+test('getIdentitySegments with TraitConfig format matches segment', async () => {
+    const identifier = 'identifier';
+    // TraitConfig format should work for getIdentitySegments too
+    const traits = { age: { value: 30, transient: true } };
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    const segments = await flg.getIdentitySegments(identifier, traits);
+
+    expect(segments).toHaveLength(1);
+    expect(segments[0].name).toBe('regular_segment');
+});
+
 test('getIdentityFlags fails if API call failed and no default flag handler was provided', async () => {
     const flg = flagsmith({
         fetch: badFetch
