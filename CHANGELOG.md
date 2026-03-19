@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.1...v8.0.2) (2026-03-19)
+
+
+### Bug Fixes
+
+* Missing variants in feature engine context ([#257](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/257)) ([7e191b8](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7e191b8fff2634e58ff4ade92d4729b0b51ed6dc))
+
+
+### Other
+
+* **deps:** bump minimatch and npm ([#255](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/255)) ([c18c3b3](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c18c3b357243df72708fdc3e0184589b25efa8a1))
+
 ## [8.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.0...v8.0.1) (2026-03-16)
 
 
