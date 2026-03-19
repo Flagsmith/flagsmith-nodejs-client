@@ -12,6 +12,7 @@ import {
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
 import { TraitModel } from '../../identities/traits/models.js';
+import { FeatureStateModel } from '../../features/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
 import { uuidToBigInt } from '../../features/util.js';
@@ -48,21 +49,12 @@ function mapEnvironmentModelToEvaluationContext(
 
     const features: FeaturesWithMetadata<SDKFeatureMetadata> = {};
     for (const fs of environment.featureStates) {
-        const variants =
-            fs.multivariateFeatureStateValues?.length > 0
-                ? fs.multivariateFeatureStateValues.map(mv => ({
-                      value: mv.multivariateFeatureOption.value,
-                      weight: mv.percentageAllocation,
-                      priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid)
-                  }))
-                : undefined;
-
         features[fs.feature.name] = {
             key: fs.djangoID?.toString() || fs.featurestateUUID,
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
-            variants,
+            variants: mapFeatureStateVariants(fs),
             priority: fs.featureSegment?.priority,
             metadata: {
                 id: fs.feature.id
@@ -83,6 +75,7 @@ function mapEnvironmentModelToEvaluationContext(
                           name: fs.feature.name,
                           enabled: fs.enabled,
                           value: fs.getValue(),
+                          variants: mapFeatureStateVariants(fs),
                           priority: fs.featureSegment?.priority,
                           metadata: {
                               id: fs.feature.id
@@ -130,6 +123,16 @@ function mapIdentityModelToIdentityContext(
     return identityContext;
 }
 
+function mapFeatureStateVariants(fs: FeatureStateModel) {
+    return fs.multivariateFeatureStateValues?.length > 0
+        ? fs.multivariateFeatureStateValues.map(mv => ({
+              value: mv.multivariateFeatureOption.value,
+              weight: mv.percentageAllocation,
+              priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid)
+          }))
+        : undefined;
+}
+
 function mapSegmentRuleModelToRule(rule: any): any {
     return {
         type: rule.type,
@@ -160,6 +163,7 @@ function mapIdentityOverridesToSegments(
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
+            variants: mapFeatureStateVariants(fs),
             priority: -Infinity,
             metadata: {
                 id: fs.feature.id
