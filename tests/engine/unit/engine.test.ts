@@ -7,7 +7,13 @@ import {
     shouldApplyOverride
 } from '../../../flagsmith-engine/index.js';
 import { CONSTANTS } from '../../../flagsmith-engine/features/constants.js';
-import { FeatureModel, FeatureStateModel } from '../../../flagsmith-engine/features/models.js';
+import {
+    FeatureModel,
+    FeatureSegment,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueModel
+} from '../../../flagsmith-engine/features/models.js';
 import { TraitModel } from '../../../flagsmith-engine/identities/traits/models.js';
 import {
     environment,
@@ -15,12 +21,15 @@ import {
     feature1,
     identity,
     identityInSegment,
+    segment,
     segmentConditionProperty,
-    segmentConditionStringValue
+    segmentConditionStringValue,
+    traitMatchingSegment
 } from './utils.js';
 import { getEvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/mappers.js';
 import { TARGETING_REASONS } from '../../../flagsmith-engine/features/types.js';
 import { EvaluationContext } from '../../../flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.js';
+import { EvaluationContextWithMetadata } from '../../../flagsmith-engine/evaluation/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../../flagsmith-engine/segments/constants.js';
 
 test('test_get_evaluation_result_without_any_override', () => {
@@ -355,4 +364,85 @@ test('evaluateFeatures with multivariate evaluation', () => {
 
     const flags = evaluateFeatures(context as any, {});
     expect(flags['Multivariate Feature'].value).toBe('variant_b');
+});
+
+test('local evaluation returns correct multivariate value for segment override with 100% weight', () => {
+    // Given
+    // a feature with two multivariate variants where the segment override
+    // assigns 100% weight to the second variant
+    const env = environment();
+    const seg = segment();
+
+    const mvFeature = new FeatureModel(10, 'mv_feature', CONSTANTS.STANDARD);
+
+    const controlOption = new MultivariateFeatureOptionModel('control', 1);
+    const variantOption = new MultivariateFeatureOptionModel('variant_b', 2);
+
+    const envFs = new FeatureStateModel(mvFeature, true, 10, 'default');
+    envFs.multivariateFeatureStateValues = [
+        new MultivariateFeatureStateValueModel(controlOption, 0, 1),
+        new MultivariateFeatureStateValueModel(variantOption, 100, 2)
+    ];
+    env.featureStates.push(envFs);
+
+    const overrideFs = new FeatureStateModel(mvFeature, true, 11, 'default');
+    overrideFs.featureSegment = new FeatureSegment(0);
+    overrideFs.multivariateFeatureStateValues = [
+        new MultivariateFeatureStateValueModel(controlOption, 0, 1),
+        new MultivariateFeatureStateValueModel(variantOption, 100, 2)
+    ];
+    seg.featureStates.push(overrideFs);
+    env.project.segments = [seg];
+
+    // When
+    // evaluating flags for an identity that matches the segment
+    const context = getEvaluationContext(env, identityInSegment(), [traitMatchingSegment()]);
+    const result = getEvaluationResult(context as EvaluationContextWithMetadata);
+    const flag = result.flags['mv_feature'];
+
+    // Then
+    // the flag value should be the 100%-weighted variant, not the base default
+    expect(flag).toBeDefined();
+    expect(flag.value).toBe('variant_b');
+});
+
+test('getEvaluationContext maps multivariate variants onto segment override feature states', () => {
+    // Given
+    // a segment override feature state with multivariate values
+    const env = environment();
+    const seg = segment();
+
+    const mvFeature = new FeatureModel(10, 'mv_feature', CONSTANTS.STANDARD);
+    env.featureStates.push(new FeatureStateModel(mvFeature, true, 10, 'default'));
+
+    const overrideFs = new FeatureStateModel(mvFeature, true, 11, 'default');
+    overrideFs.featureSegment = new FeatureSegment(0);
+    overrideFs.multivariateFeatureStateValues = [
+        new MultivariateFeatureStateValueModel(
+            new MultivariateFeatureOptionModel('variant_value', 1),
+            100,
+            1
+        )
+    ];
+    seg.featureStates.push(overrideFs);
+    env.project.segments = [seg];
+
+    // When
+    // mapping the environment model to an evaluation context
+    const context = getEvaluationContext(env, identityInSegment(), [traitMatchingSegment()]);
+
+    // Then
+    // the segment override should include the variants array
+    const segmentOverrides = Object.values(context.segments || {});
+    const segWithOverrides = segmentOverrides.find(
+        s => s.overrides && s.overrides.some((o: any) => o.name === 'mv_feature')
+    );
+    expect(segWithOverrides).toBeDefined();
+
+    const mvOverride = segWithOverrides!.overrides!.find((o: any) => o.name === 'mv_feature');
+    expect(mvOverride).toBeDefined();
+    expect((mvOverride as any).variants).toBeDefined();
+    expect((mvOverride as any).variants).toHaveLength(1);
+    expect((mvOverride as any).variants[0].value).toBe('variant_value');
+    expect((mvOverride as any).variants[0].weight).toBe(100);
 });
