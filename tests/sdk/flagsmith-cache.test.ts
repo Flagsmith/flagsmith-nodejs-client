@@ -129,7 +129,6 @@ test('test_different_traits_produce_different_cache_entries', async () => {
     await flg.getIdentityFlags(identifier, { some_trait: 'value_a' });
     await flg.getIdentityFlags(identifier, { some_trait: 'value_b' });
 
-    // Different traits should hit the API separately, not return stale cached results.
     expect(fetch).toBeCalledTimes(2);
     expect(Object.keys(cache.cache).length).toBe(2);
 });
