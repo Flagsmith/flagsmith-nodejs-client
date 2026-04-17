@@ -11,6 +11,7 @@ import { EnvironmentDataPollingManager } from './polling_manager.js';
 import {
     Deferred,
     generateIdentitiesData,
+    generateIdentityCacheKey,
     getUserAgent,
     isTraitConfig,
     retryFetch
@@ -226,7 +227,8 @@ export class Flagsmith {
             throw new Error('`identifier` argument is missing or invalid.');
         }
 
-        const cachedItem = !!this.cache && (await this.cache.get(`flags-${identifier}`));
+        const cacheKey = generateIdentityCacheKey(identifier, traits);
+        const cachedItem = !!this.cache && (await this.cache.get(cacheKey));
         if (!!cachedItem) {
             return cachedItem;
         }
@@ -497,7 +499,7 @@ export class Flagsmith {
         );
 
         if (!!this.cache) {
-            await this.cache.set(`flags-${identifier}`, flags);
+            await this.cache.set(generateIdentityCacheKey(identifier, traits), flags);
         }
 
         return flags;
@@ -535,7 +537,7 @@ export class Flagsmith {
             defaultFlagHandler: this.defaultFlagHandler
         });
         if (!!this.cache) {
-            await this.cache.set(`flags-${identifier}`, flags);
+            await this.cache.set(generateIdentityCacheKey(identifier, traits), flags);
         }
         return flags;
     }

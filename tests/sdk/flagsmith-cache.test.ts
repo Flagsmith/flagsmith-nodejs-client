@@ -7,6 +7,7 @@ import {
     identitiesJSON,
     TestCache
 } from './utils.js';
+import { generateIdentityCacheKey } from '../../sdk/utils.js';
 
 test('test_empty_cache_not_read_but_populated', async () => {
     const cache = new TestCache();
@@ -86,7 +87,7 @@ test('test_cache_used_for_identity_flags', async () => {
     const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
 
     expect(set).toBeCalled();
-    expect(await cache.get('flags-identifier')).toBeTruthy();
+    expect(await cache.get(generateIdentityCacheKey(identifier, traits))).toBeTruthy();
 
     expect(fetch).toBeCalledTimes(1);
 
@@ -111,11 +112,23 @@ test('test_cache_used_for_identity_flags_local_evaluation', async () => {
     const identityFlags = (await flg.getIdentityFlags(identifier, traits)).allFlags();
 
     expect(set).toBeCalled();
-    expect(await cache.get('flags-identifier')).toBeTruthy();
+    expect(await cache.get(generateIdentityCacheKey(identifier, traits))).toBeTruthy();
 
     expect(fetch).toBeCalledTimes(1);
 
     expect(identityFlags[0].enabled).toBe(true);
     expect(identityFlags[0].value).toBe('some-value');
     expect(identityFlags[0].featureName).toBe('some_feature');
+});
+
+test('test_different_traits_produce_different_cache_entries', async () => {
+    const cache = new TestCache();
+    const identifier = 'identifier';
+    const flg = flagsmith({ cache });
+
+    await flg.getIdentityFlags(identifier, { some_trait: 'value_a' });
+    await flg.getIdentityFlags(identifier, { some_trait: 'value_b' });
+
+    expect(fetch).toBeCalledTimes(2);
+    expect(Object.keys(cache.cache).length).toBe(2);
 });
