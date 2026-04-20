@@ -1,6 +1,6 @@
 # Changelog
 
-## [8.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.0.3) (2026-04-20)
+## [8.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.1.0) (2026-04-20)
 
 
 ### Bug Fixes
