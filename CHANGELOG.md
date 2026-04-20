@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.0.3) (2026-04-20)
+
+
+### Bug Fixes
+
+* include-identity-traits-in-cache-key ([#262](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/262)) ([1526afc](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/1526afc68c69608efb4df6ec7ce2a7b9713d2693))
+
+
+### Other
+
+* **deps-dev:** bump lodash from 4.17.21 to 4.18.1 ([#260](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/260)) ([9c2e12c](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/9c2e12cb122da8202bfe317634505bf00ee3c3c8))
+* **deps-dev:** bump undici from 6.21.2 to 6.24.0 ([#251](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/251)) ([4edd7a9](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/4edd7a9f02f5020472761dde77f1d0dfcd057156))
+* **deps:** bump picomatch ([#258](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/258)) ([a84227b](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a84227b26ef26f08cd20de62c6fd4eaedb4fa77b))
+* **deps:** bump rollup from 4.34.6 to 4.59.0 ([#249](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/249)) ([90d3a0e](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/90d3a0e0b1fbdcfd8d27a4ebddc860fd745ebd2a))
+* release 8.1.0 ([#263](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/263)) ([c7f625e](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c7f625e859c4d5c6b3ef85558201500cd6e9b5cf))
+
 ## [8.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.1...v8.0.2) (2026-03-19)
 
 
