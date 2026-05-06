@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.0...v8.1.1) (2026-05-06)
+
+
+### CI
+
+* setup Renovate for engine-test-data tracking ([#264](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/264)) ([8743f06](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/8743f06437954283ba29be962bab6a4a2883d659))
+
 ## [8.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.1.0) (2026-04-20)
 
 
