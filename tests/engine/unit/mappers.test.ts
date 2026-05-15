@@ -336,8 +336,9 @@ describe('getEvaluationContext', () => {
     });
 
     test('handles multiple identity overrides with same features', () => {
-        // Given - the fixture already has identity override with 'overridden-id'
-        // Verify it's mapped correctly
+        // Given - the fixture has identity overrides for 'overridden-id' (some_feature)
+        // plus two entries for 'multi-override-id' covering some_feature and mv_feature.
+        // Each unique feature-set hash produces its own identity override segment.
         const context = getEvaluationContext(testEnvironment);
 
         // Then
@@ -345,9 +346,15 @@ describe('getEvaluationContext', () => {
             s => s.name === IDENTITY_OVERRIDE_SEGMENT_NAME
         );
 
-        // The fixture has one identity override
-        expect(overrideSegments.length).toBe(1);
-        expect(overrideSegments[0].rules?.[0].conditions?.[0].value).toContain('overridden-id');
-        expect(overrideSegments[0].overrides?.length).toBe(1);
+        expect(overrideSegments.length).toBe(3);
+
+        const identifiers = overrideSegments
+            .map(s => s.rules?.[0].conditions?.[0].value as string)
+            .sort();
+        expect(identifiers).toEqual(['multi-override-id', 'multi-override-id', 'overridden-id']);
+
+        for (const segment of overrideSegments) {
+            expect(segment.overrides?.length).toBe(1);
+        }
     });
 });
