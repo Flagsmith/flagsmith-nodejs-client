@@ -119,9 +119,11 @@ function evaluateSubRules(
 ): boolean {
     if (!rule.rules || rule.rules.length === 0) return true;
 
-    return rule.rules.every((subRule: SegmentRule) =>
+    const subRuleResults = rule.rules.map((subRule: SegmentRule) =>
         traitsMatchSegmentRule(subRule, segmentKey, context)
     );
+
+    return evaluateRuleConditions(rule.type, subRuleResults);
 }
 
 function evaluateRuleConditions(ruleType: string, conditionResults: boolean[]): boolean {
