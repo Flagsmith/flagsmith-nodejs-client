@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.0...v8.1.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* respect rule type for sub-rules in segment evaluation ([#266](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/266)) ([468c2b5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/468c2b57f44edcd7a735859b6ce6d23436ac9c5a))
+
+
+### CI
+
+* setup Renovate for engine-test-data tracking ([#264](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/264)) ([8743f06](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/8743f06437954283ba29be962bab6a4a2883d659))
+
 ## [8.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.1.0) (2026-04-20)
 
 
