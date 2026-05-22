@@ -1,9 +1,15 @@
 # Flagsmith NodeJS Client
 
-[![npm version](https://badge.fury.io/js/flagsmith-nodejs.svg)](https://badge.fury.io/js/flagsmith-nodejs)
-[![](https://data.jsdelivr.com/v1/package/npm/flagsmith-nodejs/badge)](https://www.jsdelivr.com/package/npm/flagsmith-nodejs)
+[![npm version](https://badge.fury.io/js/@flagsmith%2Fnodejs.svg)](https://badge.fury.io/js/@flagsmith%2Fnodejs)
+[![](https://data.jsdelivr.com/v1/package/npm/@flagsmith/nodejs/badge)](https://www.jsdelivr.com/package/npm/@flagsmith/nodejs)
 
 The SDK clients for NodeJS [https://www.flagsmith.com/](https://www.flagsmith.com/). Flagsmith allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+
+## Installation
+
+```bash
+npm install @flagsmith/nodejs
+```
 
 ## Adding to your project
 
