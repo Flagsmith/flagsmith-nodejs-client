@@ -4,6 +4,8 @@ import { AnalyticsProcessor } from '../../sdk/analytics.js';
 import Flagsmith, { FlagsmithConfig } from '../../sdk/index.js';
 import { Fetch, FlagsmithCache } from '../../sdk/types.js';
 import { Flags } from '../../sdk/models.js';
+import { fetch } from './fetchMock.js';
+export { fetch, fetchImpl, environmentJSON, flagsJSON, identitiesJSON } from './fetchMock.js';
 
 const DATA_DIR = __dirname + '/data/';
 
@@ -18,29 +20,6 @@ export class TestCache implements FlagsmithCache {
         this.cache[name] = value;
     }
 }
-
-export const fetch = vi.fn((url: string, options?: RequestInit) => {
-    const headers = options?.headers as Record<string, string>;
-    if (!headers) throw new Error('missing request headers');
-    const env = headers['X-Environment-Key'];
-    if (!env)
-        return Promise.resolve(new Response('missing x-environment-key header', { status: 404 }));
-    if (url.includes('/environment-document')) {
-        if (env.startsWith('ser.')) {
-            return Promise.resolve(new Response(environmentJSON, { status: 200 }));
-        }
-        return Promise.resolve(
-            new Response('environment-document called without a server-side key', { status: 401 })
-        );
-    }
-    if (url.includes('/flags')) {
-        return Promise.resolve(new Response(flagsJSON, { status: 200 }));
-    }
-    if (url.includes('/identities')) {
-        return Promise.resolve(new Response(identitiesJSON, { status: 200 }));
-    }
-    return Promise.resolve(new Response('unknown url ' + url, { status: 404 }));
-});
 
 export const badFetch: Fetch = () => {
     throw new Error('fetch failed');
@@ -68,17 +47,11 @@ export function flagsmith(params: FlagsmithConfig = {}) {
     });
 }
 
-export const environmentJSON = readFileSync(DATA_DIR + 'environment.json', 'utf-8');
-
 export const offlineEnvironmentJSON = readFileSync(DATA_DIR + 'offline-environment.json', 'utf-8');
 
 export function environmentModel(environmentJSON: any) {
     return buildEnvironmentModel(environmentJSON);
 }
-
-export const flagsJSON = readFileSync(DATA_DIR + 'flags.json', 'utf-8');
-
-export const identitiesJSON = readFileSync(DATA_DIR + 'identities.json', 'utf-8');
 
 export const transientIdentityJSON = readFileSync(DATA_DIR + 'transient-identity.json', 'utf-8');
 
