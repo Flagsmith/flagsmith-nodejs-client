@@ -5,7 +5,6 @@ import Flagsmith, { FlagsmithConfig } from '../../sdk/index.js';
 import { Fetch, FlagsmithCache } from '../../sdk/types.js';
 import { Flags } from '../../sdk/models.js';
 import { fetch } from './fetchMock.js';
-export { fetch, fetchImpl, environmentJSON, flagsJSON, identitiesJSON } from './fetchMock.js';
 
 const DATA_DIR = __dirname + '/data/';
 

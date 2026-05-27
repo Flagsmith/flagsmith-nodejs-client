@@ -1,5 +1,6 @@
 import { getUserAgent } from '../../sdk/utils.js';
-import { analyticsProcessor, fetch } from './utils.js';
+import { fetch } from './fetchMock.js';
+import { analyticsProcessor } from './utils.js';
 
 test('test_analytics_processor_track_feature_updates_analytics_data', () => {
     const aP = analyticsProcessor();

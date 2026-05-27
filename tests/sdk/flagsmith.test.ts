@@ -1,13 +1,7 @@
 import Flagsmith from '../../sdk/index.js';
 import { EnvironmentDataPollingManager } from '../../sdk/polling_manager.js';
-import {
-    environmentJSON,
-    environmentModel,
-    flagsmith,
-    fetch,
-    offlineEnvironmentJSON,
-    badFetch
-} from './utils.js';
+import { fetch, environmentJSON } from './fetchMock.js';
+import { environmentModel, flagsmith, offlineEnvironmentJSON, badFetch } from './utils.js';
 import { DefaultFlag, Flags } from '../../sdk/models.js';
 import { delay, getUserAgent } from '../../sdk/utils.js';
 import { EnvironmentModel } from '../../flagsmith-engine/environments/models.js';

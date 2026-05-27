@@ -1,5 +1,6 @@
 import Flagsmith from '../../sdk/index.js';
-import { environmentJSON, environmentModel, flagsJSON, flagsmith, fetch } from './utils.js';
+import { fetch, environmentJSON, flagsJSON } from './fetchMock.js';
+import { environmentModel, flagsmith } from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
 import { getUserAgent } from '../../sdk/utils.js';
 
