@@ -76,7 +76,7 @@
     "@types/semver": "^7.3.9",
     "@types/uuid": "^8.3.4",
     "@vitest/coverage-v8": "^4.1.4",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.0",
     "husky": "^7.0.4",
     "install": "^0.13.0",
     "json-schema-to-typescript": "^15.0.4",
