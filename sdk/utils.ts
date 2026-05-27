@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { Fetch, FlagsmithTraitValue, TraitConfig } from './types.js';
 import { Dispatcher } from 'undici-types';
 
@@ -38,6 +39,28 @@ export function generateIdentitiesData(identifier: string, traits: Traits, trans
         identifier: identifier,
         traits: traitsGenerated
     };
+}
+
+export function generateIdentityCacheKey(identifier: string, traits?: Traits): string {
+    if (!traits || Object.keys(traits).length === 0) {
+        return `flags-${identifier}`;
+    }
+
+    const normalized: [string, FlagsmithTraitValue][] = [];
+    for (const key of Object.keys(traits).sort()) {
+        const raw = traits[key];
+        const value = isTraitConfig(raw) ? raw.value : raw;
+        if (value === undefined) continue;
+        normalized.push([key, value]);
+    }
+
+    if (normalized.length === 0) {
+        return `flags-${identifier}`;
+    }
+
+    const serialized = JSON.stringify(normalized);
+    const hash = createHash('sha256').update(serialized).digest('hex').substring(0, 16);
+    return `flags-${identifier}-${hash}`;
 }
 
 export const delay = (ms: number) =>
