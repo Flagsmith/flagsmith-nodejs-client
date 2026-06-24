@@ -160,6 +160,7 @@ function mapIdentityOverridesToSegments(
             a.feature.name.localeCompare(b.feature.name)
         );
         const overridesKey = sortedFeatures.map(fs => ({
+            key: fs.djangoID?.toString() || fs.featurestateUUID,
             name: fs.feature.name,
             enabled: fs.enabled,
             value: fs.getValue(),
@@ -170,7 +171,14 @@ function mapIdentityOverridesToSegments(
             }
         }));
 
-        const overridesHash = createHash('sha1').update(JSON.stringify(overridesKey)).digest('hex');
+        const overridesHash = createHash('sha1')
+            .update(
+                JSON.stringify(overridesKey, (key, value) => {
+                    if (key === 'key') return undefined;
+                    return typeof value === 'bigint' ? value.toString() : value;
+                })
+            )
+            .digest('hex');
 
         if (!featuresToIdentifiers.has(overridesHash)) {
             featuresToIdentifiers.set(overridesHash, { identifiers: [], overrides: overridesKey });

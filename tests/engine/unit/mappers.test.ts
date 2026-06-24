@@ -350,4 +350,94 @@ describe('getEvaluationContext', () => {
         expect(overrideSegments[0].rules?.[0].conditions?.[0].value).toContain('overridden-id');
         expect(overrideSegments[0].overrides?.length).toBe(1);
     });
+
+    // Regression: identity override on a multivariate flag whose mv values have no
+    // django `id` made mapIdentityOverridesToSegments JSON.stringify a BigInt priority.
+    test('handles identity override on a multivariate feature without django ids', () => {
+        const envWithMvOverride = JSON.parse(JSON.stringify(environmentJSON));
+        envWithMvOverride.identity_overrides = [
+            {
+                identifier: 'overridden-mv-identifier',
+                identity_uuid: '11111111-1111-1111-1111-111111111111',
+                environment_api_key: 'B62qaMZNwfiqT76p38ggrQ',
+                identity_features: [
+                    {
+                        feature: { id: 2, name: 'mv_feature', type: 'MULTIVARIATE' },
+                        featurestate_uuid: '22222222-2222-2222-2222-222222222222',
+                        feature_state_value: 'control',
+                        enabled: true,
+                        feature_segment: null,
+                        multivariate_feature_state_values: [
+                            {
+                                percentage_allocation: 33,
+                                multivariate_feature_option: { value: 'variant_1' },
+                                mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000001'
+                            },
+                            {
+                                percentage_allocation: 33,
+                                multivariate_feature_option: { value: 'variant_2' },
+                                mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000002'
+                            },
+                            {
+                                percentage_allocation: 34,
+                                multivariate_feature_option: { value: 'variant_3' },
+                                mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000003'
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+        const env = buildEnvironmentModel(envWithMvOverride);
+
+        expect(() => getEvaluationContext(env)).not.toThrow();
+
+        const context = getEvaluationContext(env);
+        const overrideSegment = Object.values(context.segments!).find(
+            s =>
+                s.name === IDENTITY_OVERRIDE_SEGMENT_NAME &&
+                s.rules?.[0]?.conditions?.[0]?.value === 'overridden-mv-identifier'
+        );
+        expect(overrideSegment).toBeDefined();
+        const mvOverride = overrideSegment!.overrides?.find(o => o.name === 'mv_feature');
+        expect(mvOverride).toBeDefined();
+        expect(mvOverride!.variants?.length).toBe(3);
+        expect(mvOverride!.variants?.map(v => v.value)).toEqual([
+            'variant_1',
+            'variant_2',
+            'variant_3'
+        ]);
+        expect(mvOverride!.key).toBe('22222222-2222-2222-2222-222222222222');
+    });
+
+    test('still dedupes identical plain identity overrides into one segment', () => {
+        const envWithDupes = JSON.parse(JSON.stringify(environmentJSON));
+        const makeOverride = (identifier: string, fsUuid: string) => ({
+            identifier,
+            identity_uuid: identifier,
+            environment_api_key: 'B62qaMZNwfiqT76p38ggrQ',
+            identity_features: [
+                {
+                    feature: { id: 1, name: 'some_feature', type: 'STANDARD' },
+                    featurestate_uuid: fsUuid,
+                    feature_state_value: 'shared-override-value',
+                    enabled: false,
+                    feature_segment: null
+                }
+            ]
+        });
+        envWithDupes.identity_overrides = [
+            makeOverride('user-a', '33333333-3333-3333-3333-333333333333'),
+            makeOverride('user-b', '44444444-4444-4444-4444-444444444444')
+        ];
+        const env = buildEnvironmentModel(envWithDupes);
+
+        const context = getEvaluationContext(env);
+        const overrideSegments = Object.values(context.segments!).filter(
+            s => s.name === IDENTITY_OVERRIDE_SEGMENT_NAME
+        );
+
+        expect(overrideSegments.length).toBe(1);
+        expect(overrideSegments[0].rules?.[0].conditions?.[0].value).toBe('user-a,user-b');
+    });
 });

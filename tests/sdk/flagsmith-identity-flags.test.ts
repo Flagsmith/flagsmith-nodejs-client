@@ -138,6 +138,56 @@ test('test_get_identity_flags_multivariate_value_with_local_evaluation_enabled',
     expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(false);
 });
 
+// Regression: local-evaluation getIdentityFlags() threw "Do not know how to
+// serialize a BigInt" when an identity override targeted a multivariate flag.
+test('getIdentityFlags local evaluation with multivariate identity override does not crash', async () => {
+    const envWithMvOverride = JSON.parse(environmentJSON);
+    envWithMvOverride.identity_overrides = [
+        {
+            identifier: 'overridden-mv-identifier',
+            identity_uuid: '11111111-1111-1111-1111-111111111111',
+            environment_api_key: 'B62qaMZNwfiqT76p38ggrQ',
+            identity_features: [
+                {
+                    feature: { id: 2, name: 'mv_feature', type: 'MULTIVARIATE' },
+                    featurestate_uuid: '22222222-2222-2222-2222-222222222222',
+                    feature_state_value: 'control',
+                    enabled: true,
+                    feature_segment: null,
+                    multivariate_feature_state_values: [
+                        {
+                            percentage_allocation: 33,
+                            multivariate_feature_option: { value: 'variant_1' },
+                            mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000001'
+                        },
+                        {
+                            percentage_allocation: 33,
+                            multivariate_feature_option: { value: 'variant_2' },
+                            mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000002'
+                        },
+                        {
+                            percentage_allocation: 34,
+                            multivariate_feature_option: { value: 'variant_3' },
+                            mv_fs_value_uuid: 'aaaaaaaa-0000-0000-0000-000000000003'
+                        }
+                    ]
+                }
+            ]
+        }
+    ];
+    fetch.mockResolvedValue(new Response(JSON.stringify(envWithMvOverride)));
+
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    const flags = await flg.getIdentityFlags('overridden-mv-identifier');
+
+    expect(flags.isFeatureEnabled('mv_feature')).toBe(true);
+    expect(['variant_1', 'variant_2', 'variant_3']).toContain(flags.getFeatureValue('mv_feature'));
+});
+
 test('test_transient_identity', async () => {
     fetch.mockResolvedValue(new Response(transientIdentityJSON));
     const identifier = 'transient_identifier';
