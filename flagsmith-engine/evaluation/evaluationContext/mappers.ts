@@ -173,10 +173,10 @@ function mapIdentityOverridesToSegments(
 
         const overridesHash = createHash('sha1')
             .update(
-                JSON.stringify(overridesKey, (key, value) => {
-                    if (key === 'key') return undefined;
-                    return typeof value === 'bigint' ? value.toString() : value;
-                })
+                JSON.stringify(
+                    overridesKey.map(({ key, ...rest }) => rest),
+                    (_, value) => (typeof value === 'bigint' ? value.toString() : value)
+                )
             )
             .digest('hex');
 
