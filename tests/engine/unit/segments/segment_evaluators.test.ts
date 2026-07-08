@@ -483,9 +483,6 @@ describe.skipIf(isEsmBuild)('percentage split operator', () => {
         segments: {},
         features: {}
     };
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
 
     test.each([
         [25.5, 30, true],

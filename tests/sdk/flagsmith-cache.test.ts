@@ -1,12 +1,5 @@
-import {
-    fetch,
-    environmentJSON,
-    environmentModel,
-    flagsJSON,
-    flagsmith,
-    identitiesJSON,
-    TestCache
-} from './utils.js';
+import { fetch, environmentJSON, flagsJSON, identitiesJSON } from './fetchMock.js';
+import { environmentModel, flagsmith, TestCache } from './utils.js';
 import { generateIdentityCacheKey } from '../../sdk/utils.js';
 
 test('test_empty_cache_not_read_but_populated', async () => {

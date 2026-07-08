@@ -192,7 +192,11 @@ function getMultivariateFeatureValue(
 ): { value: any; reason?: string } {
     const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
     const sortedVariants = [...(feature?.variants || [])].sort((a, b) => {
-        return (a.priority ?? Infinity) - (b.priority ?? Infinity);
+        const aPriority = a.priority ?? Infinity;
+        const bPriority = b.priority ?? Infinity;
+        if (aPriority < bPriority) return -1;
+        if (aPriority > bPriority) return 1;
+        return 0;
     });
 
     let startPercentage = 0;

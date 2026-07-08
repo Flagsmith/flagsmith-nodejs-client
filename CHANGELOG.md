@@ -1,5 +1,34 @@
 # Changelog
 
+## [8.1.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.1...v8.1.2) (2026-07-08)
+
+
+### Other
+
+* **deps-dev:** bump esbuild from 0.28.0 to 0.28.1 ([#281](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/281)) ([1f4f811](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/1f4f8114d69d52d9d18996c03aaaa081be6b9545))
+* **deps-dev:** bump undici from 6.24.0 to 6.27.0 ([#275](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/275)) ([a7682af](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a7682af343c06c8ca333210ece7f347935b994e8))
+* **deps:** bump vite, @vitest/coverage-v8 and vitest ([#261](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/261)) ([8b43434](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/8b43434e983228ccda401d098a18fd1d2ca62527))
+
+## [8.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.0...v8.1.1) (2026-06-25)
+
+
+### Bug Fixes
+
+* handle BigInt variant priority in local evaluation of multivariate identity overrides ([#279](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/279)) ([7d2b2fd](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/7d2b2fdd9e46f87588ffd78a08b51e28b787a0b5))
+* respect rule type for sub-rules in segment evaluation ([#266](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/266)) ([468c2b5](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/468c2b57f44edcd7a735859b6ce6d23436ac9c5a))
+
+
+### CI
+
+* setup Renovate for engine-test-data tracking ([#264](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/264)) ([8743f06](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/8743f06437954283ba29be962bab6a4a2883d659))
+
+
+### Other
+
+* **deps-dev:** bump js-yaml from 4.1.1 to 4.2.0 ([#276](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/276)) ([a483d62](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a483d626d5d2f8c1cf239758bf92a14db39bb4d3))
+* **deps:** bump postcss from 8.5.1 to 8.5.15 ([#269](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/269)) ([d5e1a6f](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/d5e1a6fbfc7fd0d48a0ce81c0c9bee57cb7e7cd6))
+* **deps:** bump tar and npm ([#274](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/274)) ([dda4000](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/dda4000d9077043f6d9f2ea512dc2304490be6a1))
+
 ## [8.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.0.2...v8.1.0) (2026-04-20)
 
 
