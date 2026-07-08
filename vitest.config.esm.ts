@@ -12,6 +12,8 @@ export default defineConfig({
     test: {
         globals: true,
         restoreMocks: true,
+        clearMocks: true,
+        setupFiles: ['./tests/setup.ts'],
         exclude: ['**/node_modules/**'],
         server: {
             deps: {

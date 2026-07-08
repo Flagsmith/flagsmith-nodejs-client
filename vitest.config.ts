@@ -4,6 +4,8 @@ export default defineConfig({
     test: {
         globals: true,
         restoreMocks: true,
+        clearMocks: true,
+        setupFiles: ['./tests/setup.ts'],
         coverage: {
             reporter: ['text'],
             exclude: ['build/**'],

@@ -1,9 +1,7 @@
 import Flagsmith from '../../sdk/index.js';
+import { fetch, environmentJSON, identitiesJSON } from './fetchMock.js';
 import {
-    fetch,
-    environmentJSON,
     flagsmith,
-    identitiesJSON,
     identityWithTransientTraitsJSON,
     transientIdentityJSON,
     badFetch
