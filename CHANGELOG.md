@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.1.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.1...v8.1.2) (2026-07-08)
+
+
+### Other
+
+* **deps-dev:** bump esbuild from 0.28.0 to 0.28.1 ([#281](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/281)) ([1f4f811](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/1f4f8114d69d52d9d18996c03aaaa081be6b9545))
+* **deps-dev:** bump undici from 6.24.0 to 6.27.0 ([#275](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/275)) ([a7682af](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/a7682af343c06c8ca333210ece7f347935b994e8))
+* **deps:** bump vite, @vitest/coverage-v8 and vitest ([#261](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/261)) ([8b43434](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/8b43434e983228ccda401d098a18fd1d2ca62527))
+
 ## [8.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.0...v8.1.1) (2026-06-25)
 
 
