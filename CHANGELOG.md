@@ -1,5 +1,16 @@
 # Changelog
 
+## [9.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.2...v9.0.0) (2026-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate npm package to @flagsmith organization scope ([#270](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/270))
+
+### Features
+
+* migrate npm package to [@flagsmith](https://github.com/flagsmith) organization scope ([#270](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/270)) ([29ffeb1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/29ffeb18be4ebeef3c568dc0e4761971024efcb0))
+
 ## [8.1.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.1...v8.1.2) (2026-07-08)
 
 
