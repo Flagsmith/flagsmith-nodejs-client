@@ -101,6 +101,10 @@ export type Enabled = boolean;
  */
 export type Value2 = string | number | boolean | null;
 /**
+ * A stable, human-readable identifier for the variant. Omitted when the variant has no key set.
+ */
+export type Key4 = string;
+/**
  * The value of the feature.
  */
 export type Value3 = string | number | boolean | null;
@@ -222,6 +226,7 @@ export interface FeatureContext {
  * Represents a multivariate value for a feature flag.
  */
 export interface FeatureValue {
+    key?: Key4;
     value: Value3;
     weight: Weight;
     priority: VariantPriority;

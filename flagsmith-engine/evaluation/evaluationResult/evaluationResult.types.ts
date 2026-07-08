@@ -22,6 +22,10 @@ export type Value = string | number | boolean | null;
  */
 export type Reason = string;
 /**
+ * A stable identifier of the multivariate variant the identity was bucketed into: the variant's key, "control" for the control bucket, or null when no multivariate split applied (a standard feature, an unkeyed variant, or evaluation without an identity).
+ */
+export type Variant = string | null;
+/**
  * Segment name.
  */
 export type Name1 = string;
@@ -49,6 +53,7 @@ export interface FlagResult {
     enabled: Enabled;
     value: Value;
     reason: Reason;
+    variant: Variant;
     metadata?: FeatureMetadata;
     [k: string]: unknown;
 }
