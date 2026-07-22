@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.0...v9.0.1) (2026-07-22)
+
+
+### CI
+
+* track engine-test-data semver tags via Renovate ([#283](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/283)) ([49849f1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/49849f1f0b147ee7564f448b2e7a5bdb2b47112d))
+
 ## [9.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.2...v9.0.0) (2026-07-08)
 
 
