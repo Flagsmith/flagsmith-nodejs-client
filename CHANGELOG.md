@@ -1,5 +1,24 @@
 # Changelog
 
+## [9.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.0...v9.0.1) (2026-08-28)
+
+
+### CI
+
+* track engine-test-data semver tags via Renovate ([#283](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/283)) ([49849f1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/49849f1f0b147ee7564f448b2e7a5bdb2b47112d))
+
+
+### Dependency Updates
+
+* Patch vite and brace-expansion advisories ([#291](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/291)) ([48e57c1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/48e57c11fda4478d4a0708526127f6adea879bb5))
+
+
+### Other
+
+* **deps-dev:** bump js-yaml from 4.2.0 to 4.3.1 ([#289](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/289)) ([17f2da9](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/17f2da980ac145cb10628bd971ed028a0187d4ee))
+* **deps-dev:** bump postcss from 8.5.15 to 8.5.26 ([#290](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/290)) ([21b80a4](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/21b80a4fe55ebf02c96841a7add81f0803f7e880))
+* **deps-dev:** bump undici from 6.27.0 to 6.28.0 ([#288](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/288)) ([ebf292f](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ebf292fc97b63449bdd5cb7a23d72eef9d77bc86))
+
 ## [9.0.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v8.1.2...v9.0.0) (2026-07-08)
 
 
