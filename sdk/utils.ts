@@ -6,6 +6,7 @@ import { SDK_VERSION } from './version.js';
 type Traits = { [key: string]: TraitConfig | FlagsmithTraitValue };
 
 const FLAGSMITH_USER_AGENT = 'flagsmith-nodejs-sdk';
+const FLAGSMITH_UNKNOWN_VERSION = 'unknown';
 
 export function isTraitConfig(
     traitValue: TraitConfig | FlagsmithTraitValue
@@ -130,5 +131,7 @@ export class Deferred<T> {
 }
 
 export function getUserAgent(): string {
-    return `${FLAGSMITH_USER_AGENT}/${SDK_VERSION}`;
+    const version =
+        typeof SDK_VERSION === 'string' && SDK_VERSION ? SDK_VERSION : FLAGSMITH_UNKNOWN_VERSION;
+    return `${FLAGSMITH_USER_AGENT}/${version}`;
 }
