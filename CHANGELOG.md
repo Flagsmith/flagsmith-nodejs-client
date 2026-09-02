@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.2...v9.0.3) (2026-09-02)
+
+
+### Bug Fixes
+
+* fall back to unknown version if SDK_VERSION is unavailable ([#296](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/296)) ([3c1fd29](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/3c1fd29f5e689a9bfb63653aceca5b488e393e17))
+
 ## [9.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.1...v9.0.2) (2026-09-02)
 
 
