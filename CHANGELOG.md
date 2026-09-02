@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.0.2](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.1...v9.0.2) (2026-09-02)
+
+
+### Bug Fixes
+
+* inline SDK version instead of reading package.json at runtime ([#294](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/294)) ([2afee6c](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/2afee6c816dbcfaf675e15bf002062b21bda9dbd))
+
 ## [9.0.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.0...v9.0.1) (2026-08-28)
 
 
