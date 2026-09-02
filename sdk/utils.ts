@@ -1,11 +1,11 @@
 import { createHash } from 'crypto';
 import { Fetch, FlagsmithTraitValue, TraitConfig } from './types.js';
 import { Dispatcher } from 'undici-types';
+import { SDK_VERSION } from './version.js';
 
 type Traits = { [key: string]: TraitConfig | FlagsmithTraitValue };
 
 const FLAGSMITH_USER_AGENT = 'flagsmith-nodejs-sdk';
-const FLAGSMITH_UNKNOWN_VERSION = 'unknown';
 
 export function isTraitConfig(
     traitValue: TraitConfig | FlagsmithTraitValue
@@ -130,11 +130,5 @@ export class Deferred<T> {
 }
 
 export function getUserAgent(): string {
-    try {
-        const packageJson = require('../package.json');
-        const version = packageJson?.version;
-        return version ? `${FLAGSMITH_USER_AGENT}/${version}` : FLAGSMITH_UNKNOWN_VERSION;
-    } catch {
-        return FLAGSMITH_UNKNOWN_VERSION;
-    }
+    return `${FLAGSMITH_USER_AGENT}/${SDK_VERSION}`;
 }

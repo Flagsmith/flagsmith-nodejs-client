@@ -512,8 +512,7 @@ test('getIdentityFlags succeeds if initial fetch failed then succeeded', async (
     expect(flags2.isFeatureEnabled('some_feature')).toBe(true);
 });
 
-// Skip in ESM build: require() path resolution differs
-test.skipIf(isEsmBuild)('get_user_agent_extracts_version_from_package_json', async () => {
+test('get_user_agent_matches_package_version', async () => {
     const userAgent = getUserAgent();
     const packageJson = require('../../package.json');
 
