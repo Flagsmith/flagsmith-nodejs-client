@@ -23,6 +23,7 @@ import {
     TraitModel,
     getEvaluationResult
 } from '../flagsmith-engine/index.js';
+import { IdentityFeaturesList } from '../flagsmith-engine/utils/collections.js';
 import {
     Fetch,
     FlagsmithCache,
@@ -296,6 +297,27 @@ export class Flagsmith {
         return SegmentModel.fromSegmentResult(evaluationResult.segments, context);
     }
 
+    private parseIdentityOverrides(environment: EnvironmentModel) {
+        this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>();
+        for (const identity of environment.identityOverrides) {
+            const existing = this.identitiesWithOverridesByIdentifier.get(identity.identifier);
+            if (existing) {
+                existing.identityFeatures.push(...(identity.identityFeatures || []));
+            } else {
+                const clone = Object.assign(
+                    Object.create(Object.getPrototypeOf(identity)) as IdentityModel,
+                    identity,
+                    {
+                        identityFeatures: new IdentityFeaturesList(
+                            ...(identity.identityFeatures || [])
+                        )
+                    }
+                );
+                this.identitiesWithOverridesByIdentifier.set(identity.identifier, clone);
+            }
+        }
+    }
+
     private async fetchEnvironment(): Promise<EnvironmentModel> {
         const deferred = new Deferred<EnvironmentModel>();
         this.environmentPromise = deferred.promise;
@@ -303,9 +325,7 @@ export class Flagsmith {
             const environment = await this.getEnvironmentFromApi();
             this.environment = environment;
             if (environment.identityOverrides?.length) {
-                this.identitiesWithOverridesByIdentifier = new Map<string, IdentityModel>(
-                    environment.identityOverrides.map(identity => [identity.identifier, identity])
-                );
+                this.parseIdentityOverrides(environment);
             }
             deferred.resolve(environment);
             return deferred.promise;
