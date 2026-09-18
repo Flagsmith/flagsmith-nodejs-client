@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.0.4](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.3...v9.0.4) (2026-09-18)
+
+
+### Other
+
+* **deps-dev:** bump js-yaml from 4.3.1 to 4.3.2 ([#298](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/298)) ([4a55b18](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/4a55b1823d456bf396507ad5c1054a74d560982d))
+
 ## [9.0.3](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.2...v9.0.3) (2026-09-02)
 
 
