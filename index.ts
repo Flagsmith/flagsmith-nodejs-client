@@ -11,7 +11,7 @@ export {
     Flagsmith
 } from './sdk/index.js';
 
-export { BaseOfflineHandler, LocalFileHandler } from './sdk/offline_handlers.js';
+export { BaseOfflineHandler, InMemoryHandler, LocalFileHandler } from './sdk/offline_handlers.js';
 
 export { FlagsmithConfig, FlagsmithValue, TraitConfig } from './sdk/types.js';
 
