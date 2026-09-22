@@ -43,6 +43,57 @@ export class DefaultFlag extends BaseFlag {
 }
 
 /**
+ * A running experiment on a feature, as reported by a remote identity evaluation.
+ */
+export class ExperimentMetadata {
+    /**
+     * An identifier for this experiment, unique in a single Flagsmith installation.
+     */
+    id: number;
+    /**
+     * The name of this experiment, as shown in the Flagsmith dashboard.
+     */
+    name: string;
+    /**
+     * Whether this identity is enrolled in the experiment. A {@link Flag.variant} alone cannot tell:
+     * an identity outside the experiment's rollout is still bucketed into a variant.
+     */
+    inExperiment: boolean;
+
+    constructor(params: { id: number; name: string; inExperiment: boolean }) {
+        this.id = params.id;
+        this.name = params.name;
+        this.inExperiment = params.inExperiment;
+    }
+
+    /**
+     * Build an {@link ExperimentMetadata} from the `metadata` object of an API flag.
+     *
+     * @param metadata The `metadata` value of an API flag. Keys other than `experiment` are ignored.
+     * @returns `undefined` if no usable experiment is present.
+     */
+    static fromAPIMetadata(metadata: unknown): ExperimentMetadata | undefined {
+        if (!metadata || typeof metadata !== 'object') {
+            return undefined;
+        }
+        const experiment = (metadata as { [key: string]: any })['experiment'];
+        if (!experiment || typeof experiment !== 'object') {
+            return undefined;
+        }
+        const id = experiment['id'];
+        const name = experiment['name'];
+        if (id === undefined || id === null || name === undefined || name === null) {
+            return undefined;
+        }
+        return new ExperimentMetadata({
+            id: id,
+            name: name,
+            inExperiment: !!experiment['in_experiment']
+        });
+    }
+}
+
+/**
  * A Flagsmith feature retrieved from a successful flag evaluation.
  */
 export class Flag extends BaseFlag {
@@ -58,6 +109,14 @@ export class Flag extends BaseFlag {
      * The reason for this feature, unique per Flagsmith project.
      */
     reason?: string;
+    /**
+     * The variant key this identity was bucketed into. Set by remote evaluation only.
+     */
+    variant?: string;
+    /**
+     * The experiment running on this feature, if any. Set by remote identity evaluation only.
+     */
+    experiment?: ExperimentMetadata;
 
     constructor(params: {
         value: FlagValue;
@@ -66,11 +125,15 @@ export class Flag extends BaseFlag {
         featureId: number;
         featureName: string;
         reason?: string;
+        variant?: string;
+        experiment?: ExperimentMetadata;
     }) {
         super(params.value, params.enabled, !!params.isDefault);
         this.featureId = params.featureId;
         this.featureName = params.featureName;
         this.reason = params.reason;
+        this.variant = params.variant;
+        this.experiment = params.experiment;
     }
 
     static fromFeatureStateModel(
@@ -91,7 +154,9 @@ export class Flag extends BaseFlag {
             value: flagData['feature_state_value'] ?? flagData['value'],
             featureId: flagData['feature']['id'],
             featureName: flagData['feature']['name'],
-            reason: flagData['feature']['reason']
+            reason: flagData['reason'],
+            variant: flagData['variant'],
+            experiment: ExperimentMetadata.fromAPIMetadata(flagData['metadata'])
         });
     }
 }

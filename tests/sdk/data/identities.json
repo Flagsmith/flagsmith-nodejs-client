@@ -16,10 +16,92 @@
                 "initial_value": null,
                 "description": null,
                 "default_enabled": false,
-                "type": "STANDARD",
+                "type": "MULTIVARIATE",
                 "project": 1
             },
             "feature_state_value": "some-value",
+            "enabled": true,
+            "environment": 1,
+            "identity": null,
+            "feature_segment": null,
+            "variant": "treatment",
+            "reason": "SPLIT; weight=70.0",
+            "metadata": {
+                "experiment": {
+                    "id": 167,
+                    "name": "some_experiment",
+                    "in_experiment": true
+                },
+                "some_other_metadata_key": "ignored"
+            }
+        },
+        {
+            "id": 2,
+            "feature": {
+                "id": 2,
+                "name": "not_enrolled_feature",
+                "created_date": "2019-08-27T14:53:45.698555Z",
+                "initial_value": null,
+                "description": null,
+                "default_enabled": false,
+                "type": "MULTIVARIATE",
+                "project": 1
+            },
+            "feature_state_value": "control-value",
+            "enabled": true,
+            "environment": 1,
+            "identity": null,
+            "feature_segment": null,
+            "variant": "control",
+            "reason": "SPLIT; weight=30.0",
+            "metadata": {
+                "experiment": {
+                    "id": 168,
+                    "name": "some_other_experiment",
+                    "in_experiment": false
+                }
+            }
+        },
+        {
+            "id": 3,
+            "feature": {
+                "id": 3,
+                "name": "disabled_experiment_feature",
+                "created_date": "2019-08-27T14:53:45.698555Z",
+                "initial_value": null,
+                "description": null,
+                "default_enabled": false,
+                "type": "MULTIVARIATE",
+                "project": 1
+            },
+            "feature_state_value": "disabled-value",
+            "enabled": false,
+            "environment": 1,
+            "identity": null,
+            "feature_segment": null,
+            "variant": "treatment",
+            "reason": "SPLIT; weight=70.0",
+            "metadata": {
+                "experiment": {
+                    "id": 169,
+                    "name": "disabled_experiment",
+                    "in_experiment": true
+                }
+            }
+        },
+        {
+            "id": 4,
+            "feature": {
+                "id": 4,
+                "name": "no_experiment_feature",
+                "created_date": "2019-08-27T14:53:45.698555Z",
+                "initial_value": null,
+                "description": null,
+                "default_enabled": false,
+                "type": "STANDARD",
+                "project": 1
+            },
+            "feature_state_value": "plain-value",
             "enabled": true,
             "environment": 1,
             "identity": null,

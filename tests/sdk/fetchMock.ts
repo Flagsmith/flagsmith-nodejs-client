@@ -20,6 +20,12 @@ export function fetchImpl(url: string, options?: RequestInit) {
             new Response('environment-document called without a server-side key', { status: 401 })
         );
     }
+    if (url.includes('/v1/events')) {
+        const events = JSON.parse(String(options?.body ?? '{}'))['events'] ?? [];
+        return Promise.resolve(
+            new Response(JSON.stringify({ accepted: events.length, rejected: [] }), { status: 202 })
+        );
+    }
     if (url.includes('/flags')) {
         return Promise.resolve(new Response(flagsJSON, { status: 200 }));
     }

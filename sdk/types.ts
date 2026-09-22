@@ -117,6 +117,46 @@ export interface FlagsmithConfig {
      * If {@link offlineMode} is enabled, this handler is used to calculate the values of all flags.
      */
     offlineHandler?: BaseOfflineHandler;
+    /**
+     * If enabled, the client will buffer experiment exposures and custom events and periodically
+     * send them to the Flagsmith events API.
+     *
+     * Required by {@link Flagsmith.getExperimentFlag}, {@link Flagsmith.trackEvent} and
+     * {@link Flagsmith.trackExposureEvent}.
+     *
+     * @default false
+     */
+    enableEvents?: boolean;
+    /**
+     * Tuning options for the events pipeline. Requires {@link enableEvents}, and throws when
+     * provided without it.
+     */
+    eventProcessorConfig?: {
+        /**
+         * The Flagsmith events API URL. Set this if you are not using Flagsmith's public service.
+         *
+         * @default https://events.api.flagsmith.com/
+         */
+        eventsApiUrl?: string;
+        /**
+         * The number of buffered events that triggers a flush without waiting for the next
+         * {@link flushInterval}.
+         *
+         * @default 1000
+         */
+        maxBuffer?: number;
+        /**
+         * The time, in milliseconds, between automatic flushes. 0 disables the timer.
+         *
+         * @default 10000
+         */
+        flushInterval?: number;
+        /**
+         * The events API request timeout duration, in milliseconds. Defaults to
+         * {@link requestTimeoutSeconds}.
+         */
+        requestTimeoutMs?: number;
+    };
 }
 
 /**

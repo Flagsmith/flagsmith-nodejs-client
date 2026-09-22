@@ -42,6 +42,23 @@ export function generateIdentitiesData(identifier: string, traits: Traits, trans
     };
 }
 
+/**
+ * Unwrap any {@link TraitConfig} in a trait map to a flat map of trait values.
+ *
+ * @param traits The traits to resolve, in either supported format.
+ * @returns `null` if no traits were given, so that the value can be sent as-is to the events API.
+ */
+export function resolveTraitValues(traits?: Traits): { [key: string]: FlagsmithTraitValue } | null {
+    if (!traits) {
+        return null;
+    }
+    const resolved: { [key: string]: FlagsmithTraitValue } = {};
+    for (const [key, value] of Object.entries(traits)) {
+        resolved[key] = isTraitConfig(value) ? value.value : value;
+    }
+    return Object.keys(resolved).length ? resolved : null;
+}
+
 export function generateIdentityCacheKey(identifier: string, traits?: Traits): string {
     if (!traits || Object.keys(traits).length === 0) {
         return `flags-${identifier}`;
