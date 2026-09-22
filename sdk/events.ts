@@ -159,7 +159,9 @@ export class EventProcessor {
             if (events.length) {
                 const request = this.postEvents(events);
                 this.inFlight.add(request);
-                request.finally(() => this.inFlight.delete(request));
+                // Settle both ways: a rejection here would otherwise go unhandled.
+                const forget = () => this.inFlight.delete(request);
+                request.then(forget, forget);
             }
 
             while (this.inFlight.size) {

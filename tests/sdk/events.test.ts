@@ -57,6 +57,25 @@ test('trackEvent keeps a missing value null', async () => {
     });
 });
 
+test.each([
+    [false, 'false'],
+    [0, '0'],
+    ['', '']
+])('trackEvent stringifies the falsy value %p', async (value, expected) => {
+    const processor = eventProcessor();
+
+    processor.trackEvent({
+        event: 'purchase',
+        identifier: 'user-123',
+        value: value,
+        traits: null,
+        metadata: null
+    });
+    await processor.flush();
+
+    expect(postedEvents()[0].value).toBe(expected);
+});
+
 test('the SDK version wins over caller metadata', async () => {
     const processor = eventProcessor();
 
@@ -224,10 +243,13 @@ test('the buffer is flushed as soon as it reaches maxBuffer', async () => {
         traits: null,
         metadata: null
     });
-    await processor.flush();
 
+    // Posted by reaching maxBuffer, before anything asks for a flush.
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(postedEvents()).toHaveLength(2);
+
+    await processor.flush();
+    expect(fetch).toHaveBeenCalledTimes(1);
 });
 
 test('flush waits for a batch posted by the flush timer', async () => {
