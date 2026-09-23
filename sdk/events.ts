@@ -25,6 +25,7 @@ const DEFAULT_RETRY_BACKOFF_MS = 1000;
 /** How many times a single batch is posted before it is dropped. **/
 const MAX_ATTEMPTS = 2;
 
+/** Options for an {@link EventProcessor}. **/
 export interface EventProcessorOptions {
     /** Client-side or server-side key of the environment that events will be recorded for. **/
     environmentKey: string;
@@ -40,6 +41,7 @@ export interface EventProcessorOptions {
     requestTimeoutMs?: number;
     /** Duration in milliseconds to wait before retrying a failed batch. Defaults to {@link DEFAULT_RETRY_BACKOFF_MS}. **/
     retryBackoffMs?: number;
+    /** Logger for dropped batches and other failures. Defaults to a new pino logger. **/
     logger?: Logger;
 }
 
@@ -72,7 +74,6 @@ export interface FlagsmithEvent {
  * Exposure events are deduplicated within a flush window. A batch that cannot be posted is retried
  * once and then dropped: recording events must never fail the calling application, so all errors
  * are logged and swallowed.
- * @see https://docs.flagsmith.com/advanced-use/experimentation
  */
 export class EventProcessor {
     private eventsUrl: string;
@@ -147,30 +148,27 @@ export class EventProcessor {
     /**
      * Post all buffered events to the Flagsmith events API.
      *
-     * Resolves once every in-flight batch has been posted or dropped, including batches started by
-     * the flush timer or by reaching {@link EventProcessorOptions.maxBuffer}.
+     * Resolves once every batch in flight when it was called has been posted or dropped, including
+     * batches started by the flush timer or by reaching {@link EventProcessorOptions.maxBuffer}.
+     * Every event tracked before the call has therefore been sent or dropped. Batches started after
+     * the call are not awaited, so sustained traffic cannot keep this promise pending.
      */
     async flush(): Promise<void> {
-        try {
-            const events = this.buffer;
-            this.buffer = [];
-            this.seenExposures.clear();
+        const events = this.buffer;
+        this.buffer = [];
+        this.seenExposures.clear();
 
-            if (events.length) {
-                const request = this.postEvents(events);
-                this.inFlight.add(request);
-                // Settle both ways: a rejection here would otherwise go unhandled.
-                const forget = () => this.inFlight.delete(request);
-                request.then(forget, forget);
-            }
-
-            while (this.inFlight.size) {
-                await Promise.all([...this.inFlight]);
-            }
-        } catch (error) {
-            // Flushing events must never throw into the calling application.
-            this.logger.warn(error, 'Failed to flush events to the Flagsmith events API.');
+        if (events.length) {
+            const batch = this.postEvents(events);
+            this.inFlight.add(batch);
+            // Settle both ways: a rejection here would otherwise go unhandled.
+            const forget = () => this.inFlight.delete(batch);
+            batch.then(forget, forget);
         }
+
+        // allSettled, not all: one failed batch must neither reject this promise nor stop it from
+        // waiting for the others.
+        await Promise.allSettled([...this.inFlight]);
     }
 
     /**

@@ -4,7 +4,7 @@ import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { FlagsmithConfig } from '../../sdk/types.js';
 import { SDK_VERSION } from '../../sdk/version.js';
 import { fetch } from './fetchMock.js';
-import { flagsmith, postedEvents } from './utils.js';
+import { flagsmith, postedEvents, TestCache } from './utils.js';
 
 vi.mock('../../sdk/polling_manager');
 
@@ -61,11 +61,14 @@ test('events are also disabled in offline mode', async () => {
     );
 });
 
-test('trackEvent rejects event names reserved for Flagsmith', () => {
-    expect(() => experimentsFlagsmith().trackEvent(FLAG_EXPOSURE_EVENT)).toThrow(
-        `ValueError: event names starting with "$" are reserved; use trackExposureEvent to record "${FLAG_EXPOSURE_EVENT}".`
-    );
-});
+test.each([FLAG_EXPOSURE_EVENT, '$purchase'])(
+    'trackEvent rejects the reserved event name %s',
+    event => {
+        expect(() => experimentsFlagsmith().trackEvent(event)).toThrow(
+            `ValueError: event names starting with "$" are reserved; use trackExposureEvent to record "${FLAG_EXPOSURE_EVENT}".`
+        );
+    }
+);
 
 test('trackEvent records a custom event', async () => {
     const flg = experimentsFlagsmith();
@@ -232,6 +235,21 @@ test('getExperimentFlag deduplicates repeated exposures of the same identity', a
     expect(postedEvents()).toHaveLength(1);
 });
 
+test('getExperimentFlag records an exposure for flags served from the identity cache', async () => {
+    const flg = experimentsFlagsmith({ cache: new TestCache() });
+
+    await flg.getExperimentFlag('some_feature', 'user-123');
+    await flg.flushEvents();
+    await flg.getExperimentFlag('some_feature', 'user-123');
+    await flg.flushEvents();
+
+    const identityRequests = fetch.mock.calls.filter(([url]) =>
+        String(url).includes('/identities')
+    );
+    expect(identityRequests).toHaveLength(1);
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-123', 'user-123']);
+});
+
 test('close flushes the buffered events', async () => {
     const flg = experimentsFlagsmith();
 
@@ -253,4 +271,20 @@ test('the events request carries the environment key and the SDK user agent head
         'sometestfakekey'
     );
     expect(JSON.parse(String(options?.body))).not.toHaveProperty('environment_key');
+});
+
+test('eventProcessorConfig is passed to the event processor', async () => {
+    const flg = flagsmith({
+        enableEvents: true,
+        eventProcessorConfig: { eventsApiUrl: 'https://events.example.com', maxBuffer: 1 }
+    });
+
+    // Reaching maxBuffer posts the event without a flush.
+    flg.trackEvent('purchase', { identifier: 'user-123' });
+
+    expect(fetch).toHaveBeenCalledWith(
+        'https://events.example.com/v1/events',
+        expect.objectContaining({ method: 'POST' })
+    );
+    await flg.close();
 });

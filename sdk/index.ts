@@ -293,7 +293,9 @@ export class Flagsmith {
      * @param featureName the name of the feature to evaluate.
      * @param identifier a unique identifier for the identity in the current environment.
      * @param traits? a dictionary of traits to add / update on the identity in Flagsmith.
-     * @returns the {@link Flag} for the given feature, or a {@link DefaultFlag} if it was not found.
+     * @returns the {@link Flag} for the given feature. If it was not found, the result of
+     * {@link FlagsmithConfig.defaultFlagHandler}, or a disabled flag with `isDefault` set if there is
+     * no handler.
      * @throws if {@link FlagsmithConfig.enableEvents} is not set.
      */
     async getExperimentFlag(
@@ -412,8 +414,8 @@ export class Flagsmith {
     /**
      * Send all buffered events to the Flagsmith events API now.
      *
-     * Resolves once every in-flight batch has been posted or dropped, or immediately if
-     * {@link FlagsmithConfig.enableEvents} is not set.
+     * Resolves once every event tracked before the call has been posted or dropped, or immediately
+     * if {@link FlagsmithConfig.enableEvents} is not set.
      */
     async flushEvents(): Promise<void> {
         await this.eventProcessor?.flush();
