@@ -202,7 +202,6 @@ test('custom events are never deduplicated', async () => {
 });
 
 test('flush posts the batch to the events endpoint', async () => {
-    // The endpoint is built from the events API URL whether or not it has a trailing slash.
     const processor = eventProcessor({ eventsApiUrl: 'http://testUrl' });
 
     trackPurchase(processor);
@@ -242,7 +241,6 @@ test('flush sends custom headers without letting them override the SDK headers',
         customHeaders: {
             'X-Proxy-Token': 'secret',
             'Flagsmith-SDK-User-Agent': 'not-the-sdk',
-            // Header names are case-insensitive: a variant would be merged, not overridden.
             'x-environment-key': 'not-the-environment',
             'USER-AGENT': 'not-the-sdk'
         }
@@ -274,7 +272,6 @@ test('the buffer is flushed as soon as it reaches maxBuffer', async () => {
 
     trackPurchase(processor, 'user-456');
 
-    // Posted by reaching maxBuffer, before anything asks for a flush.
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(postedEvents()).toHaveLength(2);
 
@@ -291,7 +288,6 @@ test('flush waits for a batch posted by the flush timer', async () => {
     processor.start();
     trackPurchase(processor);
 
-    // The timer starts a flush that never settles until the response is resolved.
     await vi.advanceTimersByTimeAsync(10000);
     expect(fetch).toHaveBeenCalledTimes(1);
 
@@ -342,7 +338,6 @@ test('flush does not wait for a batch started after it was called', async () => 
         firstFlushed = true;
     });
 
-    // Traffic keeps arriving while the first batch is on the wire.
     trackPurchase(processor, 'user-456');
     let secondFlushed = false;
     const secondFlush = processor.flush().then(() => {
@@ -373,7 +368,6 @@ test('flush waits for every in-flight batch even when one of them rejects', asyn
     });
     const processor = eventProcessor({ maxBuffer: 1, logger });
 
-    // Each event reaches maxBuffer and starts its own batch.
     trackPurchase(processor);
     trackPurchase(processor, 'user-456');
     let flushed = false;
