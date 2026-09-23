@@ -26,6 +26,14 @@ const DEFAULT_RETRY_BACKOFF_MS = 1000;
 /** How many times a single batch is posted before it is dropped. **/
 const MAX_ATTEMPTS = 2;
 
+/** Headers the SDK sets itself. Header names are case-insensitive, so custom variants are dropped. **/
+const RESERVED_HEADERS = [
+    'content-type',
+    'x-environment-key',
+    'flagsmith-sdk-user-agent',
+    'user-agent'
+];
+
 /** Options for an {@link EventProcessor}. **/
 export interface EventProcessorOptions {
     /** Client-side or server-side key of the environment that events will be recorded for. **/
@@ -85,7 +93,7 @@ export class EventProcessor {
     private environmentKey: string;
     private customFetch: Fetch;
     private agent?: Dispatcher;
-    private customHeaders?: { [key: string]: string };
+    private customHeaders: { [key: string]: string };
     private maxBuffer: number;
     private flushInterval: number;
     private requestTimeoutMs: number;
@@ -104,7 +112,11 @@ export class EventProcessor {
         this.environmentKey = opts.environmentKey;
         this.customFetch = opts.fetch;
         this.agent = opts.agent;
-        this.customHeaders = opts.customHeaders;
+        this.customHeaders = Object.fromEntries(
+            Object.entries(opts.customHeaders ?? {}).filter(
+                ([name]) => !RESERVED_HEADERS.includes(name.toLowerCase())
+            )
+        );
         this.maxBuffer = opts.maxBuffer ?? DEFAULT_MAX_BUFFER;
         this.flushInterval = opts.flushInterval ?? DEFAULT_FLUSH_INTERVAL_MS;
         this.requestTimeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
@@ -275,7 +287,7 @@ export class EventProcessor {
                     signal: AbortSignal.timeout(this.requestTimeoutMs),
                     headers: {
                         // Custom headers first: the SDK's own headers must not be overridden.
-                        ...(this.customHeaders ?? {}),
+                        ...this.customHeaders,
                         'Content-Type': 'application/json; charset=utf-8',
                         'X-Environment-Key': this.environmentKey,
                         // The events pipeline reads the SDK language and version from this header.

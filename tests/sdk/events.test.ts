@@ -242,7 +242,9 @@ test('flush sends custom headers without letting them override the SDK headers',
         customHeaders: {
             'X-Proxy-Token': 'secret',
             'Flagsmith-SDK-User-Agent': 'not-the-sdk',
-            'X-Environment-Key': 'not-the-environment'
+            // Header names are case-insensitive: a variant would be merged, not overridden.
+            'x-environment-key': 'not-the-environment',
+            'USER-AGENT': 'not-the-sdk'
         }
     });
 
