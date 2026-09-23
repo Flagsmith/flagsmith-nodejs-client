@@ -227,6 +227,37 @@ test('flush posts the batch to the events endpoint', async () => {
     expect(body.events).toHaveLength(1);
 });
 
+test('flush posts through the configured dispatcher', async () => {
+    const agent = { name: 'test-dispatcher' } as any;
+    const processor = eventProcessor({ agent });
+
+    trackPurchase(processor);
+    await processor.flush();
+
+    expect(fetch.mock.calls[0][1]).toMatchObject({ dispatcher: agent });
+});
+
+test('flush sends custom headers without letting them override the SDK headers', async () => {
+    const processor = eventProcessor({
+        customHeaders: {
+            'X-Proxy-Token': 'secret',
+            'Flagsmith-SDK-User-Agent': 'not-the-sdk',
+            'X-Environment-Key': 'not-the-environment'
+        }
+    });
+
+    trackPurchase(processor);
+    await processor.flush();
+
+    expect(fetch.mock.calls[0][1]?.headers).toEqual({
+        'X-Proxy-Token': 'secret',
+        'Content-Type': 'application/json; charset=utf-8',
+        'X-Environment-Key': 'test-key',
+        'Flagsmith-SDK-User-Agent': getUserAgent(),
+        'User-Agent': getUserAgent()
+    });
+});
+
 test('flush does not post anything when nothing is buffered', async () => {
     await eventProcessor().flush();
 

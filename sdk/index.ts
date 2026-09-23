@@ -196,6 +196,8 @@ export class Flagsmith {
                     ...(data.eventProcessorConfig ?? {}),
                     environmentKey: this.environmentKey,
                     fetch: this.customFetch,
+                    agent: this.agent,
+                    customHeaders: this.customHeaders,
                     requestTimeoutMs:
                         data.eventProcessorConfig?.requestTimeoutMs ?? this.requestTimeoutMs,
                     logger: this.logger

@@ -1,4 +1,5 @@
 import { pino, Logger } from 'pino';
+import { Dispatcher } from 'undici-types';
 import { Fetch, FlagsmithTraitValue, FlagsmithValue } from './types.js';
 import { delay, getUserAgent } from './utils.js';
 import { SDK_VERSION } from './version.js';
@@ -31,6 +32,10 @@ export interface EventProcessorOptions {
     environmentKey: string;
     /** {@link fetch} implementation to use for API requests. **/
     fetch: Fetch;
+    /** Custom {@link Dispatcher} to use when making HTTP requests. **/
+    agent?: Dispatcher;
+    /** Custom headers to send with every request. The SDK's own headers take precedence. **/
+    customHeaders?: { [key: string]: string };
     /** URL of the Flagsmith events API. Defaults to {@link DEFAULT_EVENTS_API_URL}. **/
     eventsApiUrl?: string;
     /** Number of buffered events that triggers a flush. Defaults to {@link DEFAULT_MAX_BUFFER}. **/
@@ -79,6 +84,8 @@ export class EventProcessor {
     private eventsUrl: string;
     private environmentKey: string;
     private customFetch: Fetch;
+    private agent?: Dispatcher;
+    private customHeaders?: { [key: string]: string };
     private maxBuffer: number;
     private flushInterval: number;
     private requestTimeoutMs: number;
@@ -96,6 +103,8 @@ export class EventProcessor {
             (eventsApiUrl.endsWith('/') ? eventsApiUrl : `${eventsApiUrl}/`) + EVENTS_ENDPOINT;
         this.environmentKey = opts.environmentKey;
         this.customFetch = opts.fetch;
+        this.agent = opts.agent;
+        this.customHeaders = opts.customHeaders;
         this.maxBuffer = opts.maxBuffer ?? DEFAULT_MAX_BUFFER;
         this.flushInterval = opts.flushInterval ?? DEFAULT_FLUSH_INTERVAL_MS;
         this.requestTimeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
@@ -258,18 +267,23 @@ export class EventProcessor {
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             let reason = 'unknown error';
             try {
-                const response = await this.customFetch(this.eventsUrl, {
+                // built-in RequestInit type doesn't have dispatcher/agent
+                const init: RequestInit & { dispatcher?: Dispatcher } = {
+                    dispatcher: this.agent,
                     method: 'POST',
                     body: JSON.stringify({ events: events }),
                     signal: AbortSignal.timeout(this.requestTimeoutMs),
                     headers: {
+                        // Custom headers first: the SDK's own headers must not be overridden.
+                        ...(this.customHeaders ?? {}),
                         'Content-Type': 'application/json; charset=utf-8',
                         'X-Environment-Key': this.environmentKey,
                         // The events pipeline reads the SDK language and version from this header.
                         'Flagsmith-SDK-User-Agent': getUserAgent(),
                         'User-Agent': getUserAgent()
                     }
-                });
+                };
+                const response = await this.customFetch(this.eventsUrl, init);
                 if (response.status >= 200 && response.status < 300) {
                     return;
                 }

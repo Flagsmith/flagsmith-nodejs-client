@@ -2,6 +2,7 @@ import { pino } from 'pino';
 import { FLAG_EXPOSURE_EVENT } from '../../sdk/events.js';
 import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { FlagsmithConfig } from '../../sdk/types.js';
+import { getUserAgent } from '../../sdk/utils.js';
 import { SDK_VERSION } from '../../sdk/version.js';
 import { fetch } from './fetchMock.js';
 import { flagsmith, postedEvents, TestCache } from './utils.js';
@@ -287,4 +288,22 @@ test('eventProcessorConfig is passed to the event processor', async () => {
         expect.objectContaining({ method: 'POST' })
     );
     await flg.close();
+});
+
+test('the events request inherits the client agent and custom headers', async () => {
+    const agent = { name: 'test-dispatcher' } as any;
+    const flg = experimentsFlagsmith({ agent, customHeaders: { 'X-Proxy-Token': 'secret' } });
+
+    flg.trackEvent('purchase', { identifier: 'user-123' });
+    await flg.flushEvents();
+
+    const [, options] = fetch.mock.calls.find(([url]) => String(url).includes('/v1/events'))!;
+    expect(options).toMatchObject({
+        dispatcher: agent,
+        headers: expect.objectContaining({
+            'X-Proxy-Token': 'secret',
+            'X-Environment-Key': 'sometestfakekey',
+            'Flagsmith-SDK-User-Agent': getUserAgent()
+        })
+    });
 });
