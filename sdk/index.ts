@@ -6,7 +6,8 @@ import { ANALYTICS_ENDPOINT, AnalyticsProcessor } from './analytics.js';
 import { BaseOfflineHandler } from './offline_handlers.js';
 import { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
-import { DefaultFlag, Flags } from './models.js';
+import { EventProcessor, FLAG_EXPOSURE_EVENT } from './events.js';
+import { DefaultFlag, Flag, Flags } from './models.js';
 import { EnvironmentDataPollingManager } from './polling_manager.js';
 import {
     Deferred,
@@ -14,6 +15,7 @@ import {
     generateIdentityCacheKey,
     getUserAgent,
     isTraitConfig,
+    resolveTraitValues,
     retryFetch
 } from './utils.js';
 import {
@@ -28,6 +30,7 @@ import {
     FlagsmithCache,
     FlagsmithConfig,
     FlagsmithTraitValue,
+    FlagsmithValue,
     TraitConfig
 } from './types.js';
 import { pino, Logger } from 'pino';
@@ -37,7 +40,14 @@ import { EvaluationContextWithMetadata } from '../flagsmith-engine/evaluation/mo
 export { AnalyticsProcessor, AnalyticsProcessorOptions } from './analytics.js';
 export { FlagsmithAPIError, FlagsmithClientError } from './errors.js';
 
-export { BaseFlag, DefaultFlag, Flags } from './models.js';
+export {
+    DEFAULT_EVENTS_API_URL,
+    EventProcessor,
+    EventProcessorOptions,
+    FLAG_EXPOSURE_EVENT,
+    FlagsmithEvent
+} from './events.js';
+export { BaseFlag, DefaultFlag, ExperimentMetadata, Flag, Flags } from './models.js';
 export { EnvironmentDataPollingManager } from './polling_manager.js';
 export { FlagsmithCache, FlagsmithConfig } from './types.js';
 
@@ -95,6 +105,7 @@ export class Flagsmith {
     private cache?: FlagsmithCache;
     private onEnvironmentChange: (error: Error | null, result?: EnvironmentModel) => void;
     private analyticsProcessor?: AnalyticsProcessor;
+    private eventProcessor?: EventProcessor;
     private logger: Logger;
     private customFetch: Fetch;
     private readonly requestRetryDelayMilliseconds: number;
@@ -175,6 +186,24 @@ export class Flagsmith {
                     logger: this.logger
                 });
             }
+
+            if (data.eventProcessorConfig && !data.enableEvents) {
+                throw new Error('ValueError: eventProcessorConfig requires enableEvents: true.');
+            }
+
+            if (data.enableEvents) {
+                this.eventProcessor = new EventProcessor({
+                    ...(data.eventProcessorConfig ?? {}),
+                    environmentKey: this.environmentKey,
+                    fetch: this.customFetch,
+                    agent: this.agent,
+                    customHeaders: this.customHeaders,
+                    requestTimeoutMs:
+                        data.eventProcessorConfig?.requestTimeoutMs ?? this.requestTimeoutMs,
+                    logger: this.logger
+                });
+                this.eventProcessor.start();
+            }
         }
     }
     /**
@@ -251,6 +280,147 @@ export class Flagsmith {
                 defaultFlagHandler: this.defaultFlagHandler
             });
         }
+    }
+
+    /**
+     * Get a single flag for a given identity, recording a {@link FLAG_EXPOSURE_EVENT} if that
+     * identity is enrolled in a running experiment on the feature.
+     *
+     * Flags are fetched exactly as {@link getIdentityFlags} fetches them, so traits are upserted and
+     * the identity cache is used when one is configured.
+     *
+     * Experiment metadata is only produced by remote identity evaluation. Local evaluation and
+     * offline mode never carry it, so no exposure is ever recorded for them.
+     *
+     * @param featureName the name of the feature to evaluate.
+     * @param identifier a unique identifier for the identity in the current environment.
+     * @param traits? a dictionary of traits to add / update on the identity in Flagsmith.
+     * @returns the {@link Flag} for the given feature. If it was not found, the result of
+     * {@link FlagsmithConfig.defaultFlagHandler}, or a disabled flag with `isDefault` set if there is
+     * no handler.
+     * @throws if {@link FlagsmithConfig.enableEvents} is not set.
+     */
+    async getExperimentFlag(
+        featureName: string,
+        identifier: string,
+        traits?: { [key: string]: FlagsmithTraitValue | TraitConfig }
+    ): Promise<Flag | DefaultFlag> {
+        if (!this.eventProcessor) {
+            throw new Error('ValueError: enableEvents must be true to use getExperimentFlag.');
+        }
+
+        const flags = await this.getIdentityFlags(identifier, traits);
+        const flag = flags.getFlag(featureName) as Flag | DefaultFlag;
+
+        if (!(flag instanceof Flag)) {
+            this.logger.debug(
+                `Not recording an exposure for "${featureName}": the feature was not found.`
+            );
+            return flag;
+        }
+        if (!flag.enabled) {
+            this.logger.debug(
+                `Not recording an exposure for "${featureName}": the feature is disabled.`
+            );
+            return flag;
+        }
+        if (!flag.experiment?.inExperiment) {
+            this.logger.debug(
+                `Not recording an exposure for "${featureName}": the identity is not enrolled in an experiment.`
+            );
+            return flag;
+        }
+
+        this.trackExposureEvent(featureName, {
+            identifier: identifier,
+            value: flag.variant,
+            traits: traits,
+            metadata: { experiment_id: flag.experiment.id }
+        });
+
+        return flag;
+    }
+
+    /**
+     * Record a custom event, e.g. a conversion to reconcile with experiment exposures.
+     *
+     * @param event the event name. Names starting with `$` are reserved for Flagsmith.
+     * @param opts? the identity, value, traits and metadata to record alongside the event.
+     * @throws if {@link FlagsmithConfig.enableEvents} is not set, or if `event` starts with `$`.
+     */
+    trackEvent(
+        event: string,
+        opts?: {
+            identifier?: string;
+            value?: FlagsmithValue;
+            traits?: { [key: string]: FlagsmithTraitValue | TraitConfig };
+            metadata?: Record<string, unknown>;
+        }
+    ): void {
+        if (!this.eventProcessor) {
+            throw new Error('ValueError: enableEvents must be true to track events.');
+        }
+        if (event.startsWith('$')) {
+            throw new Error(
+                `ValueError: event names starting with "$" are reserved; use trackExposureEvent to record "${FLAG_EXPOSURE_EVENT}".`
+            );
+        }
+
+        this.eventProcessor.trackEvent({
+            event: event,
+            identifier: opts?.identifier ?? null,
+            value: opts?.value ?? null,
+            traits: resolveTraitValues(opts?.traits),
+            metadata: opts?.metadata ?? null
+        });
+    }
+
+    /**
+     * Record a {@link FLAG_EXPOSURE_EVENT} for a feature.
+     *
+     * {@link getExperimentFlag} records exposures on its own; use this method to record one for a
+     * flag that was evaluated elsewhere.
+     *
+     * @param featureName the name of the feature the identity was exposed to.
+     * @param opts the identity, value, traits and metadata to record alongside the exposure.
+     * @throws if {@link FlagsmithConfig.enableEvents} is not set.
+     */
+    trackExposureEvent(
+        featureName: string,
+        opts: {
+            identifier: string;
+            value?: FlagsmithValue;
+            traits?: { [key: string]: FlagsmithTraitValue | TraitConfig };
+            metadata?: Record<string, unknown>;
+        }
+    ): void {
+        if (!this.eventProcessor) {
+            throw new Error('ValueError: enableEvents must be true to track events.');
+        }
+        if (!opts.identifier) {
+            this.logger.warn(
+                `Not recording an exposure for "${featureName}": an exposure requires an identifier to reconcile with conversion events.`
+            );
+            return;
+        }
+
+        this.eventProcessor.trackExposureEvent({
+            featureName: featureName,
+            identifier: opts.identifier,
+            value: opts.value ?? null,
+            traits: resolveTraitValues(opts.traits),
+            metadata: opts.metadata ?? null
+        });
+    }
+
+    /**
+     * Send all buffered events to the Flagsmith events API now.
+     *
+     * Resolves once every event tracked before the call has been posted or dropped, or immediately
+     * if {@link FlagsmithConfig.enableEvents} is not set.
+     */
+    async flushEvents(): Promise<void> {
+        await this.eventProcessor?.flush();
     }
 
     /**
@@ -336,8 +506,12 @@ export class Flagsmith {
         }
     }
 
+    /**
+     * Stop polling the environment and send any buffered events.
+     */
     async close() {
         this.environmentDataPollingManager?.stop();
+        await this.eventProcessor?.stop();
     }
 
     private async getJSONResponse(

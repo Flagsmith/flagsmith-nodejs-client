@@ -1,12 +1,17 @@
 export {
     AnalyticsProcessor,
     AnalyticsProcessorOptions,
+    EventProcessor,
+    EventProcessorOptions,
+    FLAG_EXPOSURE_EVENT,
     FlagsmithAPIError,
     FlagsmithClientError,
     EnvironmentDataPollingManager,
     FlagsmithCache,
     BaseFlag,
     DefaultFlag,
+    ExperimentMetadata,
+    Flag,
     Flags,
     Flagsmith
 } from './sdk/index.js';

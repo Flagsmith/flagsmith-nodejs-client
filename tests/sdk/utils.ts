@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { buildEnvironmentModel } from '../../flagsmith-engine/environments/util.js';
 import { AnalyticsProcessor } from '../../sdk/analytics.js';
+import { EventProcessor, EventProcessorOptions } from '../../sdk/events.js';
 import Flagsmith, { FlagsmithConfig } from '../../sdk/index.js';
 import { Fetch, FlagsmithCache } from '../../sdk/types.js';
 import { Flags } from '../../sdk/models.js';
@@ -30,6 +31,27 @@ export function analyticsProcessor() {
         analyticsUrl: 'http://testUrl/analytics/flags/',
         fetch: (url, options) => fetch(url.toString(), options)
     });
+}
+
+export function eventProcessor(params: Partial<EventProcessorOptions> = {}) {
+    return new EventProcessor({
+        environmentKey: 'test-key',
+        eventsApiUrl: 'http://testUrl/',
+        // Tests drive flushing explicitly unless they opt in to the timer.
+        flushInterval: 0,
+        retryBackoffMs: 0,
+        fetch: (url, options) => fetch(url.toString(), options),
+        ...params
+    });
+}
+
+/**
+ * The events posted to the events API by the mocked fetch, flattened across all batches.
+ */
+export function postedEvents(): any[] {
+    return fetch.mock.calls
+        .filter(([url]) => String(url).includes('/v1/events'))
+        .flatMap(([, options]) => JSON.parse(String(options?.body ?? '{}'))['events'] ?? []);
 }
 
 export function apiKey(): string {
