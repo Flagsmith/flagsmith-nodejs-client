@@ -637,7 +637,11 @@ export class Flagsmith {
             throw new FlagsmithClientError('Unable to get flags. No environment present.');
         }
         const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
-        const flags = Flags.fromEvaluationResult(evaluationResult);
+        const flags = Flags.fromEvaluationResult(
+            evaluationResult,
+            this.defaultFlagHandler,
+            this.analyticsProcessor
+        );
 
         if (!!this.cache) {
             await this.cache.set('flags', flags);
