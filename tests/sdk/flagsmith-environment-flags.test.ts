@@ -1,6 +1,6 @@
 import Flagsmith from '../../sdk/index.js';
 import { fetch, environmentJSON, flagsJSON } from './fetchMock.js';
-import { environmentModel, flagsmith } from './utils.js';
+import { environmentModel, flagsmith, TestCache } from './utils.js';
 import { DefaultFlag } from '../../sdk/models.js';
 import { getUserAgent } from '../../sdk/utils.js';
 
@@ -180,4 +180,57 @@ test('test_local_evaluation', async () => {
     expect(flag.isDefault).toBe(false);
     expect(flag.value).not.toBe(defaultFlag.value);
     expect(flag.value).toBe('some-value');
+});
+
+test.each([false, true])(
+    'environment flag analytics work with local evaluation: %s',
+    async enableLocalEvaluation => {
+        vi.spyOn(globalThis, 'fetch').mockImplementation((url, options) =>
+            fetch(url.toString(), options)
+        );
+        const flg = flagsmith({
+            environmentKey: 'ser.key',
+            enableLocalEvaluation,
+            enableAnalytics: true,
+            cache: new TestCache()
+        });
+        const flags = await flg.getEnvironmentFlags();
+        expect(flags.isFeatureEnabled('some_feature')).toBe(true);
+        expect(flags.getFeatureValue('some_feature')).toBe('some-value');
+
+        const cachedFlags = await flg.getEnvironmentFlags();
+        expect(cachedFlags).toBe(flags);
+        cachedFlags.getFlag('some_feature');
+        await flags.analyticsProcessor?.flush();
+
+        const analyticsRequests = fetch.mock.calls.filter(([url]) =>
+            String(url).includes('/analytics/flags/')
+        );
+        expect(analyticsRequests).toHaveLength(1);
+        expect(JSON.parse(String(analyticsRequests[0][1]?.body))).toEqual({
+            some_feature: 3
+        });
+    }
+);
+
+test('local environment evaluation does not enable analytics by default', async () => {
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+    const flags = await flg.getEnvironmentFlags();
+    expect(flags.isFeatureEnabled('some_feature')).toBe(true);
+    expect(flags.analyticsProcessor).toBeUndefined();
+    expect(fetch.mock.calls.some(([url]) => String(url).includes('/analytics/flags/'))).toBe(false);
+});
+
+test('local environment flags preserve the default flag handler', async () => {
+    const defaultFlag = new DefaultFlag('fallback-value', true);
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        defaultFlagHandler: () => defaultFlag
+    });
+    const flags = await flg.getEnvironmentFlags();
+    expect(flags.getFlag('missing_feature')).toBe(defaultFlag);
 });

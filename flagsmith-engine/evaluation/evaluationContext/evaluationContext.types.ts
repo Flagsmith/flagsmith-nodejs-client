@@ -128,6 +128,26 @@ export type FeaturePriority = number;
  * Feature overrides for the segment.
  */
 export type Overrides = FeatureContext[];
+/**
+ * Feature name.
+ */
+export type Name3 = string;
+/**
+ * Indicates if the feature flag is enabled.
+ */
+export type Enabled1 = boolean;
+/**
+ * Feature flag value.
+ */
+export type Value4 = string | number | boolean | null;
+/**
+ * Reason for the feature flag evaluation.
+ */
+export type Reason = string;
+/**
+ * A stable identifier of the multivariate variant the identity was bucketed into: the variant's key, "control" for the control bucket, or null when no multivariate split applied (a standard feature, an unkeyed variant, or evaluation without an identity).
+ */
+export type Variant = string | null;
 
 /**
  * A context object containing the necessary information to evaluate Flagsmith feature flags.
@@ -140,6 +160,7 @@ export interface EvaluationContext {
     identity?: IdentityContext | null;
     segments?: Segments;
     features?: Features;
+    flags?: FlagResults;
     [k: string]: unknown;
 }
 /**
@@ -249,4 +270,25 @@ export interface SegmentMetadata {
  */
 export interface Features {
     [k: string]: FeatureContext;
+}
+/**
+ * Results of features already evaluated for this context, mapped by feature name. Populated by the engine as evaluation progresses, so that segment conditions may reference `$.flags.<feature name>.enabled`, `.value` and `.variant` to express feature dependencies.
+ */
+export interface FlagResults {
+    [k: string]: FlagResult;
+}
+export interface FlagResult {
+    name: Name3;
+    enabled: Enabled1;
+    value: Value4;
+    reason: Reason;
+    variant: Variant;
+    metadata?: FeatureMetadata1;
+    [k: string]: unknown;
+}
+/**
+ * Additional metadata associated with the feature.
+ */
+export interface FeatureMetadata1 {
+    [k: string]: unknown;
 }
