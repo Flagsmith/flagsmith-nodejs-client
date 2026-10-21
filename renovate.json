@@ -36,7 +36,8 @@
         {
             "matchPackageNames": ["Flagsmith/sdk-spec"],
             "groupName": "SDK spec",
-            "enabled": true
+            "enabled": true,
+            "addLabels": ["sdk-spec"]
         }
     ]
 }
