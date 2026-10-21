@@ -186,6 +186,25 @@ function isPrimitive(value: any): boolean {
     return typeof value !== 'object';
 }
 
+const MEMBER_NAMES_PATH_PATTERN = /^\$(?:\.[A-Za-z_][A-Za-z0-9_]*)+$/;
+const UNSUPPORTED_PATH = Symbol('UNSUPPORTED_PATH');
+
+/**
+ * Resolves a JSONPath made of object member names only, e.g. `$.flags.my_feature.enabled`,
+ * without the cost of a JSONPath evaluation. Other paths are left to JSONPath.
+ */
+function getMemberValue(jsonPath: string, json: object): unknown {
+    if (!MEMBER_NAMES_PATH_PATTERN.test(jsonPath)) return UNSUPPORTED_PATH;
+
+    let value: unknown = json;
+    for (const memberName of jsonPath.slice(2).split('.')) {
+        if (typeof value !== 'object' || value === null) return UNSUPPORTED_PATH;
+        if (!Object.prototype.hasOwnProperty.call(value, memberName)) return undefined;
+        value = (value as Record<string, unknown>)[memberName];
+    }
+    return value;
+}
+
 /**
  * Evaluates JSONPath expressions against the evaluation context.
  *
@@ -202,6 +221,9 @@ function isPrimitive(value: any): boolean {
  */
 export function getContextValue(jsonPath: string, context?: GenericEvaluationContext): any {
     if (!context || !jsonPath?.startsWith('$.')) return undefined;
+
+    const memberValue = getMemberValue(jsonPath, context);
+    if (memberValue !== UNSUPPORTED_PATH) return memberValue;
 
     try {
         const results = JSONPath({ path: jsonPath, json: context });

@@ -95,15 +95,11 @@ export function evaluateSegments(
 } {
     const segments: EvaluationResultSegments = [];
     const segmentOverrides: Record<string, SegmentOverride> = {};
-    let cycleHits = flagDependencies?.cycleHits;
 
-    for (const segment of Object.values(context.segments || {})) {
-        const matches = isContextInSegment(context, segment);
-
-        if (flagDependencies && flagDependencies.cycleHits !== cycleHits) {
-            cycleHits = flagDependencies.cycleHits; // Matched or not on an unresolvable flag
-            continue;
-        }
+    for (const [segmentKey, segment] of Object.entries(context.segments || {})) {
+        const matches = flagDependencies
+            ? flagDependencies.matchesSegment(segmentKey)
+            : isContextInSegment(context, segment);
         if (!matches) continue;
 
         segments.push({
@@ -335,15 +331,19 @@ export class FlagDependencies {
               );
     }
 
-    private matchesSegment(segmentKey: string): boolean {
-        const memoised = this.segmentMatches.get(segmentKey);
+    /**
+     * Whether the context belongs to a segment. A segment matching, or not, on a flag in a
+     * dependency cycle does not match.
+     */
+    matchesSegment(segmentKey: string): boolean {
+        const memoised = this.used ? this.segmentMatches.get(segmentKey) : undefined;
         if (memoised !== undefined) return memoised;
 
         const cycleHits = this.cycleHits;
         const matches = isContextInSegment(this.context, this.context.segments![segmentKey]);
         if (this.cycleHits !== cycleHits) return false; // Matched or not on an unresolvable flag
 
-        this.segmentMatches.set(segmentKey, matches);
+        if (this.used) this.segmentMatches.set(segmentKey, matches);
         return matches;
     }
 
