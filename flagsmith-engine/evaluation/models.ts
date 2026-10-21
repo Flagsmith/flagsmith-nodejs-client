@@ -65,7 +65,7 @@ export type SegmentsWithMetadata<T extends SegmentMetadata = SegmentMetadata> = 
 
 export interface SegmentResultWithMetadata {
     name: string;
-    metadata: SDKSegmentMetadata;
+    metadata?: SDKSegmentMetadata;
 }
 
 export type EvaluationResultSegments = SegmentResultWithMetadata[];
@@ -79,6 +79,7 @@ export interface GenericEvaluationContext<
     identity?: IdentityContext | null;
     segments?: SegmentsWithMetadata<S>;
     features?: FeaturesWithMetadata<T>;
+    flags?: EvaluationResultFlags<T>;
     [k: string]: unknown;
 }
 
