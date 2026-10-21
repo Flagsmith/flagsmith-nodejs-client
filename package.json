@@ -53,6 +53,7 @@
     "test": "vitest --coverage --run",
     "test:esm-build": "npm run build && ESM_BUILD=true vitest --config vitest.config.esm.ts --run",
     "test:watch": "vitest",
+    "bench": "vitest bench --run",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --coverage",
     "prebuild": "rm -rf ./build",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json && echo '{\"type\": \"commonjs\"}'> build/cjs/package.json",
