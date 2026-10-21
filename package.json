@@ -53,6 +53,7 @@
     "test": "vitest --coverage --run",
     "test:esm-build": "npm run build && ESM_BUILD=true vitest --config vitest.config.esm.ts --run",
     "test:watch": "vitest",
+    "bench": "vitest bench --run",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --coverage",
     "prebuild": "rm -rf ./build",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json && echo '{\"type\": \"commonjs\"}'> build/cjs/package.json",
@@ -60,7 +61,7 @@
     "deploy:beta": "npm i && npm run build && npm publish --tag beta",
     "prepare": "husky install",
     "generate-evaluation-result-types": "curl -o evaluation-result.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-result.json && npx json2ts -i evaluation-result.json -o flagsmith-engine/evaluation/evaluationResult/evaluationResult.types.ts && rm evaluation-result.json",
-    "generate-evaluation-context-types": "curl -o evaluation-context.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json && npx json2ts -i evaluation-context.json -o flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.ts && rm evaluation-context.json",
+    "generate-evaluation-context-types": "curl -o evaluation-context.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json && curl -o evaluation-result.json https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-result.json && npx json2ts -i evaluation-context.json -o flagsmith-engine/evaluation/evaluationContext/evaluationContext.types.ts && rm evaluation-context.json evaluation-result.json",
     "generate-engine-types": "npm run generate-evaluation-result-types && npm run generate-evaluation-context-types"
   },
   "dependencies": {

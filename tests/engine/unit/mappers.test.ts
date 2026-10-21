@@ -278,7 +278,7 @@ describe('getEvaluationContext', () => {
         });
     });
 
-    test('produces evaluation context without identity when isEnvironmentEvaluation is true', () => {
+    test('produces evaluation context without identity or segments when isEnvironmentEvaluation is true', () => {
         // Given
         const identity = new IdentityModel(
             '2024-01-01T00:00:00Z',
@@ -297,7 +297,7 @@ describe('getEvaluationContext', () => {
         expect(context.identity).toBeUndefined();
         expect(context.environment).toBeDefined();
         expect(context.features).toBeDefined();
-        expect(context.segments).toBeDefined();
+        expect(context.segments).toBeUndefined();
     });
 
     test('handles identity without django_id', () => {

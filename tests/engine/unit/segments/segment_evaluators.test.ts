@@ -433,7 +433,9 @@ describe('getContextValue', () => {
     test.each([
         ['$.identity.identifier', 'user@example.com'],
         ['$.environment.name', 'Test Environment'],
-        ['$.environment.key', 'test-env-key']
+        ['$.environment.key', 'test-env-key'],
+        ["$.environment['name']", 'Test Environment'],
+        ['$.environment.name.length', 16]
     ])('returns correct value for path %s', (jsonPath, expected) => {
         const result = getContextValue(jsonPath, mockContext);
         expect(result).toBe(expected);
@@ -445,6 +447,7 @@ describe('getContextValue', () => {
         ['identity.identifier', 'missing $ prefix'],
         ['$.invalid.path', 'completely invalid path'],
         ['$.identity.nonexistent', 'valid structure but missing property'],
+        ['$.identity.identifier.nonexistent', 'missing property of a text value'],
         ['', 'empty string'],
         ['$', 'just $ symbol']
     ])('returns undefined for %s (%s)', jsonPath => {

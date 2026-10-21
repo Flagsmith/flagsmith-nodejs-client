@@ -181,3 +181,24 @@ test('test_local_evaluation', async () => {
     expect(flag.value).not.toBe(defaultFlag.value);
     expect(flag.value).toBe('some-value');
 });
+
+test('local evaluation of environment flags ignores segment overrides', async () => {
+    // Given
+    const environmentWithSegmentWithoutTraits = JSON.parse(environmentJSON);
+    environmentWithSegmentWithoutTraits.project.segments[0].rules = [
+        {
+            type: 'ALL',
+            conditions: [{ property_: 'age', operator: 'IS_NOT_SET', value: null }],
+            rules: []
+        }
+    ];
+    fetch.mockResolvedValue(new Response(JSON.stringify(environmentWithSegmentWithoutTraits)));
+    const flg = flagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+
+    // When
+    const flag = (await flg.getEnvironmentFlags()).getFlag('some_feature');
+
+    // Then
+    expect(flag.value).toBe('some-value');
+    expect(flag.enabled).toBe(true);
+});

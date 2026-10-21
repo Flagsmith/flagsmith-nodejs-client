@@ -25,7 +25,8 @@ export function getEvaluationContext(
 ): GenericEvaluationContext {
     const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
     if (isEnvironmentEvaluation) {
-        return environmentContext;
+        const { segments, ...environmentContextWithoutSegments } = environmentContext;
+        return environmentContextWithoutSegments;
     }
     const identityContext = identity
         ? mapIdentityModelToIdentityContext(identity, overrideTraits)

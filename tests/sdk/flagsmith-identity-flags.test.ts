@@ -335,3 +335,50 @@ test('getIdentityFlags fails if API call failed and no default flag handler was 
         'getIdentityFlags failed and no default flag handler was provided'
     );
 });
+
+test.each([
+    [41, true],
+    [21, false]
+])(
+    'local evaluation enables a flag only for identities who get its prerequisite flag enabled (age %s)',
+    async (age, expectedEnabled) => {
+        // Given
+        const environmentWithFlagDependency = JSON.parse(environmentJSON);
+        environmentWithFlagDependency.project.segments.push({
+            id: 2,
+            name: 'follows_some_feature',
+            rules: [
+                {
+                    type: 'ALL',
+                    conditions: [
+                        {
+                            property_: '$.flags.some_feature.enabled',
+                            operator: 'EQUAL',
+                            value: 'true'
+                        }
+                    ],
+                    rules: []
+                }
+            ],
+            feature_states: [
+                {
+                    feature: { id: 2, name: 'mv_feature', type: 'STANDARD' },
+                    featurestate_uuid: '33333333-3333-3333-3333-333333333333',
+                    django_id: 81028,
+                    feature_state_value: 'foo',
+                    enabled: true,
+                    multivariate_feature_state_values: []
+                }
+            ]
+        });
+        fetch.mockResolvedValue(new Response(JSON.stringify(environmentWithFlagDependency)));
+        const flg = flagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+
+        // When
+        const identityFlags = await flg.getIdentityFlags('identifier', { age });
+
+        // Then
+        expect(identityFlags.isFeatureEnabled('some_feature')).toBe(expectedEnabled);
+        expect(identityFlags.isFeatureEnabled('mv_feature')).toBe(expectedEnabled);
+    }
+);
