@@ -114,6 +114,52 @@
           "feature_segment": null
         }
       ]
+    },
+    {
+      "identifier": "multi-override-id",
+      "identity_uuid": "11111111-1111-1111-1111-111111111111",
+      "created_date": "2024-01-01T00:00:00.000000Z",
+      "environment_api_key": "B62qaMZNwfiqT76p38ggrQ",
+      "identity_traits": [],
+      "identity_features": [
+        {
+          "id": 100,
+          "feature": {
+            "id": 1,
+            "name": "some_feature",
+            "type": "STANDARD"
+          },
+          "featurestate_uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+          "feature_state_value": "override-from-first-entry",
+          "enabled": false,
+          "environment": 1,
+          "identity": null,
+          "feature_segment": null
+        }
+      ]
+    },
+    {
+      "identifier": "multi-override-id",
+      "identity_uuid": "11111111-1111-1111-1111-111111111111",
+      "created_date": "2024-01-02T00:00:00.000000Z",
+      "environment_api_key": "B62qaMZNwfiqT76p38ggrQ",
+      "identity_traits": [],
+      "identity_features": [
+        {
+          "id": 101,
+          "feature": {
+            "id": 2,
+            "name": "mv_feature",
+            "type": "STANDARD"
+          },
+          "featurestate_uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "feature_state_value": "override-from-second-entry",
+          "enabled": true,
+          "environment": 1,
+          "identity": null,
+          "feature_segment": null
+        }
+      ]
     }
   ]
 }

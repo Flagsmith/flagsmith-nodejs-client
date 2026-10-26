@@ -492,6 +492,21 @@ test('test_localEvaluation_true__identity_overrides_evaluated', async () => {
     expect(flags.getFeatureValue('some_feature')).toEqual('some-overridden-value');
 });
 
+test('test_localEvaluation_true__multiple_identity_overrides_for_same_identifier_merged', async () => {
+    const flg = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true
+    });
+
+    await flg.updateEnvironment();
+    const flags = await flg.getIdentityFlags('multi-override-id');
+
+    expect(flags.getFeatureValue('some_feature')).toEqual('override-from-first-entry');
+    expect(flags.isFeatureEnabled('some_feature')).toEqual(false);
+    expect(flags.getFeatureValue('mv_feature')).toEqual('override-from-second-entry');
+    expect(flags.isFeatureEnabled('mv_feature')).toEqual(true);
+});
+
 test('getIdentityFlags succeeds if initial fetch failed then succeeded', async () => {
     const defaultFlagHandler = vi.fn(() => new DefaultFlag('mock-default-value', true));
 
