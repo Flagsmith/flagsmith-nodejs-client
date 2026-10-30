@@ -13,6 +13,7 @@ import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
 import { TraitModel } from '../../identities/traits/models.js';
 import { FeatureStateModel } from '../../features/models.js';
+import { SegmentRuleModel } from '../../segments/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
 import { uuidToBigInt } from '../../features/util.js';
@@ -23,7 +24,10 @@ export function getEvaluationContext(
     overrideTraits?: TraitModel[],
     isEnvironmentEvaluation: boolean = false
 ): GenericEvaluationContext {
-    const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
+    const environmentContext = mapEnvironmentModelToEvaluationContext(
+        environment,
+        isEnvironmentEvaluation
+    );
     if (isEnvironmentEvaluation) {
         return environmentContext;
     }
@@ -39,8 +43,30 @@ export function getEvaluationContext(
     return context;
 }
 
+const IDENTITY_FREE_PROPERTY_PREFIXES = [
+    '$.environment.',
+    '$.environment[',
+    '$.flags.',
+    '$.flags['
+];
+
+/**
+ * Whether segment rules can be evaluated without an identity, i.e. they read no traits nor identity.
+ */
+function isIdentityFree(rules: SegmentRuleModel[]): boolean {
+    return rules.every(
+        rule =>
+            rule.conditions.every(condition =>
+                IDENTITY_FREE_PROPERTY_PREFIXES.some(prefix =>
+                    condition.property?.startsWith(prefix)
+                )
+            ) && isIdentityFree(rule.rules)
+    );
+}
+
 function mapEnvironmentModelToEvaluationContext(
-    environment: EnvironmentModel
+    environment: EnvironmentModel,
+    isEnvironmentEvaluation: boolean
 ): GenericEvaluationContext {
     const environmentContext: EnvironmentContext = {
         key: environment.apiKey,
@@ -64,6 +90,7 @@ function mapEnvironmentModelToEvaluationContext(
 
     const segmentOverrides: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     for (const segment of environment.project.segments) {
+        if (isEnvironmentEvaluation && !isIdentityFree(segment.rules)) continue;
         segmentOverrides[segment.id.toString()] = {
             key: segment.id.toString(),
             name: segment.name,
@@ -90,7 +117,11 @@ function mapEnvironmentModelToEvaluationContext(
     }
 
     let identityOverrideSegments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
-    if (environment.identityOverrides && environment.identityOverrides.length > 0) {
+    if (
+        !isEnvironmentEvaluation &&
+        environment.identityOverrides &&
+        environment.identityOverrides.length > 0
+    ) {
         identityOverrideSegments = mapIdentityOverridesToSegments(environment.identityOverrides);
     }
 
@@ -128,7 +159,8 @@ function mapFeatureStateVariants(fs: FeatureStateModel) {
         ? fs.multivariateFeatureStateValues.map(mv => ({
               value: mv.multivariateFeatureOption.value,
               weight: mv.percentageAllocation,
-              priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid)
+              priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid),
+              ...(mv.multivariateFeatureOption.key && { key: mv.multivariateFeatureOption.key })
           }))
         : undefined;
 }

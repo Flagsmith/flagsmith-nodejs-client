@@ -27,7 +27,8 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
         ? featuresStateModelJSON.multivariate_feature_state_values.map((fsv: any) => {
               const featureOption = new MultivariateFeatureOptionModel(
                   fsv.multivariate_feature_option.value,
-                  fsv.multivariate_feature_option.id
+                  fsv.multivariate_feature_option.id,
+                  fsv.multivariate_feature_option.key ?? undefined
               );
               return new MultivariateFeatureStateValueModel(
                   featureOption,

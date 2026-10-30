@@ -74,7 +74,8 @@
           "percentage_allocation": 100,
           "multivariate_feature_option": {
             "value": "bar",
-            "id": 1
+            "id": 1,
+            "key": "bar"
           },
           "mv_fs_value_uuid": "42d5cdf9-8ec9-4b8d-a3ca-fd43c64d5f05",
           "id": 1

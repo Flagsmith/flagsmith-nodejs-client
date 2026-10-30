@@ -19,6 +19,11 @@ export function createClient(environmentKey: string, apiUrl: string) {
     return new Flagsmith({ environmentKey, apiUrl });
 }
 
+// Create the SDK client with local evaluation
+export function createClientWithLocalEvaluation(environmentKey: string, apiUrl: string) {
+    return new Flagsmith({ environmentKey, apiUrl, enableLocalEvaluation: true });
+}
+
 // When the application gets the environment flags
 export async function getEnvironmentFlags(flagsmith: Flagsmith) {
     return asSpecFlags(await flagsmith.getEnvironmentFlags());
