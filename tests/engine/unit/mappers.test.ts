@@ -104,6 +104,7 @@ describe('getEvaluationContext', () => {
         expect(mvFeature.variants?.length).toBe(1);
 
         const variant = mvFeature.variants![0];
+        expect(variant.key).toBe('bar');
         expect(variant.value).toBe('bar');
         expect(variant.weight).toBe(100);
         expect(variant.priority).toBe(1);

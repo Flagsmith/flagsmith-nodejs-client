@@ -157,7 +157,8 @@ function mapFeatureStateVariants(fs: FeatureStateModel) {
         ? fs.multivariateFeatureStateValues.map(mv => ({
               value: mv.multivariateFeatureOption.value,
               weight: mv.percentageAllocation,
-              priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid)
+              priority: mv.id ?? uuidToBigInt(mv.mvFsValueUuid),
+              ...(mv.multivariateFeatureOption.key && { key: mv.multivariateFeatureOption.key })
           }))
         : undefined;
 }
