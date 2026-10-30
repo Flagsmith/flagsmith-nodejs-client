@@ -7,7 +7,8 @@ import {
     FlagResultWithMetadata,
     GenericEvaluationContext,
     SDKSegmentMetadata,
-    SegmentContextWithMetadata
+    SegmentContextWithMetadata,
+    SegmentsWithMetadata
 } from './evaluation/models.js';
 import { isContextInSegment } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
@@ -80,19 +81,16 @@ const CIRCULAR_DEPENDENCY_REASON = 'ERROR; code=CIRCULAR_DEPENDENCY';
  * Flags supplied with the context are discarded: `$.flags` only ever holds flags resolved here.
  */
 export class FlagDependencies {
-    /** The evaluation context, with `$.flags` resolving flags as conditions read them. */
     readonly context: EvaluationContextWithMetadata;
     readonly resolved: EvaluationResultFlags<SDKFeatureMetadata> = {};
-    /** Names of the flags found to be in a dependency cycle. */
     readonly cyclic = new Set<string>();
-    /** Whether any condition read a flag. */
     used = false;
-    /** Incremented whenever a cycle is cut, voiding any segment verdict reached meanwhile. */
     cycleHits = 0;
 
+    private readonly segments: SegmentsWithMetadata<SDKSegmentMetadata>;
     private readonly resolving: string[] = [];
     private readonly segmentMatches = new Map<string, boolean>();
-    private segmentKeysByFeatureName?: Map<string, string[]>;
+    private segmentKeysByFeatureNameCache?: Map<string, string[]>;
 
     constructor(context: EvaluationContextWithMetadata) {
         const resolveOnRead = (featureName: string | symbol) => {
@@ -116,6 +114,23 @@ export class FlagDependencies {
             }
         });
         this.context = { ...context, flags };
+        this.segments = context.segments || {};
+    }
+
+    private get segmentKeysByFeatureName(): Map<string, string[]> {
+        if (!this.segmentKeysByFeatureNameCache) {
+            this.segmentKeysByFeatureNameCache = new Map();
+            for (const [segmentKey, segment] of Object.entries(this.segments)) {
+                for (const override of segment.overrides || []) {
+                    const segmentKeys = this.segmentKeysByFeatureNameCache.get(override.name) || [];
+                    this.segmentKeysByFeatureNameCache.set(override.name, [
+                        ...segmentKeys,
+                        segmentKey
+                    ]);
+                }
+            }
+        }
+        return this.segmentKeysByFeatureNameCache;
     }
 
     private resolveFeature(featureName: string): void {
@@ -133,28 +148,23 @@ export class FlagDependencies {
         try {
             segmentOverride = this.getSegmentOverride(featureName);
         } finally {
-            this.resolving.pop(); // jsonpath-plus swallows errors, which would otherwise leave a false cycle
+            this.resolving.pop();
         }
 
         if (this.cyclic.has(featureName)) return;
-        this.resolved[featureName] = getFlagResult(this.context, feature, segmentOverride);
+        this.resolved[featureName] = getFlagResult(
+            this.context,
+            feature,
+            this.segmentKeysByFeatureName.has(featureName),
+            segmentOverride
+        );
     }
 
     private getSegmentOverride(featureName: string): SegmentOverride | undefined {
-        if (!this.segmentKeysByFeatureName) {
-            this.segmentKeysByFeatureName = new Map();
-            for (const [segmentKey, segment] of Object.entries(this.context.segments || {})) {
-                for (const override of segment.overrides || []) {
-                    const segmentKeys = this.segmentKeysByFeatureName.get(override.name) || [];
-                    this.segmentKeysByFeatureName.set(override.name, [...segmentKeys, segmentKey]);
-                }
-            }
-        }
-
         let segmentOverride: SegmentOverride | undefined;
         for (const segmentKey of this.segmentKeysByFeatureName.get(featureName) || []) {
             if (!this.matchesSegment(segmentKey)) continue;
-            const segment = this.context.segments![segmentKey];
+            const segment = this.segments[segmentKey];
             for (const override of segment.overrides || []) {
                 if (
                     override.name === featureName &&
@@ -173,7 +183,7 @@ export class FlagDependencies {
         if (memoised !== undefined) return memoised;
 
         const cycleHits = this.cycleHits;
-        const matches = isContextInSegment(this.context, this.context.segments![segmentKey]);
+        const matches = isContextInSegment(this.context, this.segments[segmentKey]);
         if (this.cycleHits !== cycleHits) return false;
 
         this.segmentMatches.set(segmentKey, matches);
@@ -271,9 +281,19 @@ export function evaluateFeatures(
     segmentOverrides: Record<string, SegmentOverride>
 ): EvaluationResultFlags<SDKFeatureMetadata> {
     const flags: EvaluationResultFlags<SDKFeatureMetadata> = {};
+    const featureNamesWithSegmentOverrides = new Set(
+        Object.values(context.segments || {}).flatMap(segment =>
+            (segment.overrides || []).map(override => override.name)
+        )
+    );
 
     for (const feature of Object.values(context.features || {})) {
-        flags[feature.name] = getFlagResult(context, feature, segmentOverrides[feature.name]);
+        flags[feature.name] = getFlagResult(
+            context,
+            feature,
+            featureNamesWithSegmentOverrides.has(feature.name),
+            segmentOverrides[feature.name]
+        );
     }
 
     return flags;
@@ -282,6 +302,7 @@ export function evaluateFeatures(
 function getFlagResult(
     context: EvaluationContextWithMetadata,
     feature: FeatureContextWithMetadata<SDKFeatureMetadata>,
+    hasSegmentOverrides: boolean,
     segmentOverride?: SegmentOverride
 ): FlagResultWithMetadata<SDKFeatureMetadata> {
     const finalFeature = segmentOverride ? segmentOverride.feature : feature;
@@ -300,7 +321,11 @@ function getFlagResult(
         ...(finalFeature.metadata ? { metadata: finalFeature.metadata } : {}),
         reason:
             evaluatedReason ??
-            getTargetingMatchReason({ type: 'SEGMENT', override: segmentOverride })
+            getTargetingMatchReason({
+                type: 'SEGMENT',
+                override: segmentOverride,
+                hasSegmentOverrides
+            })
     } as FlagResultWithMetadata<SDKFeatureMetadata>;
 }
 
@@ -377,6 +402,7 @@ export type TargetingMatchReason =
     | {
           type: 'SEGMENT';
           override?: SegmentOverride;
+          hasSegmentOverrides: boolean;
       }
     | {
           type: 'SPLIT';
@@ -387,9 +413,12 @@ const getTargetingMatchReason = (matchObject: TargetingMatchReason) => {
     const { type } = matchObject;
 
     if (type === 'SEGMENT') {
-        return matchObject.override
-            ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${matchObject.override.segmentName}`
-            : TARGETING_REASONS.DEFAULT;
+        if (matchObject.override) {
+            return `${TARGETING_REASONS.TARGETING_MATCH}; segment=${matchObject.override.segmentName}`;
+        }
+        return matchObject.hasSegmentOverrides
+            ? TARGETING_REASONS.DEFAULT
+            : TARGETING_REASONS.STATIC;
     }
 
     if (type === 'SPLIT') {

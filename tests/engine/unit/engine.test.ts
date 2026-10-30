@@ -39,7 +39,7 @@ test('test_get_evaluation_result_without_any_override', () => {
     const flag = Object.values(result.flags).find(f => f.name === feature1().name);
     expect(flag).toBeDefined();
     expect(flag?.name).toBe(feature1().name);
-    expect(flag?.reason).toBe(TARGETING_REASONS.DEFAULT);
+    expect(flag?.reason).toBe(TARGETING_REASONS.STATIC);
 });
 
 test('test_get_evaluation_result_with_identity_override_and_no_segment_override', () => {
@@ -67,7 +67,7 @@ test('test_get_evaluation_result_with_identity_override_and_no_segment_override'
         expect(flag.reason).toBe(
             flag.name === 'overridden_feature'
                 ? `${TARGETING_REASONS.TARGETING_MATCH}; segment=${IDENTITY_OVERRIDE_SEGMENT_NAME}`
-                : TARGETING_REASONS.DEFAULT
+                : TARGETING_REASONS.STATIC
         );
     }
 });
@@ -97,7 +97,7 @@ test('test_environment_get_all_feature_states', () => {
     expect(Object.keys(result.flags).length).toBe(Object.keys(context.features || {}).length);
 
     Object.values(result.flags).forEach(flag => {
-        expect(flag.reason).toBe(TARGETING_REASONS.DEFAULT);
+        expect(flag.reason).toBe(TARGETING_REASONS.STATIC);
     });
 
     for (const flag of Object.values(result.flags)) {
