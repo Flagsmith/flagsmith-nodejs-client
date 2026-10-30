@@ -73,6 +73,7 @@
     "access": "public"
   },
   "devDependencies": {
+    "@codspeed/vitest-plugin": "^6.1.0",
     "@types/jest": "^30.0.0",
     "@types/jsonpath": "^0.2.4",
     "@types/node": "^20.16.10",
