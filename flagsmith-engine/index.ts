@@ -140,8 +140,9 @@ export class FlagDependencies {
             this.cycleHits++;
             return;
         }
-        const feature = this.context.features?.[featureName];
-        if (!feature) return;
+        const features = this.context.features || {};
+        if (!Object.hasOwn(features, featureName)) return;
+        const feature = features[featureName];
 
         this.resolving.push(featureName);
         let segmentOverride: SegmentOverride | undefined;
