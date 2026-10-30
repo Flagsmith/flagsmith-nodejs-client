@@ -7,13 +7,13 @@ import {
     SegmentSource,
     SDKFeatureMetadata,
     SegmentsWithMetadata,
-    SDKSegmentMetadata,
-    SegmentRule
+    SDKSegmentMetadata
 } from '../models.js';
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
 import { TraitModel } from '../../identities/traits/models.js';
 import { FeatureStateModel } from '../../features/models.js';
+import { SegmentRuleModel } from '../../segments/models.js';
 import { IDENTITY_OVERRIDE_SEGMENT_NAME } from '../../segments/constants.js';
 import { createHash } from 'node:crypto';
 import { uuidToBigInt } from '../../features/util.js';
@@ -24,16 +24,12 @@ export function getEvaluationContext(
     overrideTraits?: TraitModel[],
     isEnvironmentEvaluation: boolean = false
 ): GenericEvaluationContext {
-    const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
+    const environmentContext = mapEnvironmentModelToEvaluationContext(
+        environment,
+        isEnvironmentEvaluation
+    );
     if (isEnvironmentEvaluation) {
-        return {
-            ...environmentContext,
-            segments: Object.fromEntries(
-                Object.entries(environmentContext.segments || {}).filter(([, segment]) =>
-                    isIdentityFree(segment.rules)
-                )
-            )
-        };
+        return environmentContext;
     }
     const identityContext = identity
         ? mapIdentityModelToIdentityContext(identity, overrideTraits)
@@ -57,19 +53,20 @@ const IDENTITY_FREE_PROPERTY_PREFIXES = [
 /**
  * Whether segment rules can be evaluated without an identity, i.e. they read no traits nor identity.
  */
-function isIdentityFree(rules: SegmentRule[]): boolean {
+function isIdentityFree(rules: SegmentRuleModel[]): boolean {
     return rules.every(
         rule =>
-            (rule.conditions || []).every(condition =>
+            rule.conditions.every(condition =>
                 IDENTITY_FREE_PROPERTY_PREFIXES.some(prefix =>
                     condition.property?.startsWith(prefix)
                 )
-            ) && isIdentityFree(rule.rules || [])
+            ) && isIdentityFree(rule.rules)
     );
 }
 
 function mapEnvironmentModelToEvaluationContext(
-    environment: EnvironmentModel
+    environment: EnvironmentModel,
+    isEnvironmentEvaluation: boolean
 ): GenericEvaluationContext {
     const environmentContext: EnvironmentContext = {
         key: environment.apiKey,
@@ -93,6 +90,7 @@ function mapEnvironmentModelToEvaluationContext(
 
     const segmentOverrides: SegmentsWithMetadata<SDKSegmentMetadata> = {};
     for (const segment of environment.project.segments) {
+        if (isEnvironmentEvaluation && !isIdentityFree(segment.rules)) continue;
         segmentOverrides[segment.id.toString()] = {
             key: segment.id.toString(),
             name: segment.name,
@@ -119,7 +117,11 @@ function mapEnvironmentModelToEvaluationContext(
     }
 
     let identityOverrideSegments: SegmentsWithMetadata<SDKSegmentMetadata> = {};
-    if (environment.identityOverrides && environment.identityOverrides.length > 0) {
+    if (
+        !isEnvironmentEvaluation &&
+        environment.identityOverrides &&
+        environment.identityOverrides.length > 0
+    ) {
         identityOverrideSegments = mapIdentityOverridesToSegments(environment.identityOverrides);
     }
 
