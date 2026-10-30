@@ -11,21 +11,18 @@ import { SegmentConditionModel } from './models.js';
 import { IS_NOT_SET, IS_SET, PERCENTAGE_SPLIT } from './constants.js';
 
 /**
- * Returns all segments that the identity belongs to based on segment rules evaluation.
+ * Whether the context belongs to a segment, i.e. it matches ALL of the segment's rules.
  *
- * An identity belongs to a segment if it matches ALL of the segment's rules.
- * If the context has no identity or segments, returns an empty array.
- *
- * @param context - Evaluation context containing identity and segment definitions
- * @returns Array of segments that the identity matches
+ * @param context - Evaluation context to match against the segment's rules
+ * @param segment - Segment to match, never matched when it has no rules
+ * @returns true if the context belongs to the segment
  */
-export function getIdentitySegments(context: GenericEvaluationContext): SegmentContext[] {
-    if (!context.identity || !context.segments) return [];
-
-    return Object.values(context.segments).filter(segment => {
-        if (segment.rules.length === 0) return false;
-        return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
-    });
+export function isContextInSegment(
+    context: GenericEvaluationContext,
+    segment: SegmentContext
+): boolean {
+    if (segment.rules.length === 0) return false;
+    return segment.rules.every(rule => traitsMatchSegmentRule(rule, segment.key, context));
 }
 
 /**
