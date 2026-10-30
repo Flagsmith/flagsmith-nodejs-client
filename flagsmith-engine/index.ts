@@ -9,6 +9,8 @@ import {
 } from './evaluation/models.js';
 import { getIdentitySegments } from './segments/evaluators.js';
 import { EvaluationResultFlags } from './evaluation/models.js';
+import type { Variant } from './evaluation/evaluationResult/evaluationResult.types.js';
+import { CONTROL_VARIANT } from './features/constants.js';
 import { TARGETING_REASONS } from './features/types.js';
 import { getHashedPercentageForObjIds } from './utils/hashing/index.js';
 export { EnvironmentModel } from './environments/models.js';
@@ -146,15 +148,17 @@ export function evaluateFeatures(
         const segmentOverride = segmentOverrides[feature.name];
         const finalFeature = segmentOverride ? segmentOverride.feature : feature;
 
-        const { value: evaluatedValue, reason: evaluatedReason } = evaluateFeatureValue(
-            finalFeature,
-            getIdentityKey(context)
-        );
+        const {
+            value: evaluatedValue,
+            reason: evaluatedReason,
+            variant
+        } = evaluateFeatureValue(finalFeature, getIdentityKey(context));
 
         flags[finalFeature.name] = {
             name: finalFeature.name,
             enabled: finalFeature.enabled,
             value: evaluatedValue,
+            variant,
             ...(finalFeature.metadata ? { metadata: finalFeature.metadata } : {}),
             reason:
                 evaluatedReason ??
@@ -165,15 +169,17 @@ export function evaluateFeatures(
     return flags;
 }
 
+type FeatureValueResult = { value: any; reason?: string; variant: Variant };
+
 function evaluateFeatureValue(
     feature: FeatureContextWithMetadata,
     identityKey?: string
-): { value: any; reason?: string } {
+): FeatureValueResult {
     if (!!feature.variants && feature.variants.length > 0 && !!identityKey) {
         return getMultivariateFeatureValue(feature, identityKey);
     }
 
-    return { value: feature.value, reason: undefined };
+    return { value: feature.value, reason: undefined, variant: null };
 }
 
 /**
@@ -184,12 +190,12 @@ function evaluateFeatureValue(
  *
  * @param feature - The feature context containing variants and their weights
  * @param identityKey - The identity key used for deterministic variant selection
- * @returns The variant value if the identity falls within a variant's range, otherwise the default feature value
+ * @returns The variant value and key if the identity falls within a variant's range, otherwise the default feature value and the control variant
  */
 function getMultivariateFeatureValue(
     feature: FeatureContextWithMetadata,
     identityKey?: string
-): { value: any; reason?: string } {
+): FeatureValueResult {
     const percentageValue = getHashedPercentageForObjIds([feature.key, identityKey]);
     const sortedVariants = [...(feature?.variants || [])].sort((a, b) => {
         const aPriority = a.priority ?? Infinity;
@@ -205,13 +211,14 @@ function getMultivariateFeatureValue(
         if (startPercentage <= percentageValue && percentageValue < limit) {
             return {
                 value: variant.value,
-                reason: getTargetingMatchReason({ type: 'SPLIT', weight: variant.weight })
+                reason: getTargetingMatchReason({ type: 'SPLIT', weight: variant.weight }),
+                variant: variant.key ?? null
             };
         }
         startPercentage = limit;
     }
 
-    return { value: feature.value, reason: undefined };
+    return { value: feature.value, reason: undefined, variant: CONTROL_VARIANT };
 }
 
 export function shouldApplyOverride(
