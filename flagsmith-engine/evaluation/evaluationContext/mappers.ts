@@ -7,7 +7,8 @@ import {
     SegmentSource,
     SDKFeatureMetadata,
     SegmentsWithMetadata,
-    SDKSegmentMetadata
+    SDKSegmentMetadata,
+    SegmentRule
 } from '../models.js';
 import { EnvironmentModel } from '../../environments/models.js';
 import { IdentityModel } from '../../identities/models.js';
@@ -25,7 +26,14 @@ export function getEvaluationContext(
 ): GenericEvaluationContext {
     const environmentContext = mapEnvironmentModelToEvaluationContext(environment);
     if (isEnvironmentEvaluation) {
-        return environmentContext;
+        return {
+            ...environmentContext,
+            segments: Object.fromEntries(
+                Object.entries(environmentContext.segments || {}).filter(([, segment]) =>
+                    isIdentityFree(segment.rules)
+                )
+            )
+        };
     }
     const identityContext = identity
         ? mapIdentityModelToIdentityContext(identity, overrideTraits)
@@ -37,6 +45,27 @@ export function getEvaluationContext(
     };
 
     return context;
+}
+
+const IDENTITY_FREE_PROPERTY_PREFIXES = [
+    '$.environment.',
+    '$.environment[',
+    '$.flags.',
+    '$.flags['
+];
+
+/**
+ * Whether segment rules can be evaluated without an identity, i.e. they read no traits nor identity.
+ */
+function isIdentityFree(rules: SegmentRule[]): boolean {
+    return rules.every(
+        rule =>
+            (rule.conditions || []).every(condition =>
+                IDENTITY_FREE_PROPERTY_PREFIXES.some(prefix =>
+                    condition.property?.startsWith(prefix)
+                )
+            ) && isIdentityFree(rule.rules || [])
+    );
 }
 
 function mapEnvironmentModelToEvaluationContext(
