@@ -1,5 +1,14 @@
 # Changelog
 
+## [9.1.1](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.1.0...v9.1.1) (2026-10-30)
+
+
+### CI
+
+* Benchmark the SDK with CodSpeed ([#313](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/313)) ([c386862](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c3868627b539ae7a1dc72eb65c7d73995ad4030b))
+* Label Renovate's SDK spec bump PRs ([#309](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/309)) ([c9f5df1](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/c9f5df1a337f8b5d3e8efb275e071ee62c2daa7e))
+* Run the Flagsmith SDK behavioural spec ([#307](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/307)) ([089838b](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/089838b3d84e56a1e7f46d6fc09f151a79352b04))
+
 ## [9.1.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.0.3...v9.1.0) (2026-09-25)
 
 
