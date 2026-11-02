@@ -20,10 +20,12 @@ export class FeatureModel {
 export class MultivariateFeatureOptionModel {
     value: any;
     id: number | undefined;
+    key: string | undefined;
 
-    constructor(value: any, id?: number) {
+    constructor(value: any, id?: number, key?: string) {
         this.value = value;
         this.id = id;
+        this.key = key;
     }
 }
 

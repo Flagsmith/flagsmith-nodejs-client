@@ -3,7 +3,7 @@ import { ALL_RULE, CONDITION_OPERATORS } from '../../../../flagsmith-engine/segm
 import {
     traitsMatchSegmentCondition,
     getContextValue,
-    getIdentitySegments
+    isContextInSegment
 } from '../../../../flagsmith-engine/segments/evaluators.js';
 import { TraitModel } from '../../../../flagsmith-engine/index.js';
 import { getHashedPercentageForObjIds } from '../../../../flagsmith-engine/utils/hashing/index.js';
@@ -75,83 +75,6 @@ test('test_traits_match_segment_condition_for_trait_existence_operators', () => 
             traitsMatchSegmentCondition(segmentConditionModel as SegmentCondition, 'any', context)
         ).toBe(expectedResult);
     }
-});
-
-describe('getIdentitySegments integration', () => {
-    test('returns only matching segments', () => {
-        const context: EvaluationContext = {
-            environment: { key: 'env', name: 'test' },
-            identity: {
-                key: 'user',
-                identifier: 'premium@example.com',
-                traits: { subscription: 'premium' }
-            },
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'premium_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'premium' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                },
-                '2': {
-                    key: '2',
-                    name: 'basic_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'basic' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                }
-            },
-            features: {}
-        };
-
-        const result = getIdentitySegments(context);
-
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toBe('premium_users');
-    });
-
-    test('returns empty array when no segments match', () => {
-        const context: EvaluationContext = {
-            environment: { key: 'env', name: 'test' },
-            identity: {
-                key: 'user',
-                identifier: 'test@example.com',
-                traits: { subscription: 'free' }
-            },
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'premium_users',
-                    rules: [
-                        {
-                            type: 'ALL',
-                            conditions: [
-                                { property: 'subscription', operator: 'EQUAL', value: 'premium' }
-                            ]
-                        }
-                    ],
-                    overrides: []
-                }
-            },
-            features: {}
-        };
-
-        const result = getIdentitySegments(context);
-        expect(result).toEqual([]);
-    });
 });
 
 describe('IN operator', () => {
@@ -246,7 +169,7 @@ describe('IN operator', () => {
     );
 });
 
-describe('getIdentitySegments single segment evaluation', () => {
+describe('isContextInSegment', () => {
     const baseContext: EvaluationContext = {
         environment: { key: 'env', name: 'test' },
         identity: { key: 'user', identifier: 'test@example.com', traits: { age: 25 } },
@@ -254,94 +177,77 @@ describe('getIdentitySegments single segment evaluation', () => {
         features: {}
     };
 
-    test('returns empty array for segment with no rules', () => {
-        const context = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'empty_segment',
-                    rules: [],
-                    overrides: []
-                }
-            }
+    test('does not match a segment with no rules', () => {
+        const segment = {
+            key: '1',
+            name: 'empty_segment',
+            rules: [],
+            overrides: []
         };
 
-        expect(getIdentitySegments(context)).toEqual([]);
+        expect(isContextInSegment(baseContext, segment)).toBe(false);
     });
 
-    test('returns segment when all rules match', () => {
-        const context: EvaluationContext = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'matching_segment',
-                    rules: [
+    test('matches a segment when all rules match', () => {
+        const segment = {
+            key: '1',
+            name: 'matching_segment',
+            rules: [
+                {
+                    type: ALL_RULE,
+                    conditions: [
                         {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'EQUAL',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
-                        },
-                        {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'CONTAINS',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
+                            property: '$.identity.identifier',
+                            operator: 'EQUAL',
+                            value: 'test@example.com'
                         }
                     ],
-                    overrides: []
+                    rules: []
+                },
+                {
+                    type: ALL_RULE,
+                    conditions: [
+                        {
+                            property: '$.identity.identifier',
+                            operator: 'CONTAINS',
+                            value: 'test@example.com'
+                        }
+                    ],
+                    rules: []
                 }
-            }
+            ],
+            overrides: []
         };
 
-        const result = getIdentitySegments(context);
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toBe('matching_segment');
+        expect(isContextInSegment(baseContext, segment)).toBe(true);
     });
 
-    test('returns empty array when any rule fails', () => {
-        const context: EvaluationContext = {
-            ...baseContext,
-            segments: {
-                '1': {
-                    key: '1',
-                    name: 'failing_segment',
-                    rules: [
+    test('does not match a segment when any rule fails', () => {
+        const segment = {
+            key: '1',
+            name: 'failing_segment',
+            rules: [
+                {
+                    type: ALL_RULE,
+                    conditions: [
                         {
-                            type: ALL_RULE,
-                            conditions: [
-                                {
-                                    property: '$.identity.identifier',
-                                    operator: 'EQUAL',
-                                    value: 'test@example.com'
-                                }
-                            ],
-                            rules: []
-                        },
-                        {
-                            type: ALL_RULE,
-                            conditions: [{ property: 'age', operator: 'EQUAL', value: '30' }],
-                            rules: []
+                            property: '$.identity.identifier',
+                            operator: 'EQUAL',
+                            value: 'test@example.com'
                         }
                     ],
-                    overrides: []
+                    rules: []
+                },
+                {
+                    type: ALL_RULE,
+                    conditions: [{ property: 'age', operator: 'EQUAL', value: '30' }],
+                    rules: []
                 }
-            }
+            ],
+            overrides: []
         };
 
-        expect(getIdentitySegments(context)).toEqual([]);
+        expect(isContextInSegment(baseContext, segment)).toBe(false);
     });
 });
 
