@@ -114,11 +114,11 @@ export class SegmentConditionModel {
             },
             evaluateRegex: (traitValue: any) => {
                 try {
-                    if (!this.value) {
+                    if (!this.value || traitValue === null || traitValue === undefined) {
                         return false;
                     }
-                    const regex = new RegExp(this.value?.toString());
-                    return !!traitValue?.toString().match(regex);
+                    const regex = new RegExp(this.value.toString(), 'y'); // Sticky: match from the start only
+                    return regex.test(traitValue.toString());
                 } catch {
                     return false;
                 }
