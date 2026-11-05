@@ -289,9 +289,6 @@ export class Flagsmith {
      * Flags are fetched exactly as {@link getIdentityFlags} fetches them, so traits are upserted and
      * the identity cache is used when one is configured.
      *
-     * Experiment metadata is only produced by remote identity evaluation. Local evaluation and
-     * offline mode never carry it, so no exposure is ever recorded for them.
-     *
      * @param featureName the name of the feature to evaluate.
      * @param identifier a unique identifier for the identity in the current environment.
      * @param traits? a dictionary of traits to add / update on the identity in Flagsmith.
@@ -638,6 +635,10 @@ export class Flagsmith {
         }
         const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
         const flags = Flags.fromEvaluationResult(evaluationResult);
+        // Only an identity is enrolled in an experiment, so environment flags carry none.
+        for (const flag of Object.values(flags.flags)) {
+            flag.experiment = undefined;
+        }
 
         if (!!this.cache) {
             await this.cache.set('flags', flags);

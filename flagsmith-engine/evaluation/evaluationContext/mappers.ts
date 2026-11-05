@@ -82,9 +82,7 @@ function mapEnvironmentModelToEvaluationContext(
             value: fs.getValue(),
             variants: mapFeatureStateVariants(fs),
             priority: fs.featureSegment?.priority,
-            metadata: {
-                id: fs.feature.id
-            }
+            metadata: mapFeatureStateMetadata(fs)
         };
     }
 
@@ -104,9 +102,7 @@ function mapEnvironmentModelToEvaluationContext(
                           value: fs.getValue(),
                           variants: mapFeatureStateVariants(fs),
                           priority: fs.featureSegment?.priority,
-                          metadata: {
-                              id: fs.feature.id
-                          }
+                          metadata: mapFeatureStateMetadata(fs)
                       }))
                     : [],
             metadata: {
@@ -152,6 +148,13 @@ function mapIdentityModelToIdentityContext(
     };
 
     return identityContext;
+}
+
+function mapFeatureStateMetadata(fs: FeatureStateModel): SDKFeatureMetadata {
+    return {
+        id: fs.feature.id,
+        ...(fs.experiment && { experiment: fs.experiment })
+    };
 }
 
 function mapFeatureStateVariants(fs: FeatureStateModel) {

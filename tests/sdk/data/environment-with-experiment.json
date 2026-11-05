@@ -1,0 +1,97 @@
+{
+    "api_key": "B62qaMZNwfiqT76p38ggrQ",
+    "name": "Test Environment",
+    "project": {
+        "name": "Test project",
+        "organisation": {
+            "feature_analytics": false,
+            "name": "Test Org",
+            "id": 1,
+            "persist_trait_data": true,
+            "stop_serving_flags": false
+        },
+        "id": 1,
+        "hide_disabled_flags": false,
+        "segments": [
+            {
+                "id": 7,
+                "name": "Checkout experiment rollout",
+                "feature_states": [
+                    {
+                        "multivariate_feature_state_values": [
+                            {
+                                "id": 3,
+                                "multivariate_feature_option": {
+                                    "id": 3,
+                                    "value": "new checkout",
+                                    "key": "treatment"
+                                },
+                                "percentage_allocation": 100,
+                                "mv_fs_value_uuid": "3e3e3e3e-3e3e-3e3e-3e3e-3e3e3e3e3e3e"
+                            }
+                        ],
+                        "feature_state_value": "control",
+                        "django_id": 2,
+                        "featurestate_uuid": "c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2",
+                        "feature": { "name": "checkout", "type": "MULTIVARIATE", "id": 10 },
+                        "feature_segment": { "priority": 0 },
+                        "enabled": true,
+                        "metadata": {
+                            "experiment": {
+                                "id": 42,
+                                "name": "Checkout experiment",
+                                "in_experiment": true
+                            }
+                        }
+                    }
+                ],
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "conditions": [{ "operator": "EQUAL", "property_": "plan", "value": "premium" }],
+                        "rules": []
+                    }
+                ]
+            }
+        ]
+    },
+    "segment_overrides": [],
+    "id": 1,
+    "feature_states": [
+        {
+            "multivariate_feature_state_values": [],
+            "feature_state_value": "control",
+            "django_id": 1,
+            "featurestate_uuid": "c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1",
+            "feature": { "name": "checkout", "type": "MULTIVARIATE", "id": 10 },
+            "feature_segment": null,
+            "enabled": true,
+            "metadata": {
+                "experiment": { "id": 42, "name": "Checkout experiment", "in_experiment": false }
+            }
+        },
+        {
+            "multivariate_feature_state_values": [],
+            "feature_state_value": "hello",
+            "django_id": 3,
+            "featurestate_uuid": "c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3",
+            "feature": { "name": "plain", "type": "STANDARD", "id": 11 },
+            "feature_segment": null,
+            "enabled": true
+        }
+    ],
+    "identity_overrides": [
+        {
+            "identifier": "user_overridden",
+            "identity_features": [
+                {
+                    "multivariate_feature_state_values": [],
+                    "feature_state_value": "overridden checkout",
+                    "featurestate_uuid": "c4c4c4c4-c4c4-c4c4-c4c4-c4c4c4c4c4c4",
+                    "feature": { "name": "checkout", "type": "MULTIVARIATE", "id": 10 },
+                    "enabled": true
+                }
+            ]
+        }
+    ]
+}

@@ -43,7 +43,7 @@ export class DefaultFlag extends BaseFlag {
 }
 
 /**
- * A running experiment on a feature, as reported by a remote identity evaluation.
+ * A running experiment on a feature, as reported by an identity evaluation.
  */
 export class ExperimentMetadata {
     /**
@@ -110,11 +110,11 @@ export class Flag extends BaseFlag {
      */
     reason?: string;
     /**
-     * The variant key this identity was bucketed into. Set by remote evaluation only.
+     * The variant key this identity was bucketed into. Set by identity evaluation only.
      */
     variant?: string;
     /**
-     * The experiment running on this feature, if any. Set by remote identity evaluation only.
+     * The experiment running on this feature, if any. Set by identity evaluation only.
      */
     experiment?: ExperimentMetadata;
 
@@ -196,7 +196,9 @@ export class Flags {
                 value: flag.value ?? null,
                 featureId: flagMetadataId,
                 featureName: flag.name,
-                reason: flag.reason
+                reason: flag.reason,
+                variant: flag.variant ?? undefined,
+                experiment: ExperimentMetadata.fromAPIMetadata(flag.metadata)
             });
         }
         return new Flags({
