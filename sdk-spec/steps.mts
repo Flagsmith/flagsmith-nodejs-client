@@ -4,7 +4,7 @@
  * Each function implements the Gherkin step in the comment above it.
  */
 
-import { Flagsmith, type Flags, type FlagsmithValue } from '@flagsmith/nodejs';
+import { Flag, Flagsmith, type Flags, type FlagsmithValue } from '@flagsmith/nodejs';
 
 function asSpecFlags(flags: Flags) {
     return flags.allFlags().map(flag => ({
@@ -60,7 +60,8 @@ export async function getExperimentFlag(
     traits: Record<string, FlagsmithValue>
 ) {
     const flag = await flagsmith.getExperimentFlag(feature, identifier, traits);
-    return [{ feature, enabled: flag.enabled, value: flag.value }];
+    const featureName = flag instanceof Flag ? flag.featureName : feature; // A default flag has no name of its own
+    return [{ feature: featureName, enabled: flag.enabled, value: flag.value }];
 }
 
 // When the application tracks event "{event}" for identity "{identifier}" with value {value} and metadata:
