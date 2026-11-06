@@ -327,6 +327,12 @@ export class Flagsmith {
             );
             return flag;
         }
+        if (flag.variant === undefined) {
+            this.logger.debug(
+                `Not recording an exposure for "${featureName}": the flag has no variant.`
+            );
+            return flag;
+        }
 
         this.trackExposureEvent(featureName, {
             identifier: identifier,
@@ -635,10 +641,6 @@ export class Flagsmith {
         }
         const evaluationResult = getEvaluationResult(context as EvaluationContextWithMetadata);
         const flags = Flags.fromEvaluationResult(evaluationResult);
-        // Only an identity is enrolled in an experiment, so environment flags carry none.
-        for (const flag of Object.values(flags.flags)) {
-            flag.experiment = undefined;
-        }
 
         if (!!this.cache) {
             await this.cache.set('flags', flags);

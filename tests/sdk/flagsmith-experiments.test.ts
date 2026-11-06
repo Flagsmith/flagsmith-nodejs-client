@@ -4,7 +4,7 @@ import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { FlagsmithConfig } from '../../sdk/types.js';
 import { getUserAgent } from '../../sdk/utils.js';
 import { SDK_VERSION } from '../../sdk/version.js';
-import { fetch, fetchImpl } from './fetchMock.js';
+import { fetch, fetchImpl, identitiesJSON } from './fetchMock.js';
 import { flagsmith, postedEvents, TestCache } from './utils.js';
 import { readFileSync } from 'fs';
 
@@ -182,6 +182,24 @@ test.each([
     await flg.getExperimentFlag(featureName, 'user-123');
     await flg.flushEvents();
 
+    expect(postedEvents()).toHaveLength(0);
+});
+
+test('getExperimentFlag records no exposure when the flag has no variant', async () => {
+    const identities = JSON.parse(identitiesJSON);
+    delete identities.flags.find((f: any) => f.feature.name === 'some_feature').variant;
+    fetch.mockImplementation((url, options) =>
+        String(url).includes('/identities')
+            ? Promise.resolve(new Response(JSON.stringify(identities), { status: 200 }))
+            : fetchImpl(url, options)
+    );
+    const flg = experimentsFlagsmith();
+
+    const flag = (await flg.getExperimentFlag('some_feature', 'user-123')) as Flag;
+    await flg.flushEvents();
+
+    expect(flag.experiment?.inExperiment).toBe(true);
+    expect(flag.variant).toBeUndefined();
     expect(postedEvents()).toHaveLength(0);
 });
 
