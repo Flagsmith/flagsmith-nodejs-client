@@ -4,8 +4,14 @@ import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { FlagsmithConfig } from '../../sdk/types.js';
 import { getUserAgent } from '../../sdk/utils.js';
 import { SDK_VERSION } from '../../sdk/version.js';
-import { fetch } from './fetchMock.js';
+import { fetch, fetchImpl, identitiesJSON } from './fetchMock.js';
 import { flagsmith, postedEvents, TestCache } from './utils.js';
+import { readFileSync } from 'fs';
+
+const environmentWithExperimentJSON = readFileSync(
+    __dirname + '/data/environment-with-experiment.json',
+    'utf-8'
+);
 
 vi.mock('../../sdk/polling_manager');
 
@@ -179,6 +185,24 @@ test.each([
     expect(postedEvents()).toHaveLength(0);
 });
 
+test('getExperimentFlag records no exposure when the flag has no variant', async () => {
+    const identities = JSON.parse(identitiesJSON);
+    delete identities.flags.find((f: any) => f.feature.name === 'some_feature').variant;
+    fetch.mockImplementation((url, options) =>
+        String(url).includes('/identities')
+            ? Promise.resolve(new Response(JSON.stringify(identities), { status: 200 }))
+            : fetchImpl(url, options)
+    );
+    const flg = experimentsFlagsmith();
+
+    const flag = (await flg.getExperimentFlag('some_feature', 'user-123')) as Flag;
+    await flg.flushEvents();
+
+    expect(flag.experiment?.inExperiment).toBe(true);
+    expect(flag.variant).toBeUndefined();
+    expect(postedEvents()).toHaveLength(0);
+});
+
 test('getExperimentFlag still returns the flag when the identity is outside the rollout', async () => {
     const flg = experimentsFlagsmith();
 
@@ -201,19 +225,80 @@ test('getExperimentFlag records no exposure for a feature served by the default 
     expect(postedEvents()).toHaveLength(0);
 });
 
-test('getExperimentFlag records no exposure when evaluating locally', async () => {
-    const flg = experimentsFlagsmith({
-        environmentKey: 'ser.key',
-        enableLocalEvaluation: true
-    });
+/**
+ * A locally evaluating client whose environment document runs an experiment on `checkout`. Its
+ * rollout segment is identities on the premium plan, who are served the `treatment` variant.
+ * `user_overridden` has an identity override for `checkout`, and `plain` has no experiment.
+ */
+function localExperimentsFlagsmith() {
+    fetch.mockImplementation((url, options) =>
+        String(url).includes('/environment-document')
+            ? Promise.resolve(new Response(environmentWithExperimentJSON, { status: 200 }))
+            : fetchImpl(url, options)
+    );
+    return experimentsFlagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+}
 
-    const flag = (await flg.getExperimentFlag('some_feature', 'user-123')) as Flag;
+test('getExperimentFlag records an exposure for an enrolled identity when evaluating locally', async () => {
+    const flg = localExperimentsFlagsmith();
+
+    const flag = (await flg.getExperimentFlag('checkout', 'user-123', { plan: 'premium' })) as Flag;
     await flg.flushEvents();
 
-    expect(flag.enabled).toBe(true);
-    expect(flag.variant).toBeUndefined();
+    expect(flag.value).toBe('new checkout');
+    expect(flag.variant).toBe('treatment');
+    expect(flag.experiment).toEqual({ id: 42, name: 'Checkout experiment', inExperiment: true });
+    expect(postedEvents()).toEqual([
+        expect.objectContaining({
+            event: FLAG_EXPOSURE_EVENT,
+            feature_name: 'checkout',
+            identifier: 'user-123',
+            value: 'treatment',
+            traits: { plan: 'premium' },
+            metadata: { experiment_id: 42, sdk_version: SDK_VERSION }
+        })
+    ]);
+});
+
+test.each([
+    [
+        'the identity is outside the rollout',
+        'checkout',
+        'user-123',
+        'free',
+        'control',
+        { id: 42, name: 'Checkout experiment', inExperiment: false }
+    ],
+    [
+        'the identity has an identity override',
+        'checkout',
+        'user_overridden',
+        'premium',
+        'overridden checkout',
+        undefined
+    ],
+    ['the feature has no experiment', 'plain', 'user-123', 'premium', 'hello', undefined]
+])(
+    'getExperimentFlag records no exposure when evaluating locally and %s',
+    async (_name, featureName, identifier, plan, expectedValue, expectedExperiment) => {
+        const flg = localExperimentsFlagsmith();
+
+        const flag = (await flg.getExperimentFlag(featureName, identifier, { plan })) as Flag;
+        await flg.flushEvents();
+
+        expect(flag.value).toBe(expectedValue);
+        expect(flag.experiment).toEqual(expectedExperiment);
+        expect(postedEvents()).toHaveLength(0);
+    }
+);
+
+test('environment flags carry no experiment when evaluating locally', async () => {
+    const flg = localExperimentsFlagsmith();
+
+    const flag = (await flg.getEnvironmentFlags()).getFlag('checkout') as Flag;
+
+    expect(flag.value).toBe('control');
     expect(flag.experiment).toBeUndefined();
-    expect(postedEvents()).toHaveLength(0);
 });
 
 test('getExperimentFlag records one exposure per identity', async () => {

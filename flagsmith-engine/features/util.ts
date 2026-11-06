@@ -23,6 +23,8 @@ export function buildFeatureStateModel(featuresStateModelJSON: any): FeatureStat
         ? buildFeatureSegment(featuresStateModelJSON.feature_segment)
         : undefined;
 
+    featureStateModel.experiment = featuresStateModelJSON.metadata?.experiment ?? undefined;
+
     const multivariateFeatureStateValues = featuresStateModelJSON.multivariate_feature_state_values
         ? featuresStateModelJSON.multivariate_feature_state_values.map((fsv: any) => {
               const featureOption = new MultivariateFeatureOptionModel(

@@ -82,9 +82,7 @@ function mapEnvironmentModelToEvaluationContext(
             value: fs.getValue(),
             variants: mapFeatureStateVariants(fs),
             priority: fs.featureSegment?.priority,
-            metadata: {
-                id: fs.feature.id
-            }
+            metadata: mapFeatureStateMetadata(fs, isEnvironmentEvaluation)
         };
     }
 
@@ -104,9 +102,7 @@ function mapEnvironmentModelToEvaluationContext(
                           value: fs.getValue(),
                           variants: mapFeatureStateVariants(fs),
                           priority: fs.featureSegment?.priority,
-                          metadata: {
-                              id: fs.feature.id
-                          }
+                          metadata: mapFeatureStateMetadata(fs, isEnvironmentEvaluation)
                       }))
                     : [],
             metadata: {
@@ -152,6 +148,19 @@ function mapIdentityModelToIdentityContext(
     };
 
     return identityContext;
+}
+
+/**
+ * Only an identity is enrolled in an experiment, so environment evaluation leaves it out.
+ */
+function mapFeatureStateMetadata(
+    fs: FeatureStateModel,
+    isEnvironmentEvaluation: boolean
+): SDKFeatureMetadata {
+    return {
+        id: fs.feature.id,
+        ...(!isEnvironmentEvaluation && fs.experiment && { experiment: fs.experiment })
+    };
 }
 
 function mapFeatureStateVariants(fs: FeatureStateModel) {

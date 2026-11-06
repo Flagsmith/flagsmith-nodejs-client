@@ -48,12 +48,22 @@ export class MultivariateFeatureStateValueModel {
     }
 }
 
+/**
+ * The running experiment a feature state belongs to, as the environment document reports it.
+ */
+export interface FeatureStateExperiment {
+    id: number;
+    name: string;
+    in_experiment: boolean;
+}
+
 export class FeatureStateModel {
     feature: FeatureModel;
     enabled: boolean;
     djangoID: number;
     featurestateUUID: string = uuidv4();
     featureSegment?: FeatureSegment;
+    experiment?: FeatureStateExperiment;
     private value: any;
     multivariateFeatureStateValues: MultivariateFeatureStateValueModel[] = [];
 

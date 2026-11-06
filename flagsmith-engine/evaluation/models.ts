@@ -9,6 +9,8 @@ import type {
     SegmentMetadata
 } from './evaluationResult/evaluationResult.types.js';
 
+import type { FeatureStateExperiment } from '../features/models.js';
+
 import type {
     FeatureContext,
     EnvironmentContext,
@@ -26,6 +28,8 @@ export enum SegmentSource {
 // Feature types
 export interface SDKFeatureMetadata extends FeatureMetadata {
     id: number;
+    /** The running experiment the feature state belongs to, if any. */
+    experiment?: FeatureStateExperiment;
 }
 
 export interface FeatureContextWithMetadata<T extends FeatureMetadata = FeatureMetadata>
