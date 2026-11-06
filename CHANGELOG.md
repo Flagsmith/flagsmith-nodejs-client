@@ -1,5 +1,18 @@
 # Changelog
 
+## [9.3.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.2.0...v9.3.0) (2026-11-06)
+
+
+### Features
+
+* Record exposures under local evaluation ([#318](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/318)) ([467dc54](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/467dc54dad6c7dfd03461e50169dfdc37208e68b))
+
+
+### Other
+
+* **deps-dev:** bump undici from 6.28.0 to 6.29.1 ([#312](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/312)) ([0cc92c2](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/0cc92c2388685c479581fc4b4fd70f7315055cad))
+* Let Renovate keep updating spec bumps the webhook handler commits to ([#319](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/319)) ([ee89f5a](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/ee89f5a5ba3fadad0a2a89ca902534f597187cda))
+
 ## [9.2.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.1.0...v9.2.0) (2026-11-02)
 
 
