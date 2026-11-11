@@ -1,7 +1,7 @@
 import { pino, Logger } from 'pino';
 import { Dispatcher } from 'undici-types';
 import { Fetch, FlagsmithTraitValue, FlagsmithValue } from './types.js';
-import { delay, getUserAgent } from './utils.js';
+import { getUserAgent } from './utils.js';
 import { SDK_VERSION } from './version.js';
 
 /** The only `$`-prefixed event name an SDK is allowed to send. **/
@@ -12,7 +12,7 @@ export const DEFAULT_EVENTS_API_URL = 'https://events.api.flagsmith.com/';
 
 const EVENTS_ENDPOINT = 'v1/events';
 
-/** Number of buffered events that triggers a flush without waiting for the timer. **/
+/** Number of events the buffer holds before it drops its oldest event. **/
 const DEFAULT_MAX_BUFFER = 1000;
 
 /** Duration in milliseconds between two automatic flushes. **/
@@ -20,11 +20,24 @@ const DEFAULT_FLUSH_INTERVAL_MS = 10000;
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 3000;
 
-/** Duration in milliseconds to wait before retrying a failed batch. **/
+/** Upper bound in milliseconds of the wait before the first retry of a batch, doubled for each retry after it. **/
 const DEFAULT_RETRY_BACKOFF_MS = 1000;
 
-/** How many times a single batch is posted before it is dropped. **/
-const MAX_ATTEMPTS = 2;
+/** How many times a single batch is posted in one flush. **/
+const MAX_ATTEMPTS = 3;
+
+/** Statuses meaning the events API is unavailable for now, rather than failing on the batch. **/
+const UNAVAILABLE_STATUSES = [408, 429, 502, 503, 504];
+
+/** Statuses meaning the events API refuses the environment key. **/
+const UNAUTHORISED_STATUSES = [401, 403];
+
+/**
+ * What became of a batch posted to the events API: `sent`, `dropped` because it cannot be sent,
+ * `kept` to be sent again with the next flush, or `unauthorised` because the environment key was
+ * refused.
+ */
+type Outcome = 'sent' | 'dropped' | 'kept' | 'unauthorised';
 
 /** Headers the SDK sets itself. Header names are case-insensitive, so custom variants are dropped. **/
 const RESERVED_HEADERS = [
@@ -46,13 +59,13 @@ export interface EventProcessorOptions {
     customHeaders?: { [key: string]: string };
     /** URL of the Flagsmith events API. Defaults to {@link DEFAULT_EVENTS_API_URL}. **/
     eventsApiUrl?: string;
-    /** Number of buffered events that triggers a flush. Defaults to {@link DEFAULT_MAX_BUFFER}. **/
+    /** Number of events the buffer holds before it drops its oldest event. Defaults to {@link DEFAULT_MAX_BUFFER}. **/
     maxBuffer?: number;
     /** Duration in milliseconds between automatic flushes. 0 disables the timer. Defaults to {@link DEFAULT_FLUSH_INTERVAL_MS}. **/
     flushInterval?: number;
     /** Duration in milliseconds to wait for API requests to complete before timing out. Defaults to {@link DEFAULT_REQUEST_TIMEOUT_MS}. **/
     requestTimeoutMs?: number;
-    /** Duration in milliseconds to wait before retrying a failed batch. Defaults to {@link DEFAULT_RETRY_BACKOFF_MS}. **/
+    /** Upper bound in milliseconds of the wait before the first retry of a batch, doubled for each retry after it. Defaults to {@link DEFAULT_RETRY_BACKOFF_MS}. **/
     retryBackoffMs?: number;
     /** Logger for dropped batches and other failures. Defaults to a new pino logger. **/
     logger?: Logger;
@@ -81,12 +94,20 @@ export interface FlagsmithEvent {
 /**
  * Buffers events and posts them to the Flagsmith events API.
  *
- * Events are flushed every {@link EventProcessorOptions.flushInterval} milliseconds, as soon as
- * {@link EventProcessorOptions.maxBuffer} events are buffered, or by calling {@link flush}.
+ * Events are flushed every {@link EventProcessorOptions.flushInterval} milliseconds, or by calling
+ * {@link flush}. Flushes run one after the other, so a single batch is in flight at a time. Once
+ * {@link EventProcessorOptions.maxBuffer} events are buffered, each new event drops the oldest.
  *
- * Exposure events are deduplicated within a flush window. A batch that cannot be posted is retried
- * once and then dropped: recording events must never fail the calling application, so all errors
- * are logged and swallowed.
+ * Exposure events are deduplicated within a flush window. A batch that fails is retried after a
+ * backoff with full jitter, up to {@link MAX_ATTEMPTS} attempts in a flush. If its last attempt
+ * finds the events API unavailable (a network error, a timeout or a 408, 429, 502, 503 or 504
+ * response), the batch is kept and sent with the next flush, ahead of the events buffered since.
+ * Otherwise a batch that keeps failing, or that the events API rejects with a 4xx response, is
+ * dropped. A 401 or 403 response means the environment key is refused: the processor then drops
+ * every event and stops tracking.
+ *
+ * Recording events must never fail the calling application, so all errors are logged and
+ * swallowed.
  */
 export class EventProcessor {
     private eventsUrl: string;
@@ -102,8 +123,13 @@ export class EventProcessor {
 
     private buffer: FlagsmithEvent[] = [];
     private seenExposures: Set<string> = new Set();
-    private inFlight: Set<Promise<void>> = new Set();
+    /** The last flush requested, which every new flush runs after. Never rejects. **/
+    private flushing: Promise<void> = Promise.resolve();
     private interval?: NodeJS.Timeout;
+    /** Set once the events API refuses the environment key. **/
+    private unauthorised = false;
+    /** Aborts the request and backoff in flight when {@link stop} times out. **/
+    private abortController = new AbortController();
 
     constructor(opts: EventProcessorOptions) {
         const eventsApiUrl = opts.eventsApiUrl || DEFAULT_EVENTS_API_URL;
@@ -169,27 +195,14 @@ export class EventProcessor {
     /**
      * Post all buffered events to the Flagsmith events API.
      *
-     * Resolves once every batch in flight when it was called has been posted or dropped, including
-     * batches started by the flush timer or by reaching {@link EventProcessorOptions.maxBuffer}.
-     * Every event tracked before the call has therefore been sent or dropped. Batches started after
-     * the call are not awaited, so sustained traffic cannot keep this promise pending.
+     * Runs after the flushes requested before it, so it resolves once every event tracked before
+     * the call has been sent, dropped, or kept for the next flush because the events API is
+     * unavailable. Never rejects.
      */
-    async flush(): Promise<void> {
-        const events = this.buffer;
-        this.buffer = [];
-        this.seenExposures.clear();
-
-        if (events.length) {
-            const batch = this.postEvents(events);
-            this.inFlight.add(batch);
-            // Settle both ways: a rejection here would otherwise go unhandled.
-            const forget = () => this.inFlight.delete(batch);
-            batch.then(forget, forget);
-        }
-
-        // allSettled, not all: one failed batch must neither reject this promise nor stop it from
-        // waiting for the others.
-        await Promise.allSettled([...this.inFlight]);
+    flush(): Promise<void> {
+        const flush = this.flushing.then(() => this.sendBuffer());
+        this.flushing = flush;
+        return flush;
     }
 
     /**
@@ -209,13 +222,37 @@ export class EventProcessor {
 
     /**
      * Stop the flush timer and post any remaining events.
+     *
+     * @param timeoutMs? how long to wait for the events to be sent. Once it has passed, the request
+     * in flight is aborted, its events are lost, and this resolves. Waits for the flush to complete
+     * if not set.
      */
-    async stop(): Promise<void> {
+    async stop(timeoutMs?: number): Promise<void> {
         if (this.interval) {
             clearInterval(this.interval);
             this.interval = undefined;
         }
-        return this.flush();
+        const flush = this.flush();
+        if (timeoutMs === undefined) {
+            return flush;
+        }
+
+        let timer: NodeJS.Timeout | undefined;
+        const timedOut = new Promise<boolean>(resolve => {
+            timer = setTimeout(() => resolve(true), timeoutMs);
+        });
+        const expired = await Promise.race([flush.then(() => false), timedOut]);
+        clearTimeout(timer);
+        if (expired) {
+            this.abortController.abort();
+            try {
+                this.logger.warn(
+                    `Could not send the buffered events to the Flagsmith events API within ${timeoutMs}ms. Dropping them.`
+                );
+            } catch {
+                // Closing must never fail the calling application.
+            }
+        }
     }
 
     private bufferEvent(args: {
@@ -226,6 +263,9 @@ export class EventProcessor {
         traits: Record<string, FlagsmithTraitValue> | null;
         metadata: Record<string, unknown> | null;
     }): void {
+        if (this.unauthorised) {
+            return;
+        }
         try {
             const value = args.value != null ? String(args.value) : null;
             const metadata: Record<string, unknown> = {
@@ -260,8 +300,11 @@ export class EventProcessor {
                 timestamp: Date.now()
             });
 
-            if (this.buffer.length >= this.maxBuffer) {
-                this.flush();
+            if (this.buffer.length > this.maxBuffer) {
+                this.buffer.shift();
+                this.logger.warn(
+                    `The events buffer is full (${this.maxBuffer} events). Dropping its oldest event.`
+                );
             }
         } catch (error) {
             // Recording an event must never throw into the calling application.
@@ -270,21 +313,63 @@ export class EventProcessor {
     }
 
     /**
-     * Post a batch, retrying once on a network error or a 5xx response before dropping it.
-     *
-     * A batch is never re-queued into the live buffer: a permanently rejected batch would otherwise
-     * be retried forever.
+     * Post the buffered events as one batch, and keep them for the next flush if the events API is
+     * unavailable.
      */
-    private async postEvents(events: FlagsmithEvent[]): Promise<void> {
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            let reason = 'unknown error';
+    private async sendBuffer(): Promise<void> {
+        if (!this.buffer.length || this.unauthorised) {
+            return;
+        }
+        const events = this.buffer;
+        this.buffer = [];
+        this.seenExposures.clear();
+
+        try {
+            const outcome = await this.postEvents(events);
+            if (outcome === 'kept') {
+                // Ahead of the events tracked since, within the buffer's capacity.
+                this.buffer = [...events, ...this.buffer];
+                const overflow = this.buffer.length - this.maxBuffer;
+                if (overflow > 0) {
+                    this.buffer.splice(0, overflow);
+                    this.logger.warn(
+                        `The events buffer is full (${this.maxBuffer} events). Dropping its ${overflow} oldest events.`
+                    );
+                }
+            } else if (outcome === 'unauthorised') {
+                this.unauthorised = true;
+                this.buffer = [];
+                this.seenExposures.clear();
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = undefined;
+                }
+            }
+        } catch (error) {
+            // Only a throwing logger gets here: a flush must never reject.
+        }
+    }
+
+    /**
+     * Post a batch, retrying it after a server error or while the events API is unavailable.
+     */
+    private async postEvents(events: FlagsmithEvent[]): Promise<Outcome> {
+        const abortSignal = this.abortController.signal;
+        for (let attempt = 1; ; attempt++) {
+            let reason: string;
+            let unavailable = true;
+            // Gives up on the request once it times out, or once stop() times out.
+            const request = new AbortController();
+            const giveUp = () => request.abort();
+            const timeout = setTimeout(giveUp, this.requestTimeoutMs);
+            abortSignal.addEventListener('abort', giveUp);
             try {
                 // built-in RequestInit type doesn't have dispatcher/agent
                 const init: RequestInit & { dispatcher?: Dispatcher } = {
                     dispatcher: this.agent,
                     method: 'POST',
                     body: JSON.stringify({ events: events }),
-                    signal: AbortSignal.timeout(this.requestTimeoutMs),
+                    signal: request.signal,
                     headers: {
                         // Custom headers first: the SDK's own headers must not be overridden.
                         ...this.customHeaders,
@@ -296,27 +381,67 @@ export class EventProcessor {
                     }
                 };
                 const response = await this.customFetch(this.eventsUrl, init);
-                if (response.status >= 200 && response.status < 300) {
-                    return;
+                const status = response.status;
+                if (status >= 200 && status < 300) {
+                    return 'sent';
                 }
-                if (response.status < 500) {
-                    this.logger.warn(
-                        `Flagsmith events API rejected ${events.length} events with status ${response.status}. Dropping them.`
+                if (UNAUTHORISED_STATUSES.includes(status)) {
+                    this.logger.error(
+                        `Flagsmith events API refused the environment key with status ${status}. Dropping ${events.length} events and no longer tracking events.`
                     );
-                    return;
+                    return 'unauthorised';
                 }
-                reason = `status ${response.status}`;
+                unavailable = UNAVAILABLE_STATUSES.includes(status);
+                if (status < 500 && !unavailable) {
+                    this.logger.warn(
+                        `Flagsmith events API rejected ${events.length} events with status ${status}. Dropping them.`
+                    );
+                    return 'dropped';
+                }
+                reason = `status ${status}`;
             } catch (error) {
                 reason = String(error);
+            } finally {
+                clearTimeout(timeout);
+                abortSignal.removeEventListener('abort', giveUp);
             }
 
+            if (abortSignal.aborted) {
+                return 'dropped';
+            }
             if (attempt === MAX_ATTEMPTS) {
+                if (unavailable) {
+                    this.logger.warn(
+                        `Failed to post ${events.length} events to the Flagsmith events API (${reason}). Keeping them for the next flush.`
+                    );
+                    return 'kept';
+                }
                 this.logger.warn(
                     `Failed to post ${events.length} events to the Flagsmith events API (${reason}). Dropping them.`
                 );
-                return;
+                return 'dropped';
             }
-            await delay(this.retryBackoffMs);
+            // Full jitter: any wait up to the backoff, which doubles with each retry.
+            await abortableDelay(
+                Math.random() * this.retryBackoffMs * 2 ** (attempt - 1),
+                abortSignal
+            );
         }
     }
+}
+
+/** Resolve after `ms` milliseconds, or as soon as `signal` aborts. **/
+function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise(resolve => {
+        if (signal.aborted) {
+            return resolve();
+        }
+        const done = () => {
+            clearTimeout(timer);
+            signal.removeEventListener('abort', done);
+            resolve();
+        };
+        const timer = setTimeout(done, ms);
+        signal.addEventListener('abort', done);
+    });
 }

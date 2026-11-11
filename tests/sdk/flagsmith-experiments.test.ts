@@ -365,13 +365,16 @@ test('eventProcessorConfig is passed to the event processor', async () => {
         eventProcessorConfig: { eventsApiUrl: 'https://events.example.com', maxBuffer: 1 }
     });
 
-    // Reaching maxBuffer posts the event without a flush.
+    // A full buffer drops its oldest event.
     flg.trackEvent('purchase', { identifier: 'user-123' });
+    flg.trackEvent('purchase', { identifier: 'user-456' });
+    await flg.flushEvents();
 
     expect(fetch).toHaveBeenCalledWith(
         'https://events.example.com/v1/events',
         expect.objectContaining({ method: 'POST' })
     );
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-456']);
     await flg.close();
 });
 

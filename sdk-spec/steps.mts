@@ -38,6 +38,21 @@ export function createClientWithEvents(
     });
 }
 
+// Create the SDK client with local evaluation and events enabled
+export function createClientWithLocalEvaluationAndEvents(
+    environmentKey: string,
+    apiUrl: string,
+    eventsApiUrl: string
+) {
+    return new Flagsmith({
+        environmentKey,
+        apiUrl,
+        enableLocalEvaluation: true,
+        enableEvents: true,
+        eventProcessorConfig: { eventsApiUrl }
+    });
+}
+
 // When the application gets the environment flags
 export async function getEnvironmentFlags(flagsmith: Flagsmith) {
     return asSpecFlags(await flagsmith.getEnvironmentFlags());
@@ -84,4 +99,26 @@ export function trackExposureEvent(
     metadata: Record<string, unknown>
 ) {
     flagsmith.trackExposureEvent(feature, { identifier, value, metadata });
+}
+
+// When the application tracks events "event_{first}" to "event_{last}" for identity "{identifier}"
+export function trackNumberedEvents(
+    flagsmith: Flagsmith,
+    first: number,
+    last: number,
+    identifier: string
+) {
+    for (let number = Number(first); number <= Number(last); number++) {
+        flagsmith.trackEvent(`event_${number}`, { identifier });
+    }
+}
+
+// When the application flushes events
+export async function flushEvents(flagsmith: Flagsmith) {
+    await flagsmith.flushEvents();
+}
+
+// When the application closes the client with a timeout of {timeout} seconds
+export async function close(flagsmith: Flagsmith, timeout: number) {
+    await flagsmith.close(timeout * 1000);
 }

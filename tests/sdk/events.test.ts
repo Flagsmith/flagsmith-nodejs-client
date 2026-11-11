@@ -264,19 +264,16 @@ test('flush does not post anything when nothing is buffered', async () => {
     expect(fetch).not.toHaveBeenCalled();
 });
 
-test('the buffer is flushed as soon as it reaches maxBuffer', async () => {
-    const processor = eventProcessor({ maxBuffer: 2 });
+test('a full buffer drops its oldest event instead of flushing', async () => {
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
 
-    trackPurchase(processor);
+    trackPurchase(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    trackPurchase(processor, 'user-3');
     expect(fetch).not.toHaveBeenCalled();
 
-    trackPurchase(processor, 'user-456');
-
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(postedEvents()).toHaveLength(2);
-
     await processor.flush();
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-2', 'user-3']);
 });
 
 test('flush waits for a batch posted by the flush timer', async () => {
@@ -305,28 +302,7 @@ test('flush waits for a batch posted by the flush timer', async () => {
     await processor.stop();
 });
 
-test('flush waits for a batch posted by reaching maxBuffer', async () => {
-    vi.useFakeTimers();
-    const deferred = new Deferred<Response>();
-    fetch.mockReturnValue(deferred.promise);
-
-    const processor = eventProcessor({ maxBuffer: 1 });
-    trackPurchase(processor);
-    expect(fetch).toHaveBeenCalledTimes(1);
-
-    let flushed = false;
-    const flush = processor.flush().then(() => {
-        flushed = true;
-    });
-    await vi.advanceTimersByTimeAsync(1);
-    expect(flushed).toBe(false);
-
-    deferred.resolve(new Response(null, { status: 202 }));
-    await flush;
-    expect(flushed).toBe(true);
-});
-
-test('flush does not wait for a batch started after it was called', async () => {
+test('flushes run one at a time, so a single batch is in flight', async () => {
     const first = new Deferred<Response>();
     const second = new Deferred<Response>();
     fetch.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
@@ -337,56 +313,31 @@ test('flush does not wait for a batch started after it was called', async () => 
     const firstFlush = processor.flush().then(() => {
         firstFlushed = true;
     });
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
     trackPurchase(processor, 'user-456');
     let secondFlushed = false;
     const secondFlush = processor.flush().then(() => {
         secondFlushed = true;
     });
+    await settle();
+    // The second batch waits for the first one to be answered.
+    expect(fetch).toHaveBeenCalledTimes(1);
 
     first.resolve(new Response(null, { status: 202 }));
     await firstFlush;
-    await settle();
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
     expect(firstFlushed).toBe(true);
     expect(secondFlushed).toBe(false);
 
     second.resolve(new Response(null, { status: 202 }));
     await secondFlush;
     expect(secondFlushed).toBe(true);
-});
-
-test('flush waits for every in-flight batch even when one of them rejects', async () => {
-    const pending = new Deferred<Response>();
-    fetch
-        .mockRejectedValueOnce(new Error('network unreachable'))
-        .mockReturnValueOnce(pending.promise)
-        .mockRejectedValueOnce(new Error('network unreachable'));
-    const logger = pino({ level: 'silent' });
-    // A throwing logger makes the dropped batch reject instead of resolving.
-    vi.spyOn(logger, 'warn').mockImplementation(() => {
-        throw new Error('logger failure');
-    });
-    const processor = eventProcessor({ maxBuffer: 1, logger });
-
-    trackPurchase(processor);
-    trackPurchase(processor, 'user-456');
-    let flushed = false;
-    const flush = processor.flush().finally(() => {
-        flushed = true;
-    });
-
-    // The first batch has been retried and dropped, the second one is still on the wire.
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
-    await settle();
-    expect(flushed).toBe(false);
-
-    pending.resolve(new Response(null, { status: 202 }));
-    await flush;
-    expect(flushed).toBe(true);
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-123', 'user-456']);
 });
 
 test('a throwing logger cannot make flush reject', async () => {
-    fetch.mockRejectedValue(new Error('network unreachable'));
+    fetch.mockResolvedValue(new Response('server error', { status: 500 }));
     const logger = pino({ level: 'silent' });
     vi.spyOn(logger, 'warn').mockImplementation(() => {
         throw new Error('logger failure');
@@ -400,9 +351,12 @@ test('a throwing logger cannot make flush reject', async () => {
     expect(logger.warn).toHaveBeenCalled();
 });
 
-test('a batch that fails to post is retried once after the backoff, then dropped', async () => {
+test('a failed batch is retried after a backoff with full jitter, doubling with each retry', async () => {
     vi.useFakeTimers();
-    fetch.mockRejectedValue(new Error('network unreachable'));
+    vi.spyOn(Math, 'random').mockReturnValue(1);
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockRejectedValueOnce(new Error('connection reset'));
 
     const processor = eventProcessor({ retryBackoffMs: 1000, logger: silentLogger });
     trackPurchase(processor);
@@ -410,31 +364,116 @@ test('a batch that fails to post is retried once after the backoff, then dropped
     const flush = processor.flush();
     await vi.advanceTimersByTimeAsync(999);
     expect(fetch).toHaveBeenCalledTimes(1);
-
     await vi.advanceTimersByTimeAsync(1);
-    await flush;
     expect(fetch).toHaveBeenCalledTimes(2);
 
-    // The batch is dropped rather than re-queued into the live buffer.
-    await processor.flush();
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(1);
+    await flush;
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(postedEvents()).toHaveLength(3);
+});
+
+test('the backoff is a random wait up to its bound', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0.25);
+    fetch.mockResolvedValueOnce(new Response(null, { status: 503 }));
+
+    const processor = eventProcessor({ retryBackoffMs: 1000, logger: silentLogger });
+    trackPurchase(processor);
+
+    const flush = processor.flush();
+    await vi.advanceTimersByTimeAsync(250);
+    await flush;
     expect(fetch).toHaveBeenCalledTimes(2);
 });
 
-test('a batch rejected with a 5xx is retried once, then dropped', async () => {
-    fetch.mockResolvedValue(new Response('downstream unavailable', { status: 503 }));
+test('a request the events API does not answer times out after 3 seconds by default', async () => {
+    vi.useFakeTimers();
+    fetch.mockImplementationOnce(
+        (_url, options) =>
+            new Promise((_resolve, reject) =>
+                options?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+            )
+    );
+    const processor = new EventProcessor({
+        environmentKey: 'test-key',
+        flushInterval: 0,
+        retryBackoffMs: 0,
+        fetch: (url, options) => fetch(url.toString(), options),
+        logger: silentLogger
+    });
+    trackPurchase(processor);
 
+    const flush = processor.flush();
+    await vi.advanceTimersByTimeAsync(2990);
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(20);
+    await flush;
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test.each([[503], [502], [504], [429], ['network error']])(
+    'a batch whose last attempt finds the events API unavailable (%p) is sent with the next flush, ahead of newer events',
+    async failure => {
+        const response = () =>
+            typeof failure === 'number'
+                ? Promise.resolve(new Response(null, { status: failure }))
+                : Promise.reject(new Error(failure));
+        fetch
+            .mockImplementationOnce(response)
+            .mockImplementationOnce(response)
+            .mockImplementationOnce(response);
+        const processor = eventProcessor({ logger: silentLogger });
+
+        trackPurchase(processor, 'user-1');
+        await processor.flush();
+        expect(fetch).toHaveBeenCalledTimes(3);
+
+        trackPurchase(processor, 'user-2');
+        await processor.flush();
+        expect(fetch).toHaveBeenCalledTimes(4);
+        const lastBatch = JSON.parse(String(fetch.mock.calls[3][1]?.body)).events;
+        expect(lastBatch.map((event: any) => event.identifier)).toEqual(['user-1', 'user-2']);
+    }
+);
+
+test('a kept batch makes room for newer events by dropping its oldest ones', async () => {
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
+
+    trackPurchase(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    await processor.flush();
+    trackPurchase(processor, 'user-3');
+    await processor.flush();
+
+    const lastBatch = JSON.parse(String(fetch.mock.calls[3][1]?.body)).events;
+    expect(lastBatch.map((event: any) => event.identifier)).toEqual(['user-2', 'user-3']);
+});
+
+test('a batch whose last attempt gets a server error is dropped', async () => {
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 500 }));
     const processor = eventProcessor({ logger: silentLogger });
+
     trackPurchase(processor);
     await processor.flush();
-
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
 
     await processor.flush();
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
 });
 
 test('a batch rejected with a 4xx is dropped without retrying', async () => {
-    fetch.mockResolvedValue(new Response('malformed batch', { status: 400 }));
+    fetch.mockResolvedValueOnce(new Response('malformed batch', { status: 400 }));
 
     const processor = eventProcessor({ logger: silentLogger });
     trackPurchase(processor);
@@ -443,6 +482,63 @@ test('a batch rejected with a 4xx is dropped without retrying', async () => {
     expect(fetch).toHaveBeenCalledTimes(1);
 
     await processor.flush();
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test.each([401, 403])(
+    'an events API refusing the environment key with %d stops event tracking',
+    async status => {
+        fetch.mockResolvedValueOnce(new Response(null, { status }));
+        const processor = eventProcessor({ logger: silentLogger });
+
+        trackPurchase(processor);
+        await processor.flush();
+        expect(fetch).toHaveBeenCalledTimes(1);
+
+        trackPurchase(processor, 'user-456');
+        await processor.flush();
+        expect(fetch).toHaveBeenCalledTimes(1);
+    }
+);
+
+test('stop with a timeout resolves once the events are sent', async () => {
+    const processor = eventProcessor();
+    trackPurchase(processor);
+
+    await processor.stop(5000);
+
+    expect(postedEvents()).toHaveLength(1);
+});
+
+test('stop with a timeout gives up on a request the events API does not answer', async () => {
+    vi.useFakeTimers();
+    let aborted = false;
+    fetch.mockImplementation(
+        (_url, options) =>
+            new Promise((_resolve, reject) =>
+                options?.signal?.addEventListener('abort', () => {
+                    aborted = true;
+                    reject(new Error('aborted'));
+                })
+            )
+    );
+    const processor = eventProcessor({ requestTimeoutMs: 3000, logger: silentLogger });
+    trackPurchase(processor);
+
+    let stopped = false;
+    const stop = processor.stop(2000).then(() => {
+        stopped = true;
+    });
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(stopped).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await stop;
+    expect(stopped).toBe(true);
+    expect(aborted).toBe(true);
+
+    // The aborted batch is not retried.
+    await vi.advanceTimersByTimeAsync(10000);
     expect(fetch).toHaveBeenCalledTimes(1);
 });
 

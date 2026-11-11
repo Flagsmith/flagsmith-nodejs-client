@@ -139,8 +139,7 @@ export interface FlagsmithConfig {
          */
         eventsApiUrl?: string;
         /**
-         * The number of buffered events that triggers a flush without waiting for the next
-         * {@link flushInterval}.
+         * The number of events the buffer holds. Once it is full, each new event drops the oldest.
          *
          * @default 1000
          */
@@ -152,8 +151,10 @@ export interface FlagsmithConfig {
          */
         flushInterval?: number;
         /**
-         * The events API request timeout duration, in milliseconds. Defaults to
-         * {@link requestTimeoutSeconds}.
+         * The events API request timeout duration, in milliseconds. A request that times out is
+         * retried.
+         *
+         * @default 3000
          */
         requestTimeoutMs?: number;
     };
