@@ -139,7 +139,8 @@ export interface FlagsmithConfig {
          */
         eventsApiUrl?: string;
         /**
-         * The number of events the buffer holds. Once it is full, each new event drops the oldest.
+         * The number of events the buffer holds. An event tracked while it is full flushes it, or
+         * drops the oldest buffered event if a batch is already in flight or kept for a retry.
          *
          * @default 1000
          */

@@ -264,16 +264,97 @@ test('flush does not post anything when nothing is buffered', async () => {
     expect(fetch).not.toHaveBeenCalled();
 });
 
-test('a full buffer drops its oldest event instead of flushing', async () => {
+test('an event tracked while the buffer is full flushes it', async () => {
     const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
 
     trackPurchase(processor, 'user-1');
     trackPurchase(processor, 'user-2');
+    expect(fetch).not.toHaveBeenCalled();
+
     trackPurchase(processor, 'user-3');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-1', 'user-2']);
+
+    // The new event starts the next batch.
+    await processor.flush();
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-1', 'user-2', 'user-3']);
+});
+
+test('a full buffer drops its oldest event while a batch is in flight', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
+
+    trackPurchase(processor, 'user-1');
+    const flush = processor.flush();
+    trackPurchase(processor, 'user-2');
+    trackPurchase(processor, 'user-3');
+    trackPurchase(processor, 'user-4');
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    pending.resolve(new Response(null, { status: 202 }));
+    await flush;
+    await processor.flush();
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-1', 'user-3', 'user-4']);
+});
+
+test('a full buffer drops its oldest event while it holds a kept batch', async () => {
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
+
+    trackPurchase(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    await processor.flush();
+    trackPurchase(processor, 'user-3');
+    expect(fetch).toHaveBeenCalledTimes(3);
+
+    await processor.flush();
+    const lastBatch = JSON.parse(String(fetch.mock.calls[3][1]?.body)).events;
+    expect(lastBatch.map((event: any) => event.identifier)).toEqual(['user-2', 'user-3']);
+});
+
+test('a duplicate exposure neither drops nor flushes buffered events', async () => {
+    const processor = eventProcessor({ maxBuffer: 1 });
+    const exposure = {
+        featureName: 'checkout_cta',
+        identifier: 'user-123',
+        value: 'treatment',
+        traits: null,
+        metadata: { experiment_id: 167 }
+    };
+
+    processor.trackExposureEvent(exposure);
+    processor.trackExposureEvent(exposure);
     expect(fetch).not.toHaveBeenCalled();
 
     await processor.flush();
-    expect(postedEvents().map(event => event.identifier)).toEqual(['user-2', 'user-3']);
+    expect(postedEvents()).toHaveLength(1);
+});
+
+test('a flush timer tick is skipped while a flush is running', async () => {
+    vi.useFakeTimers();
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const processor = eventProcessor({ flushInterval: 1000 });
+    processor.start();
+
+    trackPurchase(processor);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    trackPurchase(processor, 'user-456');
+    await vi.advanceTimersByTimeAsync(5000);
+    pending.resolve(new Response(null, { status: 202 }));
+    await vi.advanceTimersByTimeAsync(0);
+    // The ticks during the request queued nothing: the next tick sends the new event.
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    await processor.stop();
 });
 
 test('flush waits for a batch posted by the flush timer', async () => {
@@ -500,6 +581,46 @@ test.each([401, 403])(
         expect(fetch).toHaveBeenCalledTimes(1);
     }
 );
+
+test.each([501, 505])('a batch rejected with a %d is dropped without retrying', async status => {
+    fetch.mockResolvedValueOnce(new Response(null, { status }));
+    const processor = eventProcessor({ logger: silentLogger });
+
+    trackPurchase(processor);
+    await processor.flush();
+    await processor.flush();
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test('a stop timeout during the backoff sends no further attempt', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(1);
+    fetch.mockResolvedValue(new Response(null, { status: 503 }));
+    const processor = eventProcessor({ retryBackoffMs: 1000, logger: silentLogger });
+    trackPurchase(processor);
+
+    const stop = processor.stop(500);
+    await vi.advanceTimersByTimeAsync(500);
+    await stop;
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test('events tracked and flushes requested after stop are ignored', async () => {
+    const setInterval = vi.spyOn(globalThis, 'setInterval');
+    const processor = eventProcessor({ flushInterval: 10000, logger: silentLogger });
+    await processor.stop();
+
+    trackPurchase(processor);
+    await processor.flush();
+    processor.start();
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(setInterval).not.toHaveBeenCalled();
+});
 
 test('stop with a timeout resolves once the events are sent', async () => {
     const processor = eventProcessor();

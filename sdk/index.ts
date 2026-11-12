@@ -509,7 +509,8 @@ export class Flagsmith {
     }
 
     /**
-     * Stop polling the environment and send any buffered events.
+     * Stop polling the environment and send any buffered events. Events tracked afterwards are
+     * ignored.
      *
      * @param timeoutMs? how long to wait for the buffered events to be sent. Once it has passed,
      * the events still unsent are dropped and this resolves. Waits for them to be sent or dropped

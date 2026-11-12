@@ -26,7 +26,13 @@ const DEFAULT_RETRY_BACKOFF_MS = 1000;
 /** How many times a single batch is posted in one flush. **/
 const MAX_ATTEMPTS = 3;
 
-/** Statuses meaning the events API is unavailable for now, rather than failing on the batch. **/
+/** Statuses after which a batch is retried. Any other failing status drops it at once. **/
+const RETRYABLE_STATUSES = [408, 429, 500, 502, 503, 504];
+
+/**
+ * Statuses meaning the events API is unavailable for now, rather than failing on the batch: a
+ * batch whose last attempt gets one is kept for the next flush.
+ */
 const UNAVAILABLE_STATUSES = [408, 429, 502, 503, 504];
 
 /** Statuses meaning the events API refuses the environment key. **/
@@ -95,16 +101,19 @@ export interface FlagsmithEvent {
  * Buffers events and posts them to the Flagsmith events API.
  *
  * Events are flushed every {@link EventProcessorOptions.flushInterval} milliseconds, or by calling
- * {@link flush}. Flushes run one after the other, so a single batch is in flight at a time. Once
- * {@link EventProcessorOptions.maxBuffer} events are buffered, each new event drops the oldest.
+ * {@link flush}. Flushes run one after the other, so a single batch is in flight at a time, and a
+ * timer tick is skipped while a flush is running or queued. An event tracked while
+ * {@link EventProcessorOptions.maxBuffer} events are buffered flushes them, unless a batch is
+ * already in flight or kept from a failed flush: the new event then drops the oldest one instead.
  *
- * Exposure events are deduplicated within a flush window. A batch that fails is retried after a
- * backoff with full jitter, up to {@link MAX_ATTEMPTS} attempts in a flush. If its last attempt
- * finds the events API unavailable (a network error, a timeout or a 408, 429, 502, 503 or 504
- * response), the batch is kept and sent with the next flush, ahead of the events buffered since.
- * Otherwise a batch that keeps failing, or that the events API rejects with a 4xx response, is
- * dropped. A 401 or 403 response means the environment key is refused: the processor then drops
- * every event and stops tracking.
+ * Exposure events are deduplicated within a flush window. A batch that fails with a network error,
+ * a timeout or a 408, 429, 500, 502, 503 or 504 response is retried after a backoff with full
+ * jitter, up to {@link MAX_ATTEMPTS} attempts in a flush. If its last attempt finds the events API
+ * unavailable (anything but a 500), the batch is kept and sent with the next flush, ahead of the
+ * events buffered since. Otherwise a failing batch is dropped. A 401 or 403 response means the
+ * environment key is refused: the processor then drops every event and stops tracking.
+ *
+ * {@link stop} is terminal: events tracked or flushes requested after it are ignored.
  *
  * Recording events must never fail the calling application, so all errors are logged and
  * swallowed.
@@ -125,6 +134,12 @@ export class EventProcessor {
     private seenExposures: Set<string> = new Set();
     /** The last flush requested, which every new flush runs after. Never rejects. **/
     private flushing: Promise<void> = Promise.resolve();
+    /** Number of flushes running or queued. **/
+    private pendingFlushes = 0;
+    /** Set while the buffer starts with a batch kept from a failed flush. **/
+    private hasKeptBatch = false;
+    /** Set once {@link stop} has been called. **/
+    private closed = false;
     private interval?: NodeJS.Timeout;
     /** Set once the events API refuses the environment key. **/
     private unauthorised = false;
@@ -197,10 +212,22 @@ export class EventProcessor {
      *
      * Runs after the flushes requested before it, so it resolves once every event tracked before
      * the call has been sent, dropped, or kept for the next flush because the events API is
-     * unavailable. Never rejects.
+     * unavailable. Never rejects. Does nothing once the processor is stopped.
      */
     flush(): Promise<void> {
-        const flush = this.flushing.then(() => this.sendBuffer());
+        if (this.closed) {
+            this.logger.warn('Not flushing events: the event processor is closed.');
+            return this.flushing;
+        }
+        return this.queueFlush();
+    }
+
+    /**
+     * Queue a flush after the flushes already requested. With none, it takes the buffer at once.
+     */
+    private queueFlush(): Promise<void> {
+        const run = () => this.sendBuffer().finally(() => this.pendingFlushes--);
+        const flush = this.pendingFlushes++ === 0 ? run() : this.flushing.then(run);
         this.flushing = flush;
         return flush;
     }
@@ -211,17 +238,21 @@ export class EventProcessor {
      * The timer is unref'd, so it never keeps the process alive on its own.
      */
     start(): void {
-        if (this.interval || this.flushInterval <= 0) {
+        if (this.interval || this.flushInterval <= 0 || this.closed) {
             return;
         }
         this.interval = setInterval(() => {
-            this.flush();
+            // A tick must not queue flushes behind one that is still retrying.
+            if (this.pendingFlushes === 0) {
+                this.flush();
+            }
         }, this.flushInterval);
         this.interval.unref?.();
     }
 
     /**
-     * Stop the flush timer and post any remaining events.
+     * Stop the flush timer and post any remaining events. The processor ignores events tracked and
+     * flushes requested afterwards.
      *
      * @param timeoutMs? how long to wait for the events to be sent. Once it has passed, the request
      * in flight is aborted, its events are lost, and this resolves. Waits for the flush to complete
@@ -232,7 +263,11 @@ export class EventProcessor {
             clearInterval(this.interval);
             this.interval = undefined;
         }
-        const flush = this.flush();
+        if (this.closed) {
+            return;
+        }
+        this.closed = true;
+        const flush = this.queueFlush();
         if (timeoutMs === undefined) {
             return flush;
         }
@@ -266,6 +301,12 @@ export class EventProcessor {
         if (this.unauthorised) {
             return;
         }
+        if (this.closed) {
+            this.logger.warn(
+                `Not recording the "${args.event}" event: the event processor is closed.`
+            );
+            return;
+        }
         try {
             const value = args.value != null ? String(args.value) : null;
             const metadata: Record<string, unknown> = {
@@ -273,23 +314,38 @@ export class EventProcessor {
                 sdk_version: SDK_VERSION
             };
 
-            if (args.event === FLAG_EXPOSURE_EVENT) {
-                const key = JSON.stringify([
-                    args.event,
-                    args.featureName,
-                    args.identifier,
-                    value,
-                    metadata['experiment_id'] ?? null
-                ]);
-                if (this.seenExposures.has(key)) {
-                    this.logger.debug(
-                        `Skipping duplicate exposure for feature "${args.featureName}" in this flush window.`
-                    );
-                    return;
-                }
-                this.seenExposures.add(key);
+            const exposureKey =
+                args.event === FLAG_EXPOSURE_EVENT
+                    ? JSON.stringify([
+                          args.event,
+                          args.featureName,
+                          args.identifier,
+                          value,
+                          metadata['experiment_id'] ?? null
+                      ])
+                    : undefined;
+            if (exposureKey !== undefined && this.seenExposures.has(exposureKey)) {
+                this.logger.debug(
+                    `Skipping duplicate exposure for feature "${args.featureName}" in this flush window.`
+                );
+                return;
             }
 
+            if (this.buffer.length >= this.maxBuffer) {
+                if (this.pendingFlushes === 0 && !this.hasKeptBatch) {
+                    // Takes the full buffer at once, so the new event starts the next batch.
+                    this.flush();
+                } else {
+                    this.buffer.shift();
+                    this.logger.warn(
+                        `The events buffer is full (${this.maxBuffer} events) while a batch is in flight or kept. Dropping its oldest event.`
+                    );
+                }
+            }
+
+            if (exposureKey !== undefined) {
+                this.seenExposures.add(exposureKey);
+            }
             this.buffer.push({
                 event: args.event,
                 feature_name: args.featureName,
@@ -299,13 +355,6 @@ export class EventProcessor {
                 metadata: metadata,
                 timestamp: Date.now()
             });
-
-            if (this.buffer.length > this.maxBuffer) {
-                this.buffer.shift();
-                this.logger.warn(
-                    `The events buffer is full (${this.maxBuffer} events). Dropping its oldest event.`
-                );
-            }
         } catch (error) {
             // Recording an event must never throw into the calling application.
             this.logger.warn(error, `Failed to record the "${args.event}" event.`);
@@ -326,6 +375,7 @@ export class EventProcessor {
 
         try {
             const outcome = await this.postEvents(events);
+            this.hasKeptBatch = outcome === 'kept';
             if (outcome === 'kept') {
                 // Ahead of the events tracked since, within the buffer's capacity.
                 this.buffer = [...events, ...this.buffer];
@@ -351,11 +401,15 @@ export class EventProcessor {
     }
 
     /**
-     * Post a batch, retrying it after a server error or while the events API is unavailable.
+     * Post a batch, retrying it after a network error, a timeout or a {@link RETRYABLE_STATUSES} status.
      */
     private async postEvents(events: FlagsmithEvent[]): Promise<Outcome> {
         const abortSignal = this.abortController.signal;
         for (let attempt = 1; ; attempt++) {
+            // stop() may have timed out during the backoff: the next attempt must not be sent.
+            if (abortSignal.aborted) {
+                return 'dropped';
+            }
             let reason: string;
             let unavailable = true;
             // Gives up on the request once it times out, or once stop() times out.
@@ -392,7 +446,7 @@ export class EventProcessor {
                     return 'unauthorised';
                 }
                 unavailable = UNAVAILABLE_STATUSES.includes(status);
-                if (status < 500 && !unavailable) {
+                if (!RETRYABLE_STATUSES.includes(status)) {
                     this.logger.warn(
                         `Flagsmith events API rejected ${events.length} events with status ${status}. Dropping them.`
                     );
