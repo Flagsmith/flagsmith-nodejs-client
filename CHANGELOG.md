@@ -1,5 +1,17 @@
 # Changelog
 
+## [9.4.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.3.0...v9.4.0) (2026-11-13)
+
+
+### Features
+
+* Deliver events with retries, a bounded buffer and a close timeout ([#325](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/325)) ([0a9b9ed](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/0a9b9ed953b7b9f2b9f169d354228bd24b94fad6))
+
+
+### Other
+
+* **deps-dev:** bump source-map-js from 1.2.1 to 1.2.2 ([#306](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/306)) ([65ae046](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/65ae0466921b811ffde835c275cb545518115b4a))
+
 ## [9.3.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.2.0...v9.3.0) (2026-11-06)
 
 
