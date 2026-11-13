@@ -8,15 +8,24 @@ export class BaseOfflineHandler {
     }
 }
 
-export class LocalFileHandler extends BaseOfflineHandler {
+/**
+ * Handler for an environment document already in memory, as returned by the
+ * `/api/v1/environment-document` endpoint and parsed.
+ */
+export class InMemoryHandler extends BaseOfflineHandler {
     environment: EnvironmentModel;
-    constructor(environment_document_path: string) {
+    constructor(environment_document: object) {
         super();
-        const environment_document = fs.readFileSync(environment_document_path, 'utf8');
-        this.environment = buildEnvironmentModel(JSON.parse(environment_document));
+        this.environment = buildEnvironmentModel(environment_document);
     }
 
     getEnvironment(): EnvironmentModel {
         return this.environment;
+    }
+}
+
+export class LocalFileHandler extends InMemoryHandler {
+    constructor(environment_document_path: string) {
+        super(JSON.parse(fs.readFileSync(environment_document_path, 'utf8')));
     }
 }

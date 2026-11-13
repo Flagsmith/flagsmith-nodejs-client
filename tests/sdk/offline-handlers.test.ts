@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { LocalFileHandler } from '../../sdk/offline_handlers.js';
+import { InMemoryHandler, LocalFileHandler } from '../../sdk/offline_handlers.js';
 import { EnvironmentModel } from '../../flagsmith-engine/index.js';
 
 import * as offlineEnvironment from './data/offline-environment.json';
@@ -31,4 +31,16 @@ test.skipIf(isEsmBuild)('local file handler', () => {
 
     // Restore the original implementation of fs.readFileSync
     readFileSyncMock.mockRestore();
+});
+
+test.skipIf(isEsmBuild)('in memory handler', () => {
+    // Given
+    const inMemoryHandler = new InMemoryHandler(offlineEnvironment);
+
+    // When
+    const environmentModel = inMemoryHandler.getEnvironment();
+
+    // Then
+    expect(environmentModel).toBeInstanceOf(EnvironmentModel);
+    expect(environmentModel.apiKey).toBe('B62qaMZNwfiqT76p38ggrQ');
 });
