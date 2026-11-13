@@ -334,6 +334,89 @@ test('a duplicate exposure neither drops nor flushes buffered events', async () 
     expect(postedEvents()).toHaveLength(1);
 });
 
+/** Buffer a $flag_exposure for a user. */
+function trackExposure(processor: EventProcessor, identifier: string) {
+    processor.trackExposureEvent({
+        featureName: 'checkout_cta',
+        identifier: identifier,
+        value: 'treatment',
+        traits: null,
+        metadata: { experiment_id: 167 }
+    });
+}
+
+test('an exposure evicted from a full buffer can be tracked again', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
+
+    trackPurchase(processor, 'user-0');
+    const flush = processor.flush();
+    trackExposure(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    // Evicts the exposure, then tracks it again.
+    trackPurchase(processor, 'user-3');
+    trackExposure(processor, 'user-1');
+
+    pending.resolve(new Response(null, { status: 202 }));
+    await flush;
+    await processor.flush();
+    expect(postedEvents().map(event => [event.event, event.identifier])).toEqual([
+        ['purchase', 'user-0'],
+        ['purchase', 'user-3'],
+        [FLAG_EXPOSURE_EVENT, 'user-1']
+    ]);
+});
+
+test('the exposures of a kept batch are deduplicated against those tracked since', async () => {
+    const pending = new Deferred<Response>();
+    fetch
+        .mockReturnValueOnce(pending.promise)
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    const processor = eventProcessor({ logger: silentLogger });
+
+    trackExposure(processor, 'user-1');
+    const flush = processor.flush();
+    // A new flush window: the exposure in flight does not deduplicate this one.
+    trackExposure(processor, 'user-1');
+    pending.resolve(new Response(null, { status: 503 }));
+    await flush;
+
+    // The kept batch's exposure now deduplicates further copies.
+    trackExposure(processor, 'user-1');
+    await processor.flush();
+    const lastBatch = JSON.parse(String(fetch.mock.calls[3][1]?.body)).events;
+    expect(lastBatch.map((event: any) => event.identifier)).toEqual(['user-1']);
+});
+
+test('an exposure trimmed from a kept batch can be tracked again', async () => {
+    fetch
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    const pending = new Deferred<Response>();
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger });
+
+    trackExposure(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    const flush = processor.flush();
+    trackPurchase(processor, 'user-3');
+    await flush;
+    // The kept batch and the event tracked since exceed the buffer: the exposure was trimmed.
+    trackExposure(processor, 'user-1');
+    fetch.mockReturnValueOnce(pending.promise);
+    const lastFlush = processor.flush();
+    pending.resolve(new Response(null, { status: 202 }));
+    await lastFlush;
+
+    const lastBatch = JSON.parse(String(fetch.mock.calls[3][1]?.body)).events;
+    expect(lastBatch.map((event: any) => [event.event, event.identifier])).toEqual([
+        ['purchase', 'user-3'],
+        [FLAG_EXPOSURE_EVENT, 'user-1']
+    ]);
+});
+
 test('a flush timer tick is skipped while a flush is running', async () => {
     vi.useFakeTimers();
     const pending = new Deferred<Response>();

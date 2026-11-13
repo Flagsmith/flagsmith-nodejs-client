@@ -131,6 +131,7 @@ export class EventProcessor {
     private logger: Logger;
 
     private buffer: FlagsmithEvent[] = [];
+    /** Deduplication keys of the exposures in {@link buffer}, kept in sync with it. **/
     private seenExposures: Set<string> = new Set();
     /** The last flush requested, which every new flush runs after. Never rejects. **/
     private flushing: Promise<void> = Promise.resolve();
@@ -314,16 +315,16 @@ export class EventProcessor {
                 sdk_version: SDK_VERSION
             };
 
-            const exposureKey =
-                args.event === FLAG_EXPOSURE_EVENT
-                    ? JSON.stringify([
-                          args.event,
-                          args.featureName,
-                          args.identifier,
-                          value,
-                          metadata['experiment_id'] ?? null
-                      ])
-                    : undefined;
+            const event: FlagsmithEvent = {
+                event: args.event,
+                feature_name: args.featureName,
+                identifier: args.identifier,
+                value: value,
+                traits: args.traits,
+                metadata: metadata,
+                timestamp: Date.now()
+            };
+            const exposureKey = exposureKeyOf(event);
             if (exposureKey !== undefined && this.seenExposures.has(exposureKey)) {
                 this.logger.debug(
                     `Skipping duplicate exposure for feature "${args.featureName}" in this flush window.`
@@ -336,7 +337,7 @@ export class EventProcessor {
                     // Takes the full buffer at once, so the new event starts the next batch.
                     this.flush();
                 } else {
-                    this.buffer.shift();
+                    this.forgetExposures([this.buffer.shift()!]);
                     this.logger.warn(
                         `The events buffer is full (${this.maxBuffer} events) while a batch is in flight or kept. Dropping its oldest event.`
                     );
@@ -346,15 +347,7 @@ export class EventProcessor {
             if (exposureKey !== undefined) {
                 this.seenExposures.add(exposureKey);
             }
-            this.buffer.push({
-                event: args.event,
-                feature_name: args.featureName,
-                identifier: args.identifier,
-                value: value,
-                traits: args.traits,
-                metadata: metadata,
-                timestamp: Date.now()
-            });
+            this.buffer.push(event);
         } catch (error) {
             // Recording an event must never throw into the calling application.
             this.logger.warn(error, `Failed to record the "${args.event}" event.`);
@@ -377,15 +370,7 @@ export class EventProcessor {
             const outcome = await this.postEvents(events);
             this.hasKeptBatch = outcome === 'kept';
             if (outcome === 'kept') {
-                // Ahead of the events tracked since, within the buffer's capacity.
-                this.buffer = [...events, ...this.buffer];
-                const overflow = this.buffer.length - this.maxBuffer;
-                if (overflow > 0) {
-                    this.buffer.splice(0, overflow);
-                    this.logger.warn(
-                        `The events buffer is full (${this.maxBuffer} events). Dropping its ${overflow} oldest events.`
-                    );
-                }
+                this.restoreKeptBatch(events);
             } else if (outcome === 'unauthorised') {
                 this.unauthorised = true;
                 this.buffer = [];
@@ -397,6 +382,45 @@ export class EventProcessor {
             }
         } catch (error) {
             // Only a throwing logger gets here: a flush must never reject.
+        }
+    }
+
+    /**
+     * Put a kept batch back ahead of the events tracked since, within the buffer's capacity.
+     *
+     * An exposure tracked during the flush may duplicate one in the batch: the batch's copy is kept.
+     */
+    private restoreKeptBatch(events: FlagsmithEvent[]): void {
+        const merged = [...events, ...this.buffer];
+        this.buffer = [];
+        this.seenExposures.clear();
+        for (const event of merged) {
+            const key = exposureKeyOf(event);
+            if (key !== undefined) {
+                if (this.seenExposures.has(key)) {
+                    continue;
+                }
+                this.seenExposures.add(key);
+            }
+            this.buffer.push(event);
+        }
+
+        const overflow = this.buffer.length - this.maxBuffer;
+        if (overflow > 0) {
+            this.forgetExposures(this.buffer.splice(0, overflow));
+            this.logger.warn(
+                `The events buffer is full (${this.maxBuffer} events). Dropping its ${overflow} oldest events.`
+            );
+        }
+    }
+
+    /** Stop deduplicating against exposures that have left the buffer without being sent. **/
+    private forgetExposures(events: FlagsmithEvent[]): void {
+        for (const event of events) {
+            const key = exposureKeyOf(event);
+            if (key !== undefined) {
+                this.seenExposures.delete(key);
+            }
         }
     }
 
@@ -482,6 +506,20 @@ export class EventProcessor {
             );
         }
     }
+}
+
+/** The key identical exposures share, or `undefined` for any other event. **/
+function exposureKeyOf(event: FlagsmithEvent): string | undefined {
+    if (event.event !== FLAG_EXPOSURE_EVENT) {
+        return undefined;
+    }
+    return JSON.stringify([
+        event.event,
+        event.feature_name,
+        event.identifier,
+        event.value,
+        event.metadata['experiment_id'] ?? null
+    ]);
 }
 
 /** Resolve after `ms` milliseconds, or as soon as `signal` aborts. **/
