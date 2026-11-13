@@ -198,8 +198,6 @@ export class Flagsmith {
                     fetch: this.customFetch,
                     agent: this.agent,
                     customHeaders: this.customHeaders,
-                    requestTimeoutMs:
-                        data.eventProcessorConfig?.requestTimeoutMs ?? this.requestTimeoutMs,
                     logger: this.logger
                 });
                 this.eventProcessor.start();
@@ -419,7 +417,8 @@ export class Flagsmith {
     /**
      * Send all buffered events to the Flagsmith events API now.
      *
-     * Resolves once every event tracked before the call has been posted or dropped, or immediately
+     * Resolves once every event tracked before the call has been posted, dropped, or kept for the
+     * next flush because the events API is unavailable. Resolves immediately
      * if {@link FlagsmithConfig.enableEvents} is not set.
      */
     async flushEvents(): Promise<void> {
@@ -510,11 +509,16 @@ export class Flagsmith {
     }
 
     /**
-     * Stop polling the environment and send any buffered events.
+     * Stop polling the environment and send any buffered events. Events tracked afterwards are
+     * ignored.
+     *
+     * @param timeoutMs? how long to wait for the buffered events to be sent. Once it has passed,
+     * the events still unsent are dropped and this resolves. Waits for them to be sent or dropped
+     * if not set.
      */
-    async close() {
+    async close(timeoutMs?: number) {
         this.environmentDataPollingManager?.stop();
-        await this.eventProcessor?.stop();
+        await this.eventProcessor?.stop(timeoutMs);
     }
 
     private async getJSONResponse(

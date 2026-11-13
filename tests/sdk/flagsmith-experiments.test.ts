@@ -359,19 +359,31 @@ test('the events request carries the environment key and the SDK user agent head
     expect(JSON.parse(String(options?.body))).not.toHaveProperty('environment_key');
 });
 
+test('close is terminal: events tracked afterwards are not sent', async () => {
+    const flg = experimentsFlagsmith();
+    await flg.close();
+
+    flg.trackEvent('purchase', { identifier: 'user-123' });
+    await flg.flushEvents();
+
+    expect(postedEvents()).toHaveLength(0);
+});
+
 test('eventProcessorConfig is passed to the event processor', async () => {
     const flg = flagsmith({
         enableEvents: true,
         eventProcessorConfig: { eventsApiUrl: 'https://events.example.com', maxBuffer: 1 }
     });
 
-    // Reaching maxBuffer posts the event without a flush.
+    // An event tracked while the buffer is full flushes it.
     flg.trackEvent('purchase', { identifier: 'user-123' });
+    flg.trackEvent('purchase', { identifier: 'user-456' });
 
     expect(fetch).toHaveBeenCalledWith(
         'https://events.example.com/v1/events',
         expect.objectContaining({ method: 'POST' })
     );
+    expect(postedEvents().map(event => event.identifier)).toEqual(['user-123']);
     await flg.close();
 });
 
