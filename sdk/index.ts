@@ -573,7 +573,7 @@ export class Flagsmith {
      * Calling this method concurrently while the environment is being fetched will not cause additional requests.
      */
     async getEnvironment(): Promise<EnvironmentModel> {
-        if (this.offlineHandler) {
+        if (this.offlineMode && this.offlineHandler) {
             return this.offlineHandler.getEnvironment();
         }
         if (this.environment) {
@@ -582,7 +582,14 @@ export class Flagsmith {
         if (!this.environmentPromise) {
             this.environmentPromise = this.fetchEnvironment();
         }
-        return this.environmentPromise;
+        try {
+            return await this.environmentPromise;
+        } catch (error) {
+            if (this.offlineHandler) {
+                return this.offlineHandler.getEnvironment();
+            }
+            throw error;
+        }
     }
 
     private async getEnvironmentFromApi() {

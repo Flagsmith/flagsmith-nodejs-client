@@ -538,3 +538,79 @@ test('Flags.fromEvaluationResult throws error when metadata.id is missing', () =
             'This indicates a bug in the SDK, please report it.'
     );
 });
+
+function offlineFallbackClient() {
+    const offline = environmentModel(JSON.parse(offlineEnvironmentJSON));
+    const remote = JSON.parse(offlineEnvironmentJSON);
+    remote.feature_states[0].feature_state_value = 'remote-value';
+    const handler = new BaseOfflineHandler();
+    vi.spyOn(handler, 'getEnvironment').mockReturnValue(offline);
+    const request = vi.fn(async () => new Response(JSON.stringify(remote), { status: 200 }));
+    const client = flagsmith({
+        environmentKey: 'ser.key',
+        enableLocalEvaluation: true,
+        offlineHandler: handler,
+        retries: 0,
+        fetch: request
+    });
+    return { client, handler, request };
+}
+
+test('local evaluation prefers the live environment over the offline handler', async () => {
+    const { client, handler, request } = offlineFallbackClient();
+    try {
+        const flags = await client.getEnvironmentFlags();
+        expect(flags.getFeatureValue('some_feature')).toBe('remote-value');
+        const identityFlags = await client.getIdentityFlags('identity');
+        expect(identityFlags.getFeatureValue('some_feature')).toBe('remote-value');
+        expect(request).toHaveBeenCalledTimes(1);
+        expect(handler.getEnvironment).not.toHaveBeenCalled();
+    } finally {
+        client.close();
+    }
+});
+
+test('local evaluation recovers after using the offline handler on fetch failure', async () => {
+    const { client, handler, request } = offlineFallbackClient();
+    request.mockRejectedValueOnce(new Error('unavailable'));
+    try {
+        const fallback = await client.getEnvironmentFlags();
+        expect(fallback.getFeatureValue('some_feature')).toBe('offline-value');
+        expect(handler.getEnvironment).toHaveBeenCalledTimes(1);
+        const recovered = await client.getIdentityFlags('identity');
+        expect(recovered.getFeatureValue('some_feature')).toBe('remote-value');
+        expect(request).toHaveBeenCalledTimes(2);
+        expect(handler.getEnvironment).toHaveBeenCalledTimes(1);
+    } finally {
+        client.close();
+    }
+});
+
+test('local evaluation keeps the live environment after a failed refresh', async () => {
+    const { client, handler, request } = offlineFallbackClient();
+    try {
+        await client.updateEnvironment();
+        request.mockRejectedValueOnce(new Error('unavailable'));
+        await client.updateEnvironment();
+        const flags = await client.getEnvironmentFlags();
+        expect(flags.getFeatureValue('some_feature')).toBe('remote-value');
+        expect(handler.getEnvironment).not.toHaveBeenCalled();
+    } finally {
+        client.close();
+    }
+});
+
+test('local evaluation without an offline handler still surfaces fetch failure', async () => {
+    const { client, request } = offlineFallbackClient();
+    client.offlineHandler = undefined;
+    const failure = new Error('unavailable');
+    request.mockRejectedValue(failure);
+    try {
+        await expect(client.getEnvironment()).rejects.toBe(failure);
+        await expect(client.getEnvironmentFlags()).rejects.toThrow(
+            'getEnvironmentFlags failed and no default flag handler was provided'
+        );
+    } finally {
+        client.close();
+    }
+});
