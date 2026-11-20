@@ -106,7 +106,8 @@ export class Flag extends BaseFlag {
      */
     featureName: string;
     /**
-     * The reason for this feature, unique per Flagsmith project.
+     * Why the flag was evaluated to its value, e.g. `STATIC`, `DEFAULT`,
+     * `TARGETING_MATCH; segment=premium_users` or `SPLIT; weight=50`.
      */
     reason?: string;
     /**
