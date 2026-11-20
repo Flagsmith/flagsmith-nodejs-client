@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.5.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.4.0...v9.5.0) (2026-11-20)
+
+
+### Features
+
+* Every SDK includes `reason` in responses for identity and environment flags ([#327](https://github.com/Flagsmith/flagsmith-nodejs-client/issues/327)) ([957b1e8](https://github.com/Flagsmith/flagsmith-nodejs-client/commit/957b1e8c3eb54191b76d6c0dee40df379a526a10))
+
 ## [9.4.0](https://github.com/Flagsmith/flagsmith-nodejs-client/compare/v9.3.0...v9.4.0) (2026-11-13)
 
 
