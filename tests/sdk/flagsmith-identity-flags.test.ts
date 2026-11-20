@@ -6,7 +6,7 @@ import {
     transientIdentityJSON,
     badFetch
 } from './utils.js';
-import { DefaultFlag } from '../../sdk/models.js';
+import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { getUserAgent } from '../../sdk/utils.js';
 
 vi.mock('../../sdk/polling_manager');
@@ -334,4 +334,24 @@ test('getIdentityFlags fails if API call failed and no default flag handler was 
     await expect(flg.getIdentityFlags('user')).rejects.toThrow(
         'getIdentityFlags failed and no default flag handler was provided'
     );
+});
+
+test('getIdentityFlags local evaluation sets the reason of a segment override the traits match', async () => {
+    const flg = flagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+
+    const flags = await flg.getIdentityFlags('identifier', { age: 30 });
+    const flag = flags.getFlag('some_feature') as Flag;
+
+    expect(flag.value).toBe('segment_override');
+    expect(flag.reason).toBe('TARGETING_MATCH; segment=regular_segment');
+});
+
+test('getIdentityFlags local evaluation sets the DEFAULT reason when no segment override matches', async () => {
+    const flg = flagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+
+    const flags = await flg.getIdentityFlags('identifier', { age: 50 });
+    const flag = flags.getFlag('some_feature') as Flag;
+
+    expect(flag.value).toBe('some-value');
+    expect(flag.reason).toBe('DEFAULT');
 });

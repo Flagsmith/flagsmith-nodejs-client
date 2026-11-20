@@ -10,7 +10,8 @@ function asSpecFlags(flags: Flags) {
     return flags.allFlags().map(flag => ({
         feature: flag.featureName,
         enabled: flag.enabled,
-        value: flag.value
+        value: flag.value,
+        reason: flag.reason
     }));
 }
 
@@ -75,8 +76,17 @@ export async function getExperimentFlag(
     traits: Record<string, FlagsmithValue>
 ) {
     const flag = await flagsmith.getExperimentFlag(feature, identifier, traits);
-    const featureName = flag instanceof Flag ? flag.featureName : feature; // A default flag has no name of its own
-    return [{ feature: featureName, enabled: flag.enabled, value: flag.value }];
+    if (flag instanceof Flag) {
+        return [
+            {
+                feature: flag.featureName,
+                enabled: flag.enabled,
+                value: flag.value,
+                reason: flag.reason
+            }
+        ];
+    }
+    return [{ feature, enabled: flag.enabled, value: flag.value }]; // A default flag has no name nor reason of its own
 }
 
 // When the application tracks event "{event}" for identity "{identifier}" with value {value} and metadata:

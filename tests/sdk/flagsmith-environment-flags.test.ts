@@ -1,7 +1,7 @@
 import Flagsmith from '../../sdk/index.js';
 import { fetch, environmentJSON, flagsJSON } from './fetchMock.js';
 import { environmentModel, flagsmith } from './utils.js';
-import { DefaultFlag } from '../../sdk/models.js';
+import { DefaultFlag, Flag } from '../../sdk/models.js';
 import { getUserAgent } from '../../sdk/utils.js';
 
 vi.mock('../../sdk/polling_manager');
@@ -180,4 +180,14 @@ test('test_local_evaluation', async () => {
     expect(flag.isDefault).toBe(false);
     expect(flag.value).not.toBe(defaultFlag.value);
     expect(flag.value).toBe('some-value');
+});
+
+test('getEnvironmentFlags local evaluation sets the STATIC reason, ignoring segments that need an identity', async () => {
+    const flg = flagsmith({ environmentKey: 'ser.key', enableLocalEvaluation: true });
+
+    const flags = await flg.getEnvironmentFlags();
+    const flag = flags.getFlag('some_feature') as Flag;
+
+    expect(flag.value).toBe('some-value');
+    expect(flag.reason).toBe('STATIC');
 });
