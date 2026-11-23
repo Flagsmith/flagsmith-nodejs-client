@@ -86,3 +86,33 @@ test('analytics is only flushed once even if requested concurrently', async () =
     await flushes;
     expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+test('analytics preserves evaluations tracked while flush is in flight', async () => {
+    let resolveFlush!: () => void;
+    fetch.mockImplementationOnce(
+        () =>
+            new Promise<Response>(resolve => {
+                resolveFlush = () => resolve(new Response(null, { status: 200 }));
+            })
+    );
+
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    const pendingFlush = processor.flush();
+
+    processor.trackFeature('duringFlush');
+    resolveFlush();
+    await pendingFlush;
+
+    expect(processor.analyticsData).toStrictEqual({ duringFlush: 1 });
+});
+
+test('analytics retains counts when fetch returns an error response', async () => {
+    fetch.mockResolvedValueOnce(new Response(null, { status: 503 }));
+
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    await processor.flush();
+
+    expect(processor.analyticsData).toStrictEqual({ myFeature: 1 });
+});

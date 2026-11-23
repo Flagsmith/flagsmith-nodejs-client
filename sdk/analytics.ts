@@ -63,10 +63,13 @@ export class AnalyticsProcessor {
             return;
         }
 
+        const analyticsData = this.analyticsData;
+        this.analyticsData = {};
+
         try {
             this.currentFlush = this.customFetch(this.analyticsUrl, {
                 method: 'POST',
-                body: JSON.stringify(this.analyticsData),
+                body: JSON.stringify(analyticsData),
                 signal: AbortSignal.timeout(this.requestTimeoutMs),
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,8 +77,15 @@ export class AnalyticsProcessor {
                     'User-Agent': getUserAgent()
                 }
             });
-            await this.currentFlush;
+            const response = await this.currentFlush;
+            if (response && typeof response.ok === 'boolean' && !response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            this.lastFlushed = Date.now();
         } catch (error) {
+            for (const [featureName, count] of Object.entries(analyticsData)) {
+                this.analyticsData[featureName] = (this.analyticsData[featureName] || 0) + count;
+            }
             // We don't want failing to write analytics to cause any exceptions in the main
             // thread so we just swallow them here.
             this.logger.warn(
@@ -85,9 +95,6 @@ export class AnalyticsProcessor {
         } finally {
             this.currentFlush = undefined;
         }
-
-        this.analyticsData = {};
-        this.lastFlushed = Date.now();
     }
 
     /**
