@@ -59,41 +59,44 @@ export class AnalyticsProcessor {
      * Try to flush pending collected data to the Flagsmith analytics API.
      */
     async flush() {
-        if (this.currentFlush || !Object.keys(this.analyticsData).length) {
+        if (this.currentFlush) {
             return;
         }
 
-        const analyticsData = this.analyticsData;
-        this.analyticsData = {};
+        while (Object.keys(this.analyticsData).length > 0) {
+            const analyticsData = this.analyticsData;
+            this.analyticsData = {};
 
-        try {
-            this.currentFlush = this.customFetch(this.analyticsUrl, {
-                method: 'POST',
-                body: JSON.stringify(analyticsData),
-                signal: AbortSignal.timeout(this.requestTimeoutMs),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Environment-Key': this.environmentKey,
-                    'User-Agent': getUserAgent()
+            try {
+                this.currentFlush = this.customFetch(this.analyticsUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(analyticsData),
+                    signal: AbortSignal.timeout(this.requestTimeoutMs),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Environment-Key': this.environmentKey,
+                        'User-Agent': getUserAgent()
+                    }
+                });
+                const response = await this.currentFlush;
+                if (response && typeof response.ok === 'boolean' && !response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
-            });
-            const response = await this.currentFlush;
-            if (response && typeof response.ok === 'boolean' && !response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                this.lastFlushed = Date.now();
+            } catch (error) {
+                for (const [featureName, count] of Object.entries(analyticsData)) {
+                    this.analyticsData[featureName] =
+                        (this.analyticsData[featureName] || 0) + count;
+                }
+                // We don't want failing to write analytics to cause any exceptions in the main
+                // thread so we just swallow them here.
+                this.logger.warn(
+                    'Failed to post analytics to Flagsmith API. Not clearing data, will retry.'
+                );
+                return;
+            } finally {
+                this.currentFlush = undefined;
             }
-            this.lastFlushed = Date.now();
-        } catch (error) {
-            for (const [featureName, count] of Object.entries(analyticsData)) {
-                this.analyticsData[featureName] = (this.analyticsData[featureName] || 0) + count;
-            }
-            // We don't want failing to write analytics to cause any exceptions in the main
-            // thread so we just swallow them here.
-            this.logger.warn(
-                'Failed to post analytics to Flagsmith API. Not clearing data, will retry.'
-            );
-            return;
-        } finally {
-            this.currentFlush = undefined;
         }
     }
 

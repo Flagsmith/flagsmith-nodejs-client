@@ -87,12 +87,53 @@ test('analytics is only flushed once even if requested concurrently', async () =
     expect(fetch).toHaveBeenCalledTimes(1);
 });
 
-test('analytics preserves evaluations tracked while flush is in flight', async () => {
+test('analytics flushes evaluations tracked while flush is in flight', async () => {
+    // Given
     let resolveFlush!: () => void;
+    fetch
+        .mockImplementationOnce(
+            () =>
+                new Promise<Response>(resolve => {
+                    resolveFlush = () => resolve(new Response(null, { status: 200 }));
+                })
+        )
+        .mockResolvedValueOnce(new Response(null, { status: 200 }));
+
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    const pendingFlush = processor.flush();
+
+    // When
+    processor.trackFeature('duringFlush');
+    resolveFlush();
+    await pendingFlush;
+
+    // Then
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        'http://testUrl/analytics/flags/',
+        expect.objectContaining({
+            body: '{"myFeature":1}'
+        })
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'http://testUrl/analytics/flags/',
+        expect.objectContaining({
+            body: '{"duringFlush":1}'
+        })
+    );
+    expect(processor.analyticsData).toStrictEqual({});
+});
+
+test('analytics retains counts when fetch returns an error response', async () => {
+    // Given
+    let rejectFlush!: () => void;
     fetch.mockImplementationOnce(
         () =>
             new Promise<Response>(resolve => {
-                resolveFlush = () => resolve(new Response(null, { status: 200 }));
+                rejectFlush = () => resolve(new Response(null, { status: 503 }));
             })
     );
 
@@ -100,19 +141,12 @@ test('analytics preserves evaluations tracked while flush is in flight', async (
     processor.trackFeature('myFeature');
     const pendingFlush = processor.flush();
 
-    processor.trackFeature('duringFlush');
-    resolveFlush();
+    // When
+    processor.trackFeature('duringFailedFlush');
+    rejectFlush();
     await pendingFlush;
 
-    expect(processor.analyticsData).toStrictEqual({ duringFlush: 1 });
-});
-
-test('analytics retains counts when fetch returns an error response', async () => {
-    fetch.mockResolvedValueOnce(new Response(null, { status: 503 }));
-
-    const processor = analyticsProcessor();
-    processor.trackFeature('myFeature');
-    await processor.flush();
-
-    expect(processor.analyticsData).toStrictEqual({ myFeature: 1 });
+    // Then
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(processor.analyticsData).toStrictEqual({ myFeature: 1, duringFailedFlush: 1 });
 });
