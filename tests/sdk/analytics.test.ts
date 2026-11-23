@@ -86,3 +86,67 @@ test('analytics is only flushed once even if requested concurrently', async () =
     await flushes;
     expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+test('analytics flushes evaluations tracked while flush is in flight', async () => {
+    // Given
+    let resolveFlush!: () => void;
+    fetch
+        .mockImplementationOnce(
+            () =>
+                new Promise<Response>(resolve => {
+                    resolveFlush = () => resolve(new Response(null, { status: 200 }));
+                })
+        )
+        .mockResolvedValueOnce(new Response(null, { status: 200 }));
+
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    const pendingFlush = processor.flush();
+
+    // When
+    processor.trackFeature('duringFlush');
+    resolveFlush();
+    await pendingFlush;
+
+    // Then
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        'http://testUrl/analytics/flags/',
+        expect.objectContaining({
+            body: '{"myFeature":1}'
+        })
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'http://testUrl/analytics/flags/',
+        expect.objectContaining({
+            body: '{"duringFlush":1}'
+        })
+    );
+    expect(processor.analyticsData).toStrictEqual({});
+});
+
+test('analytics retains counts when fetch returns an error response', async () => {
+    // Given
+    let rejectFlush!: () => void;
+    fetch.mockImplementationOnce(
+        () =>
+            new Promise<Response>(resolve => {
+                rejectFlush = () => resolve(new Response(null, { status: 503 }));
+            })
+    );
+
+    const processor = analyticsProcessor();
+    processor.trackFeature('myFeature');
+    const pendingFlush = processor.flush();
+
+    // When
+    processor.trackFeature('duringFailedFlush');
+    rejectFlush();
+    await pendingFlush;
+
+    // Then
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(processor.analyticsData).toStrictEqual({ myFeature: 1, duringFailedFlush: 1 });
+});
