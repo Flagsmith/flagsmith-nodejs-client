@@ -298,6 +298,74 @@ test('a full buffer drops its oldest event while a batch is in flight', async ()
     expect(postedEvents().map(event => event.identifier)).toEqual(['user-1', 'user-3', 'user-4']);
 });
 
+test('dropped events are reported to onEventsDropped and counted in droppedEvents', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const onEventsDropped = vi.fn();
+    const processor = eventProcessor({ maxBuffer: 2, logger: silentLogger, onEventsDropped });
+
+    trackPurchase(processor, 'user-1');
+    const flush = processor.flush();
+    trackPurchase(processor, 'user-2');
+    trackPurchase(processor, 'user-3');
+    trackPurchase(processor, 'user-4');
+
+    expect(onEventsDropped).toHaveBeenCalledTimes(1);
+    expect(onEventsDropped).toHaveBeenCalledWith({ count: 1, reason: 'buffer_full' });
+    expect(processor.droppedEvents).toBe(1);
+
+    pending.resolve(new Response(null, { status: 202 }));
+    await flush;
+    await processor.flush();
+    expect(processor.droppedEvents).toBe(1);
+});
+
+test('a batch that fails for good is reported as failed', async () => {
+    fetch.mockResolvedValueOnce(new Response(null, { status: 400 }));
+    const onEventsDropped = vi.fn();
+    const processor = eventProcessor({ logger: silentLogger, onEventsDropped });
+
+    trackPurchase(processor, 'user-1');
+    trackPurchase(processor, 'user-2');
+    await processor.flush();
+
+    expect(onEventsDropped).toHaveBeenCalledWith({ count: 2, reason: 'failed' });
+    expect(processor.droppedEvents).toBe(2);
+});
+
+test('a refused environment key reports every buffered event as unauthorised', async () => {
+    fetch.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    const onEventsDropped = vi.fn();
+    const processor = eventProcessor({ logger: silentLogger, onEventsDropped });
+
+    trackPurchase(processor, 'user-1');
+    await processor.flush();
+
+    expect(onEventsDropped).toHaveBeenCalledWith({ count: 1, reason: 'unauthorised' });
+    expect(processor.droppedEvents).toBe(1);
+});
+
+test('an onEventsDropped that throws never breaks tracking', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const processor = eventProcessor({
+        maxBuffer: 1,
+        logger: silentLogger,
+        onEventsDropped: () => {
+            throw new Error('boom');
+        }
+    });
+
+    trackPurchase(processor, 'user-1');
+    const flush = processor.flush();
+    expect(() => trackPurchase(processor, 'user-2')).not.toThrow();
+    expect(() => trackPurchase(processor, 'user-3')).not.toThrow();
+    expect(processor.droppedEvents).toBe(1);
+
+    pending.resolve(new Response(null, { status: 202 }));
+    await flush;
+});
+
 test('a full buffer drops its oldest event while it holds a kept batch', async () => {
     fetch
         .mockResolvedValueOnce(new Response(null, { status: 503 }))
