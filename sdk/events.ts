@@ -154,6 +154,8 @@ export class EventProcessor {
     private interval?: NodeJS.Timeout;
     /** Set once the events API refuses the environment key. **/
     private unauthorised = false;
+    // True while onEventsDropped runs: drops it causes itself (by tracking events) are counted, not reported again.
+    private reportingDropped = false;
     /** Aborts the request and backoff in flight when {@link stop} times out. **/
     private abortController = new AbortController();
 
@@ -311,6 +313,8 @@ export class EventProcessor {
         metadata: Record<string, unknown> | null;
     }): void {
         if (this.unauthorised) {
+            // The key was refused: nothing tracked from now on can be sent.
+            this.reportDropped(1, 'unauthorised');
             return;
         }
         if (this.closed) {
@@ -343,6 +347,7 @@ export class EventProcessor {
                 return;
             }
 
+            let droppedOldest = false;
             if (this.buffer.length >= this.maxBuffer) {
                 if (this.pendingFlushes === 0 && !this.hasKeptBatch) {
                     // Takes the full buffer at once, so the new event starts the next batch.
@@ -352,7 +357,7 @@ export class EventProcessor {
                     this.logger.warn(
                         `The events buffer is full (${this.maxBuffer} events) while a batch is in flight or kept. Dropping its oldest event.`
                     );
-                    this.reportDropped(1, 'buffer_full');
+                    droppedOldest = true;
                 }
             }
 
@@ -360,6 +365,10 @@ export class EventProcessor {
                 this.seenExposures.add(exposureKey);
             }
             this.buffer.push(event);
+            // Reported once the new event is in, so a callback that tracks events sees the buffer at maxBuffer.
+            if (droppedOldest) {
+                this.reportDropped(1, 'buffer_full');
+            }
         } catch (error) {
             // Recording an event must never throw into the calling application.
             this.logger.warn(error, `Failed to record the "${args.event}" event.`);
@@ -442,10 +451,16 @@ export class EventProcessor {
             return;
         }
         this.dropped += count;
+        if (this.reportingDropped) {
+            return;
+        }
+        this.reportingDropped = true;
         try {
             this.onEventsDropped?.({ count, reason });
         } catch (error) {
             this.logger.warn(error, 'onEventsDropped threw an error.');
+        } finally {
+            this.reportingDropped = false;
         }
     }
 

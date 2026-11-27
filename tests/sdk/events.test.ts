@@ -334,23 +334,79 @@ test('a batch that fails for good is reported as failed', async () => {
 });
 
 test('a refused environment key reports every buffered event as unauthorised', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    const onEventsDropped = vi.fn();
+    const processor = eventProcessor({ logger: silentLogger, onEventsDropped });
+
+    trackPurchase(processor, 'user-1');
+    const flush = processor.flush();
+    trackPurchase(processor, 'user-2'); // buffered while the batch is in flight
+
+    pending.resolve(new Response(null, { status: 401 }));
+    await flush;
+
+    expect(onEventsDropped).toHaveBeenCalledTimes(1);
+    expect(onEventsDropped).toHaveBeenCalledWith({ count: 2, reason: 'unauthorised' });
+    expect(processor.droppedEvents).toBe(2);
+});
+
+test('events tracked after the key was refused are reported as unauthorised', async () => {
     fetch.mockResolvedValueOnce(new Response(null, { status: 401 }));
     const onEventsDropped = vi.fn();
     const processor = eventProcessor({ logger: silentLogger, onEventsDropped });
 
     trackPurchase(processor, 'user-1');
     await processor.flush();
+    trackPurchase(processor, 'user-2');
+    trackPurchase(processor, 'user-3');
 
-    expect(onEventsDropped).toHaveBeenCalledWith({ count: 1, reason: 'unauthorised' });
-    expect(processor.droppedEvents).toBe(1);
+    expect(onEventsDropped).toHaveBeenLastCalledWith({ count: 1, reason: 'unauthorised' });
+    expect(onEventsDropped).toHaveBeenCalledTimes(3);
+    expect(processor.droppedEvents).toBe(3);
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test('an onEventsDropped that tracks events itself never recurses or overfills the buffer', async () => {
+    const pending = new Deferred<Response>();
+    fetch.mockReturnValueOnce(pending.promise);
+    let processor!: EventProcessor;
+    const onEventsDropped = vi.fn(() => {
+        trackPurchase(processor, 'from-callback');
+        trackPurchase(processor, 'from-callback-2');
+    });
+    processor = eventProcessor({ maxBuffer: 2, logger: silentLogger, onEventsDropped });
+
+    trackPurchase(processor, 'user-1');
+    const flush = processor.flush();
+    trackPurchase(processor, 'user-2');
+    trackPurchase(processor, 'user-3');
+    expect(() => trackPurchase(processor, 'user-4')).not.toThrow();
+
+    // user-4 drops user-2 and calls the callback once; the two drops its own events cause are counted, not reported.
+    expect(onEventsDropped).toHaveBeenCalledTimes(1);
+    expect(onEventsDropped).toHaveBeenCalledWith({ count: 1, reason: 'buffer_full' });
+    expect(processor.droppedEvents).toBe(3);
+
+    pending.resolve(new Response(null, { status: 202 }));
+    await flush;
+    await processor.flush();
+    // The second batch holds what was left: maxBuffer events, never more.
+    expect(postedEvents().map(event => event.identifier)).toEqual([
+        'user-1',
+        'from-callback',
+        'from-callback-2'
+    ]);
 });
 
 test('an onEventsDropped that throws never breaks tracking', async () => {
     const pending = new Deferred<Response>();
     fetch.mockReturnValueOnce(pending.promise);
+    const logger = pino({ level: 'silent' });
+    const warn = vi.spyOn(logger, 'warn');
     const processor = eventProcessor({
         maxBuffer: 1,
-        logger: silentLogger,
+        logger,
         onEventsDropped: () => {
             throw new Error('boom');
         }
@@ -361,6 +417,10 @@ test('an onEventsDropped that throws never breaks tracking', async () => {
     expect(() => trackPurchase(processor, 'user-2')).not.toThrow();
     expect(() => trackPurchase(processor, 'user-3')).not.toThrow();
     expect(processor.droppedEvents).toBe(1);
+    expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'boom' }),
+        'onEventsDropped threw an error.'
+    );
 
     pending.resolve(new Response(null, { status: 202 }));
     await flush;
