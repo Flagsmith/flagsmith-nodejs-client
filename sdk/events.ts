@@ -45,6 +45,9 @@ const UNAUTHORISED_STATUSES = [401, 403];
  */
 type Outcome = 'sent' | 'dropped' | 'kept' | 'unauthorised';
 
+/** Why events were dropped: the buffer was full, a batch failed for good, or the environment key was refused. **/
+export type DroppedReason = 'buffer_full' | 'failed' | 'unauthorised';
+
 /** Headers the SDK sets itself. Header names are case-insensitive, so custom variants are dropped. **/
 const RESERVED_HEADERS = [
     'content-type',
@@ -75,6 +78,11 @@ export interface EventProcessorOptions {
     retryBackoffMs?: number;
     /** Logger for dropped batches and other failures. Defaults to a new pino logger. **/
     logger?: Logger;
+    /**
+     * Called whenever events are dropped without being sent, with how many and why. The same events are counted in
+     * {@link EventProcessor.droppedEvents}. Errors it throws are logged and ignored.
+     */
+    onEventsDropped?: (dropped: { count: number; reason: DroppedReason }) => void;
 }
 
 /**
@@ -125,6 +133,8 @@ export class EventProcessor {
     private agent?: Dispatcher;
     private customHeaders: { [key: string]: string };
     private maxBuffer: number;
+    private onEventsDropped?: EventProcessorOptions['onEventsDropped'];
+    private dropped = 0;
     private flushInterval: number;
     private requestTimeoutMs: number;
     private retryBackoffMs: number;
@@ -144,6 +154,8 @@ export class EventProcessor {
     private interval?: NodeJS.Timeout;
     /** Set once the events API refuses the environment key. **/
     private unauthorised = false;
+    // True while onEventsDropped runs: drops it causes itself (by tracking events) are counted, not reported again.
+    private reportingDropped = false;
     /** Aborts the request and backoff in flight when {@link stop} times out. **/
     private abortController = new AbortController();
 
@@ -160,6 +172,7 @@ export class EventProcessor {
             )
         );
         this.maxBuffer = opts.maxBuffer ?? DEFAULT_MAX_BUFFER;
+        this.onEventsDropped = opts.onEventsDropped;
         this.flushInterval = opts.flushInterval ?? DEFAULT_FLUSH_INTERVAL_MS;
         this.requestTimeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
         this.retryBackoffMs = opts.retryBackoffMs ?? DEFAULT_RETRY_BACKOFF_MS;
@@ -300,6 +313,8 @@ export class EventProcessor {
         metadata: Record<string, unknown> | null;
     }): void {
         if (this.unauthorised) {
+            // The key was refused: nothing tracked from now on can be sent.
+            this.reportDropped(1, 'unauthorised');
             return;
         }
         if (this.closed) {
@@ -332,6 +347,7 @@ export class EventProcessor {
                 return;
             }
 
+            let droppedOldest = false;
             if (this.buffer.length >= this.maxBuffer) {
                 if (this.pendingFlushes === 0 && !this.hasKeptBatch) {
                     // Takes the full buffer at once, so the new event starts the next batch.
@@ -341,6 +357,7 @@ export class EventProcessor {
                     this.logger.warn(
                         `The events buffer is full (${this.maxBuffer} events) while a batch is in flight or kept. Dropping its oldest event.`
                     );
+                    droppedOldest = true;
                 }
             }
 
@@ -348,6 +365,10 @@ export class EventProcessor {
                 this.seenExposures.add(exposureKey);
             }
             this.buffer.push(event);
+            // Reported once the new event is in, so a callback that tracks events sees the buffer at maxBuffer.
+            if (droppedOldest) {
+                this.reportDropped(1, 'buffer_full');
+            }
         } catch (error) {
             // Recording an event must never throw into the calling application.
             this.logger.warn(error, `Failed to record the "${args.event}" event.`);
@@ -369,10 +390,14 @@ export class EventProcessor {
         try {
             const outcome = await this.postEvents(events);
             this.hasKeptBatch = outcome === 'kept';
+            if (outcome === 'dropped') {
+                this.reportDropped(events.length, 'failed');
+            }
             if (outcome === 'kept') {
                 this.restoreKeptBatch(events);
             } else if (outcome === 'unauthorised') {
                 this.unauthorised = true;
+                this.reportDropped(events.length + this.buffer.length, 'unauthorised');
                 this.buffer = [];
                 this.seenExposures.clear();
                 if (this.interval) {
@@ -411,6 +436,31 @@ export class EventProcessor {
             this.logger.warn(
                 `The events buffer is full (${this.maxBuffer} events). Dropping its ${overflow} oldest events.`
             );
+            this.reportDropped(overflow, 'buffer_full');
+        }
+    }
+
+    /** Number of events dropped without being sent since this processor was created. **/
+    get droppedEvents(): number {
+        return this.dropped;
+    }
+
+    /** Count dropped events and tell {@link EventProcessorOptions.onEventsDropped}, which must never break tracking. **/
+    private reportDropped(count: number, reason: DroppedReason): void {
+        if (count <= 0) {
+            return;
+        }
+        this.dropped += count;
+        if (this.reportingDropped) {
+            return;
+        }
+        this.reportingDropped = true;
+        try {
+            this.onEventsDropped?.({ count, reason });
+        } catch (error) {
+            this.logger.warn(error, 'onEventsDropped threw an error.');
+        } finally {
+            this.reportingDropped = false;
         }
     }
 

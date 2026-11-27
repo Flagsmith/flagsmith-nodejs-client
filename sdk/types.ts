@@ -146,6 +146,14 @@ export interface FlagsmithConfig {
          */
         maxBuffer?: number;
         /**
+         * Called whenever events are dropped without being sent, with how many and why: the buffer was full
+         * (`buffer_full`), a batch failed for good (`failed`) or the environment key was refused (`unauthorised`).
+         */
+        onEventsDropped?: (dropped: {
+            count: number;
+            reason: 'buffer_full' | 'failed' | 'unauthorised';
+        }) => void;
+        /**
          * The time, in milliseconds, between automatic flushes. 0 disables the timer.
          *
          * @default 10000
